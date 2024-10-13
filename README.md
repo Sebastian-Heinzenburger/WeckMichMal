@@ -72,8 +72,8 @@ Die Applikation sagt zu einen idealen Aufwachzeitpunkt zu bestimmen, unter der P
     *Reaktion*\
     Der Nutzer wird aufgefordert erneut zu bestätigen, dass er den Wecker löschen möchte. Danach wird der Wecker mitsamt seinen Präferenzen gelöscht.
 
-
 ## TODO
 - Titel überarbeiten? "WakeMeUpBeforeYouNeedToGoGo" oder "WMUBY-N-TGG"?
 - Workflows und statische Mock-Ups erstellen
 - Pflichtenheft erstellen/verfeinern
+- Product Backlog und Issues erstellen
