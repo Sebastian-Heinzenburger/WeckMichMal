@@ -74,5 +74,6 @@ Die Applikation sagt zu einen idealen Aufwachzeitpunkt zu bestimmen, unter der P
 
 
 ## TODO
+- Titel überarbeiten? "WakeMeUpBeforeYouNeedToGoGo" oder "WMUBY-N-TGG"?
 - Workflows und statische Mock-Ups erstellen
 - Pflichtenheft erstellen/verfeinern
