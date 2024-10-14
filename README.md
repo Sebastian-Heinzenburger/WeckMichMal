@@ -33,7 +33,10 @@ Ziel des Projekts ist die Entwicklung einer Android-basierten Wecker-App, die kl
 - Der Benutzer kann folgende zusätzliche Informationen angezeigt bekommen:
     - Das aktuelle Kantinenmenü
 ### § Annahmen und Zusagen
-Die Applikation sagt zu einen idealen Aufwachzeitpunkt zu bestimmen, unter der Prämisse, dass die von der DB Navigator zur Verfügung gestellten Daten korrekt sind.
+Die Applikation sagt zu, einen idealen Aufwachzeitpunkt zu bestimmen, unter der Prämisse, dass die von der DB Navigator zur Verfügung gestellten Daten korrekt sind.
+
+Es wird außerdem angenommen, dass die App den Weckton abspielen kann, ohne von Hardwareausfällen oder Softwareeinschränkungen des Betriebssystems (wie zum Beispiel das Beenden der Applikation durch Energiesparmodi) beeinflusst zu werden.
+	
 ## Abnahmekriterien
 1. Erstmaliges in Betrieb nehmen\
     *Ausgangssituation*:\
