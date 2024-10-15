@@ -70,7 +70,7 @@ Es wird außerdem angenommen, dass die App den Weckton abspielen kann, ohne von 
 4. Wecker löschen\
     *Ausgangssituation*\
     Die App wurde bereits eingerichtet und es liegt mindesten ein Wecker vor.\
-    *Ereignsi*\
+    *Ereignis*\
     Der Nutzer wählt das Löschen eines Weckers aus.\
     *Reaktion*\
     Der Nutzer wird aufgefordert erneut zu bestätigen, dass er den Wecker löschen möchte. Danach wird der Wecker mitsamt seinen Präferenzen gelöscht.
