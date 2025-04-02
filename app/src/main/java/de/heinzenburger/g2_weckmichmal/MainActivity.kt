@@ -11,11 +11,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import de.heinzenburger.g2_weckmichmal.persistence.AlarmConfiguration
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
+import kotlin.concurrent.thread
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        
         enableEdgeToEdge()
         setContent {
             G2_WeckMichMalTheme {
@@ -26,6 +30,9 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             }
+        }
+        thread {
+            AlarmConfiguration.initDatabase(this)
         }
     }
 }

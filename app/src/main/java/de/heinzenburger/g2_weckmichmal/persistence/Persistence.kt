@@ -1,5 +1,6 @@
 package de.heinzenburger.g2_weckmichmal.persistence
 
+import android.content.Context
 import java.util.BitSet
 
 interface Persistence {
