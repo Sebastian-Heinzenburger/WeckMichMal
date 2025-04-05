@@ -52,7 +52,7 @@ data class AlarmConfiguration (
     /** The name specified by the user for the configuration. */
     val name: String,
 
-    /** A set of [Day] elements representing the days selected for the configuration. */
+    /** A set of [DayOfWeek] elements representing the days selected for the configuration. */
     val selectedDays: Set<DayOfWeek>,
 
     /** The fixed arrival time, if specified by the user. */
@@ -82,7 +82,7 @@ data class AlarmConfiguration (
  * Represents a singular event for the alarm configuration at a specific time.
  *
  * @property wakeUpTime The time to ring the alarm, calculated based on the alarm configuration.
- * @property representedDay The [Day] element of the alarm configuration represented by this event.
+ * @property representedDay The [DayOfWeek] element of the alarm configuration represented by this event.
  * @property date The specific date this event references.
  * @property route The route selection for this event.
  * @property courses The courses scheduled for this day.
@@ -98,7 +98,7 @@ data class Event (
     val date: LocalDate,
 
     /** The route selection for this event. */
-    val route: Route?,
+    val route: List<Route>?,
 
     /** The courses scheduled for this day. */
     val courses: List<Course>?

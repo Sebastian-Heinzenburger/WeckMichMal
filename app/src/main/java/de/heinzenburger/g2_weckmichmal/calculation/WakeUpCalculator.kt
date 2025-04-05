@@ -100,7 +100,7 @@ class WakeUpCalculator(
      * @return A pair containing the calculated departure time and the selected route (if applicable).
      */
     @Throws(IllegalArgumentException::class)
-    private fun deriveDepartureTime(configuration: AlarmConfiguration, arrivalTime: LocalDateTime): Pair<LocalDateTime, Route?> {
+    private fun deriveDepartureTime(configuration: AlarmConfiguration, arrivalTime: LocalDateTime): Pair<LocalDateTime, List<Route>?> {
         return when {
             configuration.fixedTravelBuffer != null -> {
                 // Fixed travel buffer case
@@ -111,7 +111,7 @@ class WakeUpCalculator(
                 // Travel time based on route planner
                 val routes: List<Route> = routePlanner.planRoute(configuration.startStation, configuration.endStation, arrivalTime)
                 val route: Route = routes.maxByOrNull { it.startTime } ?: throw IllegalArgumentException("No valid route found")
-                Pair(route.startTime, route)
+                Pair(route.startTime, routes)
             }
             else -> throw IllegalArgumentException("Invalid Configuration: Missing travel buffer or station details")
         }
