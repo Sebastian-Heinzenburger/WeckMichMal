@@ -84,21 +84,18 @@ data class AlarmConfiguration (
  * @property wakeUpTime The time to ring the alarm, calculated based on the alarm configuration.
  * @property representedDay The [DayOfWeek] element of the alarm configuration represented by this event.
  * @property date The specific date this event references.
- * @property route The route selection for this event.
+ * @property routes The routes for this event.
  * @property courses The courses scheduled for this day.
  */
 data class Event (
     /** The time to ring the alarm, calculated based on the alarm configuration. */
     val wakeUpTime: LocalTime,
 
-    /** The [Day] element of the alarm configuration represented by this event. */
-    val representedDay: DayOfWeek,
-
     /** The specific date this event references. */
     val date: LocalDate,
 
-    /** The route selection for this event. */
-    val route: List<Route>?,
+    /** The routes for this event. */
+    val routes: List<Route>?,
 
     /** The courses scheduled for this day. */
     val courses: List<Course>?

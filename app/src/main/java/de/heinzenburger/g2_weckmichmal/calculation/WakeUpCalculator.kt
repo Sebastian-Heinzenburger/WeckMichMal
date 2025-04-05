@@ -73,7 +73,7 @@ class WakeUpCalculator(
         // Adjust departure time with the start buffer
         val wakeUpTime = departureTime.minusMinutes(configuration.startBuffer.toLong())
 
-        return Event(wakeUpTime.toLocalTime(), date.dayOfWeek, date, route, courses)
+        return Event(wakeUpTime.toLocalTime(), date, route, courses)
     }
 
     /**
