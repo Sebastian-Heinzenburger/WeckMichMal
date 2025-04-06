@@ -11,29 +11,42 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import de.heinzenburger.g2_weckmichmal.MainActivity
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.BitSet
 import java.util.logging.Logger
 
-class AlarmConfiguration: Persistence {
+data class AlarmConfiguration(
+    val context: Context,
+): Persistence {
     @Entity(tableName = "configurationentity")
     data class ConfigurationEntity(
-        @PrimaryKey(autoGenerate = true) val uid: Long = 0,
-        @ColumnInfo(name = "name") val name : String,
-        @ColumnInfo(name = "day") val day: Int,
-        @ColumnInfo(name = "fixedArrivalTime") val fixedArrivalTime: String,
-        @ColumnInfo(name = "fixedTravelBuffer") val fixedTravelBuffer: Int,
-        @ColumnInfo(name = "startBuffer") val startBuffer: Int,
-        @ColumnInfo(name = "endBuffer") val endBuffer: Int,
-        @ColumnInfo(name = "startStation") val startStation: String,
-        @ColumnInfo(name = "endStation") val endStation: String
-    )
+        @PrimaryKey val uid: Long = System.currentTimeMillis(),
+        @ColumnInfo(name = "name") var name : String,
+        @ColumnInfo(name = "days") var days: String,
+        @ColumnInfo(name = "fixedArrivalTime") var fixedArrivalTime: String,
+        @ColumnInfo(name = "fixedTravelBuffer") var fixedTravelBuffer: Int,
+        @ColumnInfo(name = "startBuffer") var startBuffer: Int,
+        @ColumnInfo(name = "endBuffer") var endBuffer: Int,
+        @ColumnInfo(name = "startStation") var startStation: String,
+        @ColumnInfo(name = "endStation") var endStation: String
+    ){
+        fun log(){
+            MainActivity.log.info("Logging Alarm configuration with id $uid:\n$name\n$days\n$fixedArrivalTime\n$fixedTravelBuffer\n$startBuffer\n$endBuffer\n$startStation\n$endStation")
+        }
+    }
     @Dao
     interface ConfigurationDao{
-        @Query("Select * FROM configurationentity")
+        @Query("SELECT * FROM configurationentity")
         fun getAll() : List<ConfigurationEntity>
+
+        @Query("SELECT * FROM configurationentity WHERE uid = :uid")
+        fun getById(uid: Long) : List<ConfigurationEntity>
+
+        @Query("DELETE FROM configurationentity WHERE uid = :uid")
+        fun deleteById(uid: Long)
 
         @Insert
         fun insert(configuration: ConfigurationEntity)
@@ -64,59 +77,51 @@ class AlarmConfiguration: Persistence {
         }
     }
 
+    private var database: AppDatabase = AppDatabase.getDatabase(context)
 
-    override fun saveOrUpdate(config: AlarmConfiguration) {
+    override fun saveOrUpdate(config: ConfigurationEntity): Boolean {
+        try {
+            database.configurationDao().deleteById(config.uid)
+            database.configurationDao().insert(config)
+            return true
+        }
+        catch (e: Exception){
+            MainActivity.log.warning(e.message)
+            e.printStackTrace()
+            return false
+        }
+
+    }
+
+    override fun saveOrUpdate(event: Event): Boolean {
         TODO("Not yet implemented")
     }
 
-    override fun saveOrUpdate(event: Event) {
-        TODO("Not yet implemented")
+    override fun getAlarmConfiguration(id: Long): ConfigurationEntity {
+        return database.configurationDao().getById(id)[0]
     }
 
-    override fun getAlarmConfiguration(id: String): AlarmConfiguration {
-        TODO("Not yet implemented")
-    }
-
-    override fun getAllAlarmConfigurations(): List<AlarmConfiguration> {
-        TODO("Not yet implemented")
+    override fun getAllAlarmConfigurations(): List<ConfigurationEntity> {
+        return database.configurationDao().getAll()
     }
 
     override fun getAllEvents(): List<Event> {
         TODO("Not yet implemented")
     }
 
-    override fun removeAlarmConfiguration(id: String) {
-        TODO("Not yet implemented")
-    }
-
-    override fun removeEvent(configID: String, day: BitSet) {
-        TODO("Not yet implemented")
-    }
-
-    companion object{
-        fun initDatabase(context: Context) {
-            val log = Logger.getLogger(AlarmConfiguration::class.java.name)
-            val bitSet = BitSet()
-            bitSet.set(0,6,true)
-            val fixedArrivalTime = LocalTime.parse("20:00:00")
-            val testConfiguration = ConfigurationEntity(
-                name = "peullo",
-                uid = 0,
-                day = 159,
-                fixedArrivalTime = fixedArrivalTime.format(DateTimeFormatter.ISO_LOCAL_TIME),
-                fixedTravelBuffer = 20,
-                startBuffer = 30,
-                endBuffer = 0,
-                startStation = "Durlach",
-                endStation = "Exmatrikulation"
-            )
-
-            val database = AppDatabase.getDatabase(context)
-            database.configurationDao().insert(testConfiguration)
-            val configurations: List<ConfigurationEntity> = database.configurationDao().getAll()
-            for (configuration in configurations){
-                log.warning(configuration.name)
-            }
+    override fun removeAlarmConfiguration(id: Long): Boolean {
+        try {
+            database.configurationDao().deleteById(id)
+            return true
         }
+        catch (e: Exception){
+            MainActivity.log.warning(e.message)
+            e.printStackTrace()
+            return false
+        }
+    }
+
+    override fun removeEvent(configID: String, day: BitSet): Boolean {
+        TODO("Not yet implemented")
     }
 }

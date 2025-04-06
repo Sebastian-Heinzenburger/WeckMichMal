@@ -12,7 +12,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import de.heinzenburger.g2_weckmichmal.persistence.AlarmConfiguration
+import de.heinzenburger.g2_weckmichmal.persistence.AlarmConfiguration.AppDatabase
+import de.heinzenburger.g2_weckmichmal.persistence.AlarmConfiguration.ConfigurationEntity
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.util.logging.Logger
 import kotlin.concurrent.thread
 
 class MainActivity : ComponentActivity() {
@@ -32,8 +37,36 @@ class MainActivity : ComponentActivity() {
             }
         }
         thread {
-            AlarmConfiguration.initDatabase(this)
+            //Lazy Testing Persistence Functionality
+            val alarmConfiguration = AlarmConfiguration(this)
+
+            val fixedArrivalTime = LocalTime.parse("20:00:00")
+            val testConfiguration = ConfigurationEntity(
+                name = "!!pineapple",
+                days = "1010000",
+                fixedArrivalTime = fixedArrivalTime.format(DateTimeFormatter.ISO_LOCAL_TIME),
+                fixedTravelBuffer = 20,
+                startBuffer = 30,
+                endBuffer = 0,
+                startStation = "Durlach",
+                endStation = "Exmatrikulation"
+            )
+            alarmConfiguration.saveOrUpdate(testConfiguration)
+            alarmConfiguration.getAlarmConfiguration(testConfiguration.uid).log()
+            testConfiguration.days = "1110000"
+            alarmConfiguration.saveOrUpdate(testConfiguration)
+            alarmConfiguration.getAlarmConfiguration(testConfiguration.uid).log()
+            for(config in alarmConfiguration.getAllAlarmConfigurations()){
+                config.log()
+            }
+            alarmConfiguration.removeAlarmConfiguration(testConfiguration.uid)
+            for(config in alarmConfiguration.getAllAlarmConfigurations()){
+                config.log()
+            }
         }
+    }
+    companion object{
+        val log: Logger = Logger.getLogger(AlarmConfiguration::class.java.name)
     }
 }
 
