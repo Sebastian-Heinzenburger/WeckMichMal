@@ -5,10 +5,10 @@ import java.util.BitSet
 
 interface Persistence {
     fun saveOrUpdate(config: AlarmConfiguration.ConfigurationEntity): Boolean
-    fun saveOrUpdate(event: Event): Boolean
+    fun saveOrUpdate(event: Event.EventEntity): Boolean
     fun getAlarmConfiguration(id: Long): AlarmConfiguration.ConfigurationEntity
     fun getAllAlarmConfigurations(): List<AlarmConfiguration.ConfigurationEntity>
-    fun getAllEvents(): List<Event>
+    fun getAllEvents(): List<Event.EventEntity>
     fun removeAlarmConfiguration(id: Long): Boolean
-    fun removeEvent(configID: String, day: BitSet): Boolean
+    fun removeEvent(configID: Long, days: String): Boolean
 }

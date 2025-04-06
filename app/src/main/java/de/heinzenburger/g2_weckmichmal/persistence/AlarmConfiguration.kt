@@ -90,10 +90,9 @@ data class AlarmConfiguration(
             e.printStackTrace()
             return false
         }
-
     }
 
-    override fun saveOrUpdate(event: Event): Boolean {
+    override fun saveOrUpdate(event: Event.EventEntity): Boolean {
         TODO("Not yet implemented")
     }
 
@@ -105,7 +104,11 @@ data class AlarmConfiguration(
         return database.configurationDao().getAll()
     }
 
-    override fun getAllEvents(): List<Event> {
+    override fun getEvent(id: Long): List<Event.EventEntity> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getAllEvents(): List<Event.EventEntity> {
         TODO("Not yet implemented")
     }
 
@@ -121,7 +124,8 @@ data class AlarmConfiguration(
         }
     }
 
-    override fun removeEvent(configID: String, day: BitSet): Boolean {
+    override fun removeEvent(configID: Long, day: String): Boolean {
         TODO("Not yet implemented")
     }
+
 }
