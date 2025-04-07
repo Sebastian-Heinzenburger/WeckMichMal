@@ -23,7 +23,7 @@ data class Event(
 ): Persistence{
     @Entity(tableName = "evententity")
     data class EventEntity(
-        @ColumnInfo(name = "configid") val configID: Long,
+        @PrimaryKey val configID: Long,
         @ColumnInfo(name = "wakeuptime") var wakeUpTime: String,
         @ColumnInfo(name = "days") var days: String,
         @ColumnInfo(name = "date") var date: String

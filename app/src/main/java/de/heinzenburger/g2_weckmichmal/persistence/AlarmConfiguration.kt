@@ -104,9 +104,6 @@ data class AlarmConfiguration(
         return database.configurationDao().getAll()
     }
 
-    override fun getEvent(id: Long): List<Event.EventEntity> {
-        TODO("Not yet implemented")
-    }
 
     override fun getAllEvents(): List<Event.EventEntity> {
         TODO("Not yet implemented")
