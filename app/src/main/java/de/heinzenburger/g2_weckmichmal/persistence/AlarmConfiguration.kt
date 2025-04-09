@@ -12,15 +12,10 @@ import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import de.heinzenburger.g2_weckmichmal.MainActivity
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
-import java.util.BitSet
-import java.util.logging.Logger
 
 data class AlarmConfiguration(
     val context: Context,
-): Persistence {
+): PersistenceClass() {
     @Entity(tableName = "configurationentity")
     data class ConfigurationEntity(
         @PrimaryKey val uid: Long = System.currentTimeMillis(),
@@ -92,21 +87,28 @@ data class AlarmConfiguration(
         }
     }
 
-    override fun saveOrUpdate(event: Event.EventEntity): Boolean {
-        TODO("Not yet implemented")
+    override fun getAlarmConfiguration(id: Long): ConfigurationEntity? {
+        try {
+            val result = database.configurationDao().getById(id)[0]
+            return result
+        }
+        catch (e: Exception){
+            MainActivity.log.warning(e.message)
+            e.printStackTrace()
+            return null
+        }
     }
 
-    override fun getAlarmConfiguration(id: Long): ConfigurationEntity {
-        return database.configurationDao().getById(id)[0]
-    }
-
-    override fun getAllAlarmConfigurations(): List<ConfigurationEntity> {
-        return database.configurationDao().getAll()
-    }
-
-
-    override fun getAllEvents(): List<Event.EventEntity> {
-        TODO("Not yet implemented")
+    override fun getAllAlarmConfigurations(): List<ConfigurationEntity>? {
+        try {
+            val result = database.configurationDao().getAll()
+            return result
+        }
+        catch (e: Exception){
+            MainActivity.log.warning(e.message)
+            e.printStackTrace()
+            return null
+        }
     }
 
     override fun removeAlarmConfiguration(id: Long): Boolean {
@@ -120,9 +122,4 @@ data class AlarmConfiguration(
             return false
         }
     }
-
-    override fun removeEvent(configID: Long, day: String): Boolean {
-        TODO("Not yet implemented")
-    }
-
 }

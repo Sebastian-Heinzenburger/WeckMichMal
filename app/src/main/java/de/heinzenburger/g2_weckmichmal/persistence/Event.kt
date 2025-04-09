@@ -7,23 +7,17 @@ import androidx.room.Database
 import androidx.room.Delete
 import androidx.room.Entity
 import androidx.room.Insert
-import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import de.heinzenburger.g2_weckmichmal.MainActivity
-import de.heinzenburger.g2_weckmichmal.persistence.AlarmConfiguration.AppDatabase
-import de.heinzenburger.g2_weckmichmal.persistence.AlarmConfiguration.ConfigurationEntity
-import java.time.LocalDate
-import java.time.LocalTime
-import java.util.BitSet
 
 data class Event(
     val context: Context
-): Persistence{
-    @Entity(tableName = "evententity")
+): PersistenceClass() {
+    @Entity(tableName = "evententity", primaryKeys = ["configID","days"])
     data class EventEntity(
-        @PrimaryKey val configID: Long,
+        @ColumnInfo(name = "configID") var configID: Long,
         @ColumnInfo(name = "wakeuptime") var wakeUpTime: String,
         @ColumnInfo(name = "days") var days: String,
         @ColumnInfo(name = "date") var date: String
@@ -38,11 +32,14 @@ data class Event(
         @Query("SELECT * FROM evententity")
         fun getAll() : List<EventEntity>
 
-        @Query("SELECT * FROM evententity WHERE configID = :configID")
-        fun getById(configID: Long) : List<EventEntity>
+        @Query("SELECT * FROM evententity WHERE configID = :configID AND days = :days")
+        fun getByIdAndDays(configID: Long, days: String) : List<EventEntity>
 
         @Query("DELETE FROM evententity WHERE configID = :configID AND days = :days")
         fun deleteByIdAndDays(configID: Long, days: String)
+
+        @Query("DELETE FROM evententity WHERE configID = :configID")
+        fun deleteById(configID: Long)
 
         @Insert
         fun insert(configuration: EventEntity)
@@ -75,10 +72,6 @@ data class Event(
 
     private var database: AppDatabase = AppDatabase.getDatabase(context)
 
-    override fun saveOrUpdate(config: AlarmConfiguration.ConfigurationEntity): Boolean {
-        TODO("Not yet implemented")
-    }
-
     override fun saveOrUpdate(event: EventEntity): Boolean {
         try {
             database.configurationDao().deleteByIdAndDays(event.configID, event.days)
@@ -92,25 +85,32 @@ data class Event(
         }
     }
 
-    override fun getAlarmConfiguration(id: Long): AlarmConfiguration.ConfigurationEntity {
-        TODO("Not yet implemented")
-    }
-
-    override fun getAllAlarmConfigurations(): List<AlarmConfiguration.ConfigurationEntity> {
-        TODO("Not yet implemented")
-    }
-
-    override fun getAllEvents(): List<EventEntity> {
-        return  database.configurationDao().getAll()
-    }
-
-    override fun removeAlarmConfiguration(id: Long): Boolean {
-        TODO("Not yet implemented")
+    override fun getAllEvents(): List<EventEntity>? {
+        try {
+            val result = database.configurationDao().getAll()
+            return result
+        }
+        catch (e: Exception){
+            MainActivity.log.warning(e.message)
+            e.printStackTrace()
+            return null
+        }
     }
 
     override fun removeEvent(configID: Long, days: String): Boolean {
         try {
             database.configurationDao().deleteByIdAndDays(configID, days)
+            return true
+        }
+        catch (e: Exception){
+            MainActivity.log.warning(e.message)
+            e.printStackTrace()
+            return false
+        }
+    }
+    override fun removeEvent(configID: Long): Boolean {
+        try {
+            database.configurationDao().deleteById(configID)
             return true
         }
         catch (e: Exception){

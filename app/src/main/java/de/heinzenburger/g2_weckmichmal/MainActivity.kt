@@ -47,6 +47,9 @@ class MainActivity : ComponentActivity() {
         thread {
             //Lazy Testing Persistence Functionality
             val alarmConfiguration = AlarmConfiguration(this)
+            for(config in alarmConfiguration.getAllAlarmConfigurations()!!){
+                config.log()
+            }
 
             val fixedArrivalTime = LocalTime.parse("20:00:00")
             val testConfiguration = ConfigurationEntity(
@@ -60,15 +63,15 @@ class MainActivity : ComponentActivity() {
                 endStation = "Exmatrikulation"
             )
             alarmConfiguration.saveOrUpdate(testConfiguration)
-            alarmConfiguration.getAlarmConfiguration(testConfiguration.uid).log()
+            alarmConfiguration.getAlarmConfiguration(testConfiguration.uid)?.log()
             testConfiguration.days = "1110000"
             alarmConfiguration.saveOrUpdate(testConfiguration)
-            alarmConfiguration.getAlarmConfiguration(testConfiguration.uid).log()
-            for(config in alarmConfiguration.getAllAlarmConfigurations()){
+            alarmConfiguration.getAlarmConfiguration(testConfiguration.uid)?.log()
+            for(config in alarmConfiguration.getAllAlarmConfigurations()!!){
                 config.log()
             }
             alarmConfiguration.removeAlarmConfiguration(testConfiguration.uid)
-            for(config in alarmConfiguration.getAllAlarmConfigurations()){
+            for(config in alarmConfiguration.getAllAlarmConfigurations()!!){
                 config.log()
             }
         }
