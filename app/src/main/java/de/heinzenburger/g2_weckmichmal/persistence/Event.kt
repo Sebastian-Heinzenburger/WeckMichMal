@@ -12,6 +12,8 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import de.heinzenburger.g2_weckmichmal.MainActivity
+import java.time.LocalDate
+import java.time.LocalTime
 
 data class Event(
     val context: Context
@@ -19,9 +21,9 @@ data class Event(
     @Entity(tableName = "evententity", primaryKeys = ["configID","days"])
     data class EventEntity(
         @ColumnInfo(name = "configID") var configID: Long,
-        @ColumnInfo(name = "wakeuptime") var wakeUpTime: String,
+        @ColumnInfo(name = "wakeuptime") var wakeUpTime: LocalTime,
         @ColumnInfo(name = "days") var days: String,
-        @ColumnInfo(name = "date") var date: String
+        @ColumnInfo(name = "date") var date: LocalDate
     ){
         fun log(){
             MainActivity.log.info("Logging Alarm configuration with id $configID:\n$wakeUpTime\n$days\n$date")
@@ -34,7 +36,7 @@ data class Event(
         fun getAll() : List<EventEntity>
 
         @Query("SELECT * FROM evententity WHERE configID = :configID AND days = :days")
-        fun getByIdAndDays(configID: Long, days: String) : List<EventEntity>
+        fun getByIdAndDays(configID: Long, days: String) : EventEntity
 
         @Query("DELETE FROM evententity WHERE configID = :configID AND days = :days")
         fun deleteByIdAndDays(configID: Long, days: String)

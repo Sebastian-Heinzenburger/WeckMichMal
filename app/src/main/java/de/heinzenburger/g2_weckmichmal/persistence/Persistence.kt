@@ -1,9 +1,10 @@
 package de.heinzenburger.g2_weckmichmal.persistence
 
-import android.content.Context
 import androidx.room.TypeConverter
-import java.util.BitSet
-import java.util.Date
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+
 
 interface Persistence {
     fun saveOrUpdate(config: AlarmConfiguration.ConfigurationEntity): Boolean
@@ -45,25 +46,29 @@ abstract class PersistenceClass : Persistence{
 
 public class DateConverter {
     @TypeConverter
-    fun toDate(dateLong : Long?) : Date?{
-        return if(dateLong == null){
+    fun toLocalDate(dateLong: Long?): LocalDate? {
+        return if (dateLong == null) {
             null
-        } else{
-            Date(dateLong)
+        } else {
+            LocalDate.ofEpochDay(dateLong)
         }
+    }
+    @TypeConverter
+    fun fromLocalDate(date: LocalDate?): Long? {
+        return date?.toEpochDay()
     }
 
     @TypeConverter
-    fun toLocalTime(dateLong : Long?) : Date?{
-        return if(dateLong == null){
+    fun toLocalTime(timeLong: Long?): LocalTime? {
+        return if (timeLong == null) {
             null
-        } else{
-            Date(dateLong)
+        } else {
+            LocalTime.ofNanoOfDay(timeLong)
         }
     }
-
     @TypeConverter
-    fun fromDate(date: Date?) : Long?{
-        return date?.time
+    fun fromLocalTime(time: LocalTime?): Long? {
+        return time?.toNanoOfDay()
     }
+
 }

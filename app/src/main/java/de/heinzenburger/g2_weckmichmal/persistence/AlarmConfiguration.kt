@@ -39,7 +39,7 @@ data class AlarmConfiguration(
         fun getAll() : List<ConfigurationEntity>
 
         @Query("SELECT * FROM configurationentity WHERE uid = :uid")
-        fun getById(uid: Long) : List<ConfigurationEntity>
+        fun getById(uid: Long) : ConfigurationEntity
 
         @Query("DELETE FROM configurationentity WHERE uid = :uid")
         fun deleteById(uid: Long)
@@ -91,7 +91,7 @@ data class AlarmConfiguration(
 
     override fun getAlarmConfiguration(id: Long): ConfigurationEntity? {
         try {
-            val result = database.configurationDao().getById(id)[0]
+            val result = database.configurationDao().getById(id)
             return result
         }
         catch (e: Exception){
