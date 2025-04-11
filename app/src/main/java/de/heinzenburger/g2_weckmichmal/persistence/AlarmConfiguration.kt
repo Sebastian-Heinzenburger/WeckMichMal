@@ -11,6 +11,7 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import de.heinzenburger.g2_weckmichmal.MainActivity
 
 data class AlarmConfiguration(
@@ -51,6 +52,7 @@ data class AlarmConfiguration(
     }
 
     @Database(entities = [ConfigurationEntity::class], version = 1)
+    @TypeConverters(DateConverter::class)
     abstract class AppDatabase : RoomDatabase() {
         abstract fun configurationDao(): ConfigurationDao
 

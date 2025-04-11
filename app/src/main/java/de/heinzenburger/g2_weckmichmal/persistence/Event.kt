@@ -10,6 +10,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import de.heinzenburger.g2_weckmichmal.MainActivity
 
 data class Event(
@@ -49,6 +50,7 @@ data class Event(
     }
 
     @Database(entities = [EventEntity::class], version = 1)
+    @TypeConverters(DateConverter::class)
     abstract class AppDatabase : RoomDatabase() {
         abstract fun configurationDao(): ConfigurationDao
 

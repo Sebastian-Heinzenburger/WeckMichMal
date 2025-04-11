@@ -1,7 +1,9 @@
 package de.heinzenburger.g2_weckmichmal.persistence
 
 import android.content.Context
+import androidx.room.TypeConverter
 import java.util.BitSet
+import java.util.Date
 
 interface Persistence {
     fun saveOrUpdate(config: AlarmConfiguration.ConfigurationEntity): Boolean
@@ -38,5 +40,30 @@ abstract class PersistenceClass : Persistence{
     }
     override fun removeEvent(configID: Long): Boolean{
         return false
+    }
+}
+
+public class DateConverter {
+    @TypeConverter
+    fun toDate(dateLong : Long?) : Date?{
+        return if(dateLong == null){
+            null
+        } else{
+            Date(dateLong)
+        }
+    }
+
+    @TypeConverter
+    fun toLocalTime(dateLong : Long?) : Date?{
+        return if(dateLong == null){
+            null
+        } else{
+            Date(dateLong)
+        }
+    }
+
+    @TypeConverter
+    fun fromDate(date: Date?) : Long?{
+        return date?.time
     }
 }
