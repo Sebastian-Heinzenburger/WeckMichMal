@@ -12,6 +12,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import de.heinzenburger.g2_weckmichmal.MainActivity
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalTime
 
@@ -22,11 +23,11 @@ data class Event(
     data class EventEntity(
         @ColumnInfo(name = "configID") var configID: Long,
         @ColumnInfo(name = "wakeuptime") var wakeUpTime: LocalTime,
-        @ColumnInfo(name = "days") var days: String,
+        @ColumnInfo(name = "days") var days: Set<DayOfWeek>,
         @ColumnInfo(name = "date") var date: LocalDate
     ){
         fun log(){
-            MainActivity.log.info("Logging Alarm configuration with id $configID:\n$wakeUpTime\n$days\n$date")
+            MainActivity.log.info("Logging Event with id $configID:\n$wakeUpTime\n$days\n$date")
         }
     }
 
@@ -51,7 +52,7 @@ data class Event(
         fun delete(configuration: EventEntity)
     }
 
-    @Database(entities = [EventEntity::class], version = 1)
+    @Database(entities = [EventEntity::class], version = 2)
     @TypeConverters(DateConverter::class)
     abstract class AppDatabase : RoomDatabase() {
         abstract fun configurationDao(): ConfigurationDao
@@ -66,7 +67,7 @@ data class Event(
                         context.applicationContext,
                         AppDatabase::class.java,
                         "database"
-                    ).build()
+                    ).fallbackToDestructiveMigration().build()
                     INSTANCE = instance
                     instance
                 }
@@ -78,7 +79,9 @@ data class Event(
 
     override fun saveOrUpdate(event: EventEntity): Boolean {
         try {
-            database.configurationDao().deleteByIdAndDays(event.configID, event.days)
+            database.configurationDao().deleteByIdAndDays(event.configID,
+                DateConverter().fromSetOfDays(event.days).toString()
+            )
             database.configurationDao().insert(event)
             return true
         }
@@ -101,9 +104,11 @@ data class Event(
         }
     }
 
-    override fun removeEvent(configID: Long, days: String): Boolean {
+    override fun removeEvent(configID: Long, days: Set<DayOfWeek>): Boolean {
         try {
-            database.configurationDao().deleteByIdAndDays(configID, days)
+            database.configurationDao().deleteByIdAndDays(configID,
+                DateConverter().fromSetOfDays(days).toString()
+            )
             return true
         }
         catch (e: Exception){

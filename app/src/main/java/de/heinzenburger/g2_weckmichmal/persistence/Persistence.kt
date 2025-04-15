@@ -1,6 +1,7 @@
 package de.heinzenburger.g2_weckmichmal.persistence
 
 import androidx.room.TypeConverter
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -13,7 +14,7 @@ interface Persistence {
     fun getAllAlarmConfigurations(): List<AlarmConfiguration.ConfigurationEntity>?
     fun getAllEvents(): List<Event.EventEntity>?
     fun removeAlarmConfiguration(id: Long): Boolean
-    fun removeEvent(configID: Long, days: String): Boolean
+    fun removeEvent(configID: Long, days: Set<DayOfWeek>): Boolean
     fun removeEvent(configID: Long): Boolean
 
 }
@@ -36,7 +37,7 @@ abstract class PersistenceClass : Persistence{
     override fun removeAlarmConfiguration(id: Long): Boolean{
         return false
     }
-    override fun removeEvent(configID: Long, days: String): Boolean{
+    override fun removeEvent(configID: Long, days: Set<DayOfWeek>): Boolean{
         return false
     }
     override fun removeEvent(configID: Long): Boolean{
@@ -69,6 +70,34 @@ public class DateConverter {
     @TypeConverter
     fun fromLocalTime(time: LocalTime?): Long? {
         return time?.toNanoOfDay()
+    }
+
+    @TypeConverter
+    fun toSetOfDays(stringDays: String?): Set<DayOfWeek>? {
+        if (stringDays == null) {
+            return null
+        } else {
+            var result = mutableSetOf<DayOfWeek>()
+            for(day in DayOfWeek.entries){
+                if(stringDays[day.value-1] == '1'){
+                    result.add(day)
+                }
+            }
+            return result
+        }
+    }
+    @TypeConverter
+    fun fromSetOfDays(days: Set<DayOfWeek>?): String? {
+        var result = ""
+        for(day in DayOfWeek.entries){
+            result += if(days?.contains(day) == true){
+                "1"
+            } else{
+                "0"
+            }
+        }
+        return result
+
     }
 
 }
