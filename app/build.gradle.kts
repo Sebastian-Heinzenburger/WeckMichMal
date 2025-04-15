@@ -57,10 +57,18 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-
+    implementation(libs.androidx.material.icons.extended)
     val room_version = "2.6.1"
 
-    implementation("androidx.room:room-runtime:$room_version")
-    ksp("androidx.room:room-compiler:$room_version")
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.material3)
+
+    // Compose UI base dependencies
+    implementation(libs.ui)
+    implementation(libs.androidx.material)
+
+    // Optional, for tooling support
+    implementation(libs.ui.tooling)
+    ksp(libs.androidx.room.room.compiler)
 
 }
