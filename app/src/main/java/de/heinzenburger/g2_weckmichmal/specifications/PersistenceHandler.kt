@@ -74,6 +74,7 @@ data class AlarmConfiguration (
     val endStation: String?,
 
     /** The next [Event] derived from this configuration. */
+    @Deprecated("Hallo hier ist Flo. Warum nextEvent? Das kommt doch nicht in die Datenbank")
     val nextEvent: Event?
 )
 
@@ -95,6 +96,7 @@ data class Event (
     val date: LocalDate,
 
     /** The routes for this event. */
+    @Deprecated("Hallo hier ist Flo. Warum stehen hier sachen die nicht in die Datenbank kommen...")
     val routes: List<Route>?,
 
     /** The courses scheduled for this day. */

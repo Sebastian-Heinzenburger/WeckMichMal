@@ -6,7 +6,9 @@ import androidx.activity.ComponentActivity
 import de.heinzenburger.g2_weckmichmal.persistence.AlarmConfiguration
 import de.heinzenburger.g2_weckmichmal.persistence.AlarmConfiguration.ConfigurationEntity
 import de.heinzenburger.g2_weckmichmal.persistence.Event
+import de.heinzenburger.g2_weckmichmal.persistence.Persistence
 import de.heinzenburger.g2_weckmichmal.ui.components.WelcomeScreen
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -17,7 +19,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        /*thread {
+        thread {
             //Lazy Testing Persistence Functionality
             val alarmConfiguration = AlarmConfiguration(this)
             for(config in alarmConfiguration.getAllAlarmConfigurations()!!){
@@ -27,8 +29,8 @@ class MainActivity : ComponentActivity() {
             val fixedArrivalTime = LocalTime.parse("20:00:00")
             val testConfiguration = ConfigurationEntity(
                 name = "!!pineapple",
-                days = "1010000",
-                fixedArrivalTime = fixedArrivalTime.format(DateTimeFormatter.ISO_LOCAL_TIME),
+                days = setOf<DayOfWeek>(DayOfWeek.MONDAY, DayOfWeek.FRIDAY, DayOfWeek.TUESDAY),
+                fixedArrivalTime = fixedArrivalTime,
                 fixedTravelBuffer = 20,
                 startBuffer = 30,
                 endBuffer = 0,
@@ -37,7 +39,7 @@ class MainActivity : ComponentActivity() {
             )
             alarmConfiguration.saveOrUpdate(testConfiguration)
             alarmConfiguration.getAlarmConfiguration(testConfiguration.uid)?.log()
-            testConfiguration.days = "1110000"
+            testConfiguration.days = setOf<DayOfWeek>(DayOfWeek.SUNDAY, DayOfWeek.MONDAY)
             alarmConfiguration.saveOrUpdate(testConfiguration)
             alarmConfiguration.getAlarmConfiguration(testConfiguration.uid)?.log()
             for(config in alarmConfiguration.getAllAlarmConfigurations()!!){
@@ -67,7 +69,7 @@ class MainActivity : ComponentActivity() {
             for(config in event.getAllEvents()!!){
                 config.log()
             }
-        }*/
+        }
 
         startActivity(Intent(this, WelcomeScreen::class.java))
     }
