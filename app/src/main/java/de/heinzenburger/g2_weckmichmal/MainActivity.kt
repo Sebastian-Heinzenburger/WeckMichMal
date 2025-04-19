@@ -4,9 +4,11 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import de.heinzenburger.g2_weckmichmal.persistence.AlarmConfiguration
-import de.heinzenburger.g2_weckmichmal.persistence.AlarmConfiguration.ConfigurationEntity
+import de.heinzenburger.g2_weckmichmal.persistence.ApplicationSettings
 import de.heinzenburger.g2_weckmichmal.persistence.Event
-import de.heinzenburger.g2_weckmichmal.persistence.Persistence
+import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
+import de.heinzenburger.g2_weckmichmal.specifications.EventEntity
+import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity
 import de.heinzenburger.g2_weckmichmal.ui.components.WelcomeScreen
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -20,6 +22,15 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         thread {
+            val applicationSettings = ApplicationSettings(this)
+            log.severe(applicationSettings.isApplicationOpenedFirstTime().toString())
+            var settings = SettingsEntity(
+                raplaURL = "https://ulululu"
+            )
+            applicationSettings.saveOrUpdateApplicationSettings(settings)
+            log.severe(applicationSettings.isApplicationOpenedFirstTime().toString())
+
+
             //Lazy Testing Persistence Functionality
             val alarmConfiguration = AlarmConfiguration(this)
             for(config in alarmConfiguration.getAllAlarmConfigurations()!!){
@@ -55,7 +66,7 @@ class MainActivity : ComponentActivity() {
                 config.log()
             }
 
-            val testEntity = Event.EventEntity(
+            val testEntity = EventEntity(
                 configID = testConfiguration.uid,
                 days = testConfiguration.days,
                 wakeUpTime = LocalTime.now(),

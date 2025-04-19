@@ -24,8 +24,8 @@ class WakeUpCalculator(
      * @return The calculated Event or null if no valid event can be determined.
      */
     @Throws(IllegalArgumentException::class, IllegalStateException::class)
-    override fun calculateNextEvent(configuration: AlarmConfiguration): Event {
-        val eventDate: LocalDate = getNextDateOutOfSelection(configuration.selectedDays);
+    override fun calculateNextEvent(configuration: ConfigurationEntity): EventEntity {
+        val eventDate: LocalDate = getNextDateOutOfSelection(configuration.days);
         return calculateEventForDate(configuration, eventDate);
     }
 
@@ -42,8 +42,8 @@ class WakeUpCalculator(
      * @throws IllegalArgumentException if the specified day is not part of the selected days.
      */
     @Throws(IllegalArgumentException::class)
-    override fun calculateEventForDay(configuration: AlarmConfiguration, day: DayOfWeek): Event {
-        if(!configuration.selectedDays.contains(day)) throw IllegalArgumentException("The specified day ($day) is not included in the selected alarm days.")
+    override fun calculateEventForDay(configuration: ConfigurationEntity, day: DayOfWeek): EventEntity {
+        if(!configuration.days.contains(day)) throw IllegalArgumentException("The specified day ($day) is not included in the selected alarm days.")
         val eventDate: LocalDate = getNextDateOutOfSelection(setOf(day));
 
         return calculateEventForDate(configuration, eventDate);
@@ -62,7 +62,7 @@ class WakeUpCalculator(
      * @throws IllegalArgumentException if no valid course or travel route is found.
      */
     @Throws(IllegalArgumentException::class)
-    override fun calculateEventForDate(configuration: AlarmConfiguration, date: LocalDate): Event {
+    override fun calculateEventForDate(configuration: ConfigurationEntity, date: LocalDate): EventEntity {
         val (atPlaceTime, courses) = deriveAtPlaceTime(configuration, date)
 
         // Adjust arrival time with the end buffer
@@ -73,7 +73,11 @@ class WakeUpCalculator(
         // Adjust departure time with the start buffer
         val wakeUpTime = departureTime.minusMinutes(configuration.startBuffer.toLong())
 
-        return Event(wakeUpTime.toLocalTime(), date, route, courses)
+        return EventEntity(
+            configID = configuration.uid,
+            wakeUpTime = wakeUpTime.toLocalTime(),
+            date = date,
+            days = configuration.days)
     }
 
     /**
@@ -81,10 +85,10 @@ class WakeUpCalculator(
      *
      * @return A pair containing the at-place arrival time and the list of relevant courses (if applicable).
      */
-    private fun deriveAtPlaceTime(configuration: AlarmConfiguration, eventDate: LocalDate): Pair<LocalDateTime, List<Course>?> {
+    private fun deriveAtPlaceTime(configuration: ConfigurationEntity, eventDate: LocalDate): Pair<LocalDateTime, List<Course>?> {
         return if (configuration.fixedArrivalTime != null) {
             // Fixed arrival time case
-            Pair(configuration.fixedArrivalTime.atDate(eventDate), null)
+            Pair(configuration.fixedArrivalTime!!.atDate(eventDate), null)
         } else {
             // Determine arrival time based on available courses
             val courses: List<Course> = courseFetcher.fetchCoursesBetween(eventDate.atTime(0, 0), eventDate.atTime(23, 59))
@@ -100,16 +104,17 @@ class WakeUpCalculator(
      * @return A pair containing the calculated departure time and the selected route (if applicable).
      */
     @Throws(IllegalArgumentException::class)
-    private fun deriveDepartureTime(configuration: AlarmConfiguration, arrivalTime: LocalDateTime): Pair<LocalDateTime, List<Route>?> {
+    private fun deriveDepartureTime(configuration: ConfigurationEntity, arrivalTime: LocalDateTime): Pair<LocalDateTime, List<Route>?> {
         return when {
             configuration.fixedTravelBuffer != null -> {
                 // Fixed travel buffer case
-                val departureTime = arrivalTime.minusMinutes(configuration.fixedTravelBuffer.toLong())
+                val departureTime = arrivalTime.minusMinutes(configuration.fixedTravelBuffer!!.toLong())
                 Pair(departureTime, null)
             }
             configuration.startStation != null && configuration.endStation != null -> {
                 // Travel time based on route planner
-                val routes: List<Route> = routePlanner.planRoute(configuration.startStation, configuration.endStation, arrivalTime)
+                val routes: List<Route> = routePlanner.planRoute(configuration.startStation!!,
+                    configuration.endStation!!, arrivalTime)
                 val route: Route = routes.maxByOrNull { it.startTime } ?: throw IllegalArgumentException("No valid route found")
                 Pair(route.startTime, routes)
             }

@@ -13,28 +13,13 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import de.heinzenburger.g2_weckmichmal.MainActivity
+import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
 import java.time.DayOfWeek
 import java.time.LocalTime
 
 data class AlarmConfiguration(
     val context: Context,
 ): PersistenceClass() {
-    @Entity(tableName = "configurationentity")
-    data class ConfigurationEntity(
-        @PrimaryKey val uid: Long = System.currentTimeMillis(),
-        @ColumnInfo(name = "name") var name : String,
-        @ColumnInfo(name = "days") var days: Set<DayOfWeek>,
-        @ColumnInfo(name = "fixedArrivalTime") var fixedArrivalTime: LocalTime?,
-        @ColumnInfo(name = "fixedTravelBuffer") var fixedTravelBuffer: Int?,
-        @ColumnInfo(name = "startBuffer") var startBuffer: Int,
-        @ColumnInfo(name = "endBuffer") var endBuffer: Int,
-        @ColumnInfo(name = "startStation") var startStation: String?,
-        @ColumnInfo(name = "endStation") var endStation: String?
-    ){
-        fun log(){
-            MainActivity.log.info("Logging Alarm configuration with id $uid:\n$name\n$days\n$fixedArrivalTime\n$fixedTravelBuffer\n$startBuffer\n$endBuffer\n$startStation\n$endStation")
-        }
-    }
     @Dao
     interface ConfigurationDao{
         @Query("SELECT * FROM configurationentity")

@@ -30,13 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import de.heinzenburger.g2_weckmichmal.persistence.AlarmConfiguration
-import de.heinzenburger.g2_weckmichmal.persistence.AlarmConfiguration.ConfigurationEntity
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
-import java.util.logging.Logger
-import kotlin.concurrent.thread
 
 class WelcomeScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

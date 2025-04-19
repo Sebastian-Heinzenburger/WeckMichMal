@@ -12,6 +12,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import de.heinzenburger.g2_weckmichmal.MainActivity
+import de.heinzenburger.g2_weckmichmal.specifications.EventEntity
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalTime
@@ -19,18 +20,6 @@ import java.time.LocalTime
 data class Event(
     val context: Context
 ): PersistenceClass() {
-    @Entity(tableName = "evententity", primaryKeys = ["configID","days"])
-    data class EventEntity(
-        @ColumnInfo(name = "configID") var configID: Long,
-        @ColumnInfo(name = "wakeuptime") var wakeUpTime: LocalTime,
-        @ColumnInfo(name = "days") var days: Set<DayOfWeek>,
-        @ColumnInfo(name = "date") var date: LocalDate
-    ){
-        fun log(){
-            MainActivity.log.info("Logging Event with id $configID:\n$wakeUpTime\n$days\n$date")
-        }
-    }
-
     @Dao
     interface ConfigurationDao{
         @Query("SELECT * FROM evententity")

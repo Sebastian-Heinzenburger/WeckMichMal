@@ -1,37 +1,30 @@
 package de.heinzenburger.g2_weckmichmal.persistence
 
 import androidx.room.TypeConverter
+import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
+import de.heinzenburger.g2_weckmichmal.specifications.EventEntity
+import de.heinzenburger.g2_weckmichmal.specifications.I_PersistenceSpecification
+import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 
 
-interface Persistence {
-    fun saveOrUpdate(config: AlarmConfiguration.ConfigurationEntity): Boolean
-    fun saveOrUpdate(event: Event.EventEntity): Boolean
-    fun getAlarmConfiguration(id: Long): AlarmConfiguration.ConfigurationEntity?
-    fun getAllAlarmConfigurations(): List<AlarmConfiguration.ConfigurationEntity>?
-    fun getAllEvents(): List<Event.EventEntity>?
-    fun removeAlarmConfiguration(id: Long): Boolean
-    fun removeEvent(configID: Long, days: Set<DayOfWeek>): Boolean
-    fun removeEvent(configID: Long): Boolean
-
-}
-abstract class PersistenceClass : Persistence{
-    override fun saveOrUpdate(config: AlarmConfiguration.ConfigurationEntity): Boolean {
+abstract class PersistenceClass : I_PersistenceSpecification{
+    override fun saveOrUpdate(config: ConfigurationEntity): Boolean {
         return false
     }
-    override fun saveOrUpdate(event: Event.EventEntity): Boolean{
+    override fun saveOrUpdate(event: EventEntity): Boolean{
         return false
     }
-    override fun getAlarmConfiguration(id: Long): AlarmConfiguration.ConfigurationEntity? {
+    override fun getAlarmConfiguration(id: Long): ConfigurationEntity? {
         return null
     }
-    override fun getAllAlarmConfigurations(): List<AlarmConfiguration.ConfigurationEntity>?{
+    override fun getAllAlarmConfigurations(): List<ConfigurationEntity>?{
         return null
     }
-    override fun getAllEvents(): List<Event.EventEntity>?{
+    override fun getAllEvents(): List<EventEntity>?{
         return null
     }
     override fun removeAlarmConfiguration(id: Long): Boolean{
@@ -42,6 +35,15 @@ abstract class PersistenceClass : Persistence{
     }
     override fun removeEvent(configID: Long): Boolean{
         return false
+    }
+    override fun getApplicationSettings(): SettingsEntity? {
+        return null
+    }
+    override fun saveOrUpdateApplicationSettings(settings: SettingsEntity): Boolean {
+        return false
+    }
+    override fun isApplicationOpenedFirstTime(): Boolean? {
+        return null
     }
 }
 
