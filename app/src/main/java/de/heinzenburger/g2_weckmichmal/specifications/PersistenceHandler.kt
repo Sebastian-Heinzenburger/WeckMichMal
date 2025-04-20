@@ -156,7 +156,7 @@ data class EventEntity(
  */
 data class SettingsEntity(
     /** The WebLink leading to the RAPLA schedule. */
-    val raplaURL: String
+    var raplaURL: String
 ){
     fun log(){
         MainActivity.log.info("Logging SettingsEntity:\n$raplaURL")

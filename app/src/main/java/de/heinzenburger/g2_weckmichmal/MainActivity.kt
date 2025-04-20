@@ -1,7 +1,9 @@
 package de.heinzenburger.g2_weckmichmal
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import de.heinzenburger.g2_weckmichmal.persistence.AlarmConfiguration
 import de.heinzenburger.g2_weckmichmal.persistence.ApplicationSettings
@@ -20,71 +22,22 @@ import kotlin.concurrent.thread
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        thread {
-            val applicationSettings = ApplicationSettings(this)
-            log.severe(applicationSettings.isApplicationOpenedFirstTime().toString())
-            var settings = SettingsEntity(
-                raplaURL = "https://ulululu"
-            )
-            applicationSettings.saveOrUpdateApplicationSettings(settings)
-            log.severe(applicationSettings.isApplicationOpenedFirstTime().toString())
-
-
-            //Lazy Testing Persistence Functionality
-            val alarmConfiguration = AlarmConfiguration(this)
-            for(config in alarmConfiguration.getAllAlarmConfigurations()!!){
-                config.log()
-            }
-
-            val fixedArrivalTime = LocalTime.parse("20:00:00")
-            val testConfiguration = ConfigurationEntity(
-                name = "!!pineapple",
-                days = setOf<DayOfWeek>(DayOfWeek.MONDAY, DayOfWeek.FRIDAY, DayOfWeek.TUESDAY),
-                fixedArrivalTime = fixedArrivalTime,
-                fixedTravelBuffer = 20,
-                startBuffer = 30,
-                endBuffer = 0,
-                startStation = "Durlach",
-                endStation = "Exmatrikulation"
-            )
-            alarmConfiguration.saveOrUpdate(testConfiguration)
-            alarmConfiguration.getAlarmConfiguration(testConfiguration.uid)?.log()
-            testConfiguration.days = setOf<DayOfWeek>(DayOfWeek.SUNDAY, DayOfWeek.MONDAY)
-            alarmConfiguration.saveOrUpdate(testConfiguration)
-            alarmConfiguration.getAlarmConfiguration(testConfiguration.uid)?.log()
-            for(config in alarmConfiguration.getAllAlarmConfigurations()!!){
-                config.log()
-            }
-            alarmConfiguration.removeAlarmConfiguration(testConfiguration.uid)
-            for(config in alarmConfiguration.getAllAlarmConfigurations()!!){
-                config.log()
-            }
-
-            val event = Event(this)
-            for(config in event.getAllEvents()!!){
-                config.log()
-            }
-
-            val testEntity = EventEntity(
-                configID = testConfiguration.uid,
-                days = testConfiguration.days,
-                wakeUpTime = LocalTime.now(),
-                date = LocalDate.now()
-            )
-            event.saveOrUpdate(testEntity)
-            for(config in event.getAllEvents()!!){
-                config.log()
-            }
-            event.removeEvent(testConfiguration.uid, testConfiguration.days)
-            for(config in event.getAllEvents()!!){
-                config.log()
-            }
-        }
-
         startActivity(Intent(this, WelcomeScreen::class.java))
     }
     companion object{
         val log: Logger = Logger.getLogger(AlarmConfiguration::class.java.name)
+    }
+}
+
+data class Core(
+    val context: Context
+){
+    fun saveRaplaURL(url : String){
+        val applicationSettings = ApplicationSettings(context)
+        val settingsEntity = applicationSettings.getApplicationSettings()
+        settingsEntity.raplaURL = url
+        if(!applicationSettings.saveOrUpdateApplicationSettings(settingsEntity)){
+            Toast.makeText(context, "Etwas ist schiefgelaufen (saveRaplaURL)", Toast.LENGTH_LONG).show()
+        }
     }
 }

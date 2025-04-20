@@ -7,18 +7,14 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import de.heinzenburger.g2_weckmichmal.Core
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
 
 class WelcomeScreen : ComponentActivity() {
@@ -38,14 +35,18 @@ class WelcomeScreen : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             G2_WeckMichMalTheme {
-                Greeting(Modifier = Modifier)
+                Greeting(Modifier = Modifier, this)
             }
         }
+    }
+    fun setURL(text : String){
+        val core = Core(this)
+        core.saveRaplaURL(text)
     }
 }
 
 @Composable
-fun Greeting(Modifier: Modifier) {
+fun Greeting(Modifier: Modifier, parent: WelcomeScreen?) {
     var text by remember { mutableStateOf("https://") }
 
     Column(Modifier
@@ -80,7 +81,7 @@ fun Greeting(Modifier: Modifier) {
             modifier = Modifier.padding(16.dp)
         )
         Button(
-            onClick = { setURL() },
+            onClick = { parent?.setURL(text) },
             colors = ButtonColors(
                 contentColor = MaterialTheme.colorScheme.primary,
                 containerColor = MaterialTheme.colorScheme.onBackground,
@@ -97,7 +98,7 @@ fun Greeting(Modifier: Modifier) {
             )
         }
         Button(
-            onClick = { setURL() },
+            onClick = { parent?.setURL(text) },
             colors = ButtonColors(
                 contentColor = MaterialTheme.colorScheme.primary,
                 containerColor = MaterialTheme.colorScheme.error,
@@ -120,10 +121,9 @@ fun Greeting(Modifier: Modifier) {
 @Composable
 fun GreetingPreview() {
     G2_WeckMichMalTheme {
-        Greeting(Modifier = Modifier)
+        Greeting(
+            Modifier = Modifier,
+            parent = null
+        )
     }
-}
-
-fun setURL(){
-
 }
