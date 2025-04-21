@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.room.ColumnInfo
 import de.heinzenburger.g2_weckmichmal.Core
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
 
@@ -33,23 +35,20 @@ class WelcomeScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val uiActions = UIActions(context = applicationContext)
         setContent {
             G2_WeckMichMalTheme {
-                Greeting(Modifier = Modifier, this)
+                Greeting(modifier = Modifier, uiActions)
             }
         }
-    }
-    fun setURL(text : String){
-        val core = Core(this)
-        core.saveRaplaURL(text)
     }
 }
 
 @Composable
-fun Greeting(Modifier: Modifier, parent: WelcomeScreen?) {
+fun Greeting(modifier: Modifier, uiActions: UIActions?) {
     var text by remember { mutableStateOf("https://") }
 
-    Column(Modifier
+    Column(modifier
         .background(MaterialTheme.colorScheme.background)
         .fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -60,14 +59,14 @@ fun Greeting(Modifier: Modifier, parent: WelcomeScreen?) {
             text = "Willkommen",
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.padding(16.dp)
+            modifier = modifier.padding(16.dp)
         )
         Text(
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.titleSmall,
             text = "Beginne damit, deinen Vorlesungsplan zu hinterlegen",
             color = MaterialTheme.colorScheme.error,
-            modifier = Modifier.padding(16.dp)
+            modifier = modifier.padding(16.dp)
         )
         TextField(
             shape = RoundedCornerShape(8.dp),
@@ -78,39 +77,39 @@ fun Greeting(Modifier: Modifier, parent: WelcomeScreen?) {
                 focusedContainerColor = MaterialTheme.colorScheme.primary,
                 unfocusedContainerColor = MaterialTheme.colorScheme.primary
             ),
-            modifier = Modifier.padding(16.dp)
+            modifier = modifier.padding(16.dp)
         )
         Button(
-            onClick = { parent?.setURL(text) },
+            onClick = { uiActions?.setRaplaURL(text) },
             colors = ButtonColors(
                 contentColor = MaterialTheme.colorScheme.primary,
                 containerColor = MaterialTheme.colorScheme.onBackground,
                 disabledContainerColor = MaterialTheme.colorScheme.error,
                 disabledContentColor = MaterialTheme.colorScheme.error
             ),
-            modifier = Modifier.padding(16.dp)
+            modifier = modifier.padding(16.dp)
         ) {
             Text(
                 text = "Vorlesungsplan speichern",
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(8.dp),
+                modifier = modifier.padding(8.dp),
                 style = MaterialTheme.typography.bodyMedium
             )
         }
         Button(
-            onClick = { parent?.setURL(text) },
+            onClick = { uiActions?.setRaplaURL(text) },
             colors = ButtonColors(
                 contentColor = MaterialTheme.colorScheme.primary,
                 containerColor = MaterialTheme.colorScheme.error,
                 disabledContainerColor = MaterialTheme.colorScheme.error,
                 disabledContentColor = MaterialTheme.colorScheme.error
             ),
-            modifier = Modifier.padding(16.dp)
+            modifier = modifier.padding(16.dp)
         ) {
             Text(
                 text = "Ohne Vorlesungsplan fortfahren",
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(8.dp),
+                modifier = modifier.padding(8.dp),
                 style = MaterialTheme.typography.bodyMedium
             )
         }
@@ -122,8 +121,8 @@ fun Greeting(Modifier: Modifier, parent: WelcomeScreen?) {
 fun GreetingPreview() {
     G2_WeckMichMalTheme {
         Greeting(
-            Modifier = Modifier,
-            parent = null
+            modifier = Modifier,
+            uiActions = null
         )
     }
 }

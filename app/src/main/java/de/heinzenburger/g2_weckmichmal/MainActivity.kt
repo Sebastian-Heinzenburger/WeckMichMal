@@ -11,6 +11,7 @@ import de.heinzenburger.g2_weckmichmal.persistence.Event
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
 import de.heinzenburger.g2_weckmichmal.specifications.EventEntity
 import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity
+import de.heinzenburger.g2_weckmichmal.ui.components.UIActions
 import de.heinzenburger.g2_weckmichmal.ui.components.WelcomeScreen
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -22,7 +23,7 @@ import kotlin.concurrent.thread
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        startActivity(Intent(this, WelcomeScreen::class.java))
+        UIActions(context = applicationContext).setWelcomeScreen()
     }
     companion object{
         val log: Logger = Logger.getLogger(AlarmConfiguration::class.java.name)
