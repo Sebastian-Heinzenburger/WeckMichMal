@@ -108,7 +108,8 @@ class AlarmClockOverviewScreen : ComponentActivity(){
 
 @Composable
 fun AlarmClockOverviewComposable(modifier: Modifier, core: I_Core) {
-    NavBar.NavigationBar(modifier, core, innerAlarmClockOverviewComposable)
+    NavBar.NavigationBar(modifier, core, innerAlarmClockOverviewComposable,
+        AlarmClockOverviewScreen::class)
 }
 
 val innerAlarmClockOverviewComposable : @Composable (PaddingValues, I_Core) -> Unit = { innerPadding: PaddingValues, core: I_Core ->

@@ -11,6 +11,10 @@ import de.heinzenburger.g2_weckmichmal.persistence.Event
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
 import de.heinzenburger.g2_weckmichmal.specifications.EventEntity
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import de.heinzenburger.g2_weckmichmal.ui.components.AlarmClockOverviewComposable
+import de.heinzenburger.g2_weckmichmal.ui.components.AlarmClockOverviewScreen
+import de.heinzenburger.g2_weckmichmal.ui.components.InformationScreen
+import de.heinzenburger.g2_weckmichmal.ui.components.SettingsScreen
 import de.heinzenburger.g2_weckmichmal.ui.components.WelcomeScreen
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -64,7 +68,26 @@ data class Core(
     }
 
     override fun setWelcomeScreen() {
-        var intent = Intent(context, WelcomeScreen::class.java)
+        val intent = Intent(context, WelcomeScreen::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK;
+        context.startActivity(intent)
+    }
+
+    override fun setSettingsScreen() {
+        val intent = Intent(context, SettingsScreen::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK;
+        context.startActivity(intent)
+    }
+
+    override fun setAlarmClockOverviewScreen() {
+        val intent = Intent(context, AlarmClockOverviewScreen::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK;
+        context.startActivity(intent)
+    }
+
+    override fun setInformationScreen() {
+        val intent = Intent(context, InformationScreen::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK;
         context.startActivity(intent)
     }
 }
@@ -106,6 +129,14 @@ class MockupCore : I_Core{
     }
 
     override fun setWelcomeScreen() {
+    }
 
+    override fun setSettingsScreen() {
+    }
+
+    override fun setAlarmClockOverviewScreen() {
+    }
+
+    override fun setInformationScreen() {
     }
 }

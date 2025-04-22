@@ -13,6 +13,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.unit.dp
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import java.lang.reflect.Type
+import kotlin.reflect.KClass
 
 class NavBar : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,9 +24,10 @@ class NavBar : ComponentActivity() {
 
     companion object{
         @Composable
-        fun NavigationBar(modifier: Modifier, core: I_Core, callback: @Composable ((PaddingValues, I_Core) -> Unit)) {
+        fun <T> NavigationBar(modifier: Modifier, core: I_Core, callback: @Composable ((PaddingValues, I_Core) -> Unit), caller : T) {
             val iconSize = 35.dp
             val iconColor = MaterialTheme.colorScheme.primary
+            val iconSelectedColor = MaterialTheme.colorScheme.secondary
             Scaffold(
                 bottomBar = {
                     BottomAppBar(containerColor = MaterialTheme.colorScheme.onPrimary) {
@@ -32,29 +35,27 @@ class NavBar : ComponentActivity() {
                             modifier = Modifier.fillMaxSize(),
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
-                            IconButton(onClick = { /* do something */ }, modifier.size(90.dp)) {
+                            IconButton(onClick = { core.setSettingsScreen() }, modifier.size(90.dp)) {
                                 Icon(Icons.Filled.Settings,
                                     contentDescription = "Localized description",
                                     modifier.size(iconSize),
-                                    tint = iconColor,
-
+                                    tint = if(caller == SettingsScreen::class){iconSelectedColor}else{iconColor},
                                     )
                             }
-                            IconButton(onClick = { /* do something */ }, modifier.size(90.dp)) {
+                            IconButton(onClick = { core.setAlarmClockOverviewScreen() }, modifier.size(90.dp)) {
                                 Icon(
                                     Icons.Filled.AccessAlarm,
                                     contentDescription = "Localized description",
                                     modifier.size(iconSize),
-                                    tint = iconColor,
-                                )
+                                    tint = if(caller == AlarmClockOverviewScreen::class){iconSelectedColor}else{iconColor},
+                                    )
                             }
-                            IconButton(onClick = { /* do something */ }, modifier.size(90.dp)) {
+                            IconButton(onClick = { core.setInformationScreen() }, modifier.size(90.dp)) {
                                 Icon(
                                     Icons.Filled.Info,
                                     contentDescription = "Localized description",
                                     modifier.size(iconSize),
-                                    tint = iconColor,
-
+                                    tint = if(caller == InformationScreen::class){iconSelectedColor}else{iconColor},
                                     )
                             }
                         }

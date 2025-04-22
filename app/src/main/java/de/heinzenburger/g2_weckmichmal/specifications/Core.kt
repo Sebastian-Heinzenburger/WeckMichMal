@@ -7,4 +7,7 @@ interface I_Core{
     fun getAllAlarmConfigurations(): List<ConfigurationEntity>?
     fun getPlannedTimeForAlarmEntity(configurationEntity: ConfigurationEntity) : LocalTime?
     fun setWelcomeScreen()
+    fun setSettingsScreen()
+    fun setAlarmClockOverviewScreen()
+    fun setInformationScreen()
 }

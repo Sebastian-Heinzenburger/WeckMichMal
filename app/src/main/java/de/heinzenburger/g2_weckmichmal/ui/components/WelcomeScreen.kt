@@ -82,7 +82,10 @@ fun Greeting(modifier: Modifier, core: I_Core) {
             modifier = modifier.padding(16.dp)
         )
         Button(
-            onClick = { core.saveRaplaURL(text) },
+            onClick = {
+                core.saveRaplaURL(text)
+                core.setAlarmClockOverviewScreen()
+            },
             colors = ButtonColors(
                 contentColor = MaterialTheme.colorScheme.primary,
                 containerColor = MaterialTheme.colorScheme.onBackground,
@@ -99,7 +102,10 @@ fun Greeting(modifier: Modifier, core: I_Core) {
             )
         }
         Button(
-            onClick = { core.saveRaplaURL("") },
+            onClick = {
+                core.saveRaplaURL("")
+                core.setAlarmClockOverviewScreen()
+            },
             colors = ButtonColors(
                 contentColor = MaterialTheme.colorScheme.primary,
                 containerColor = MaterialTheme.colorScheme.error,

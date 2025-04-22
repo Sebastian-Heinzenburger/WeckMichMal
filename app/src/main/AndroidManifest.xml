@@ -26,6 +26,21 @@
             android:exported="true"
             android:theme="@style/Theme.G2_WeckMichMal">
         </activity>
+        <activity
+            android:name=".ui.components.InformationScreen"
+            android:exported="true"
+            android:theme="@style/Theme.G2_WeckMichMal">
+        </activity>
+        <activity
+            android:name=".ui.components.SettingsScreen"
+            android:exported="true"
+            android:theme="@style/Theme.G2_WeckMichMal">
+        </activity>
+        <activity
+            android:name=".ui.components.AlarmClockOverviewScreen"
+            android:exported="true"
+            android:theme="@style/Theme.G2_WeckMichMal">
+        </activity>
     </application>
 
 </manifest>

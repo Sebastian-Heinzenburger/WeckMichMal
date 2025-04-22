@@ -47,7 +47,7 @@ class SettingsScreen : ComponentActivity() {
 
 @Composable
 fun SettingsComposable(modifier: Modifier, uiActions: I_Core) {
-    NavBar.NavigationBar(modifier, uiActions, innerSettingsComposable)
+    NavBar.NavigationBar(modifier, uiActions, innerSettingsComposable, SettingsScreen::class)
 }
 
 val innerSettingsComposable : @Composable (PaddingValues, I_Core) -> Unit = { innerPadding: PaddingValues, core: I_Core ->
