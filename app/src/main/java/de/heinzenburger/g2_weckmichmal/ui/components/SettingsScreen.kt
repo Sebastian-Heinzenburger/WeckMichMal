@@ -27,27 +27,30 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import de.heinzenburger.g2_weckmichmal.Core
+import de.heinzenburger.g2_weckmichmal.MockupCore
+import de.heinzenburger.g2_weckmichmal.specifications.I_Core
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
 
 class SettingsScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val uiActions = UIActions(context = applicationContext)
+        val core = Core(context = applicationContext)
         setContent {
             G2_WeckMichMalTheme {
-                SettingsComposable(modifier = Modifier, uiActions)
+                SettingsComposable(modifier = Modifier, core)
             }
         }
     }
 }
 
 @Composable
-fun SettingsComposable(modifier: Modifier, uiActions: UIActions?) {
+fun SettingsComposable(modifier: Modifier, uiActions: I_Core) {
     NavBar.NavigationBar(modifier, uiActions, innerSettingsComposable)
 }
 
-val innerSettingsComposable : @Composable (PaddingValues, UIActions?) -> Unit = { innerPadding: PaddingValues, uiActions: UIActions? ->
+val innerSettingsComposable : @Composable (PaddingValues, I_Core) -> Unit = { innerPadding: PaddingValues, core: I_Core ->
     var text by remember { mutableStateOf("https://") }
     Column(
         Modifier
@@ -77,7 +80,7 @@ val innerSettingsComposable : @Composable (PaddingValues, UIActions?) -> Unit = 
                 modifier = Modifier.padding(16.dp)
             )
             Button(
-                onClick = { uiActions?.setRaplaURL(text) },
+                onClick = { core.saveRaplaURL(text) },
                 colors = ButtonColors(
                     contentColor = MaterialTheme.colorScheme.primary,
                     containerColor = MaterialTheme.colorScheme.onBackground,
@@ -101,6 +104,6 @@ val innerSettingsComposable : @Composable (PaddingValues, UIActions?) -> Unit = 
 @Composable
 fun SettingsScreenPreview() {
     G2_WeckMichMalTheme {
-        SettingsComposable(modifier = Modifier, uiActions = null)
+        SettingsComposable(modifier = Modifier, uiActions = MockupCore())
     }
 }

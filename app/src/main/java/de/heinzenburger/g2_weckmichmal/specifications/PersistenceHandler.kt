@@ -50,6 +50,13 @@ interface I_PersistenceSpecification {
     fun getAllEvents(): List<EventEntity>?
 
     /**
+     * Returns the alarm configuration from the persistence layer.
+     *
+     * @return A ConfigurationEntity object representing the saved alarm configuration.
+     */
+    fun getEvent(id: Long, days : Set<DayOfWeek>): EventEntity?
+
+    /**
      * Removes the alarm configuration from the persistence layer.
      *
      * @param id The id of the [ConfigurationEntity] object to be removed from the persistence layer.

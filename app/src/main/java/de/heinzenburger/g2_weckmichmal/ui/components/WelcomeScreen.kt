@@ -29,23 +29,25 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.room.ColumnInfo
 import de.heinzenburger.g2_weckmichmal.Core
+import de.heinzenburger.g2_weckmichmal.MockupCore
+import de.heinzenburger.g2_weckmichmal.specifications.I_Core
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
 
 class WelcomeScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val uiActions = UIActions(context = applicationContext)
+        val core = Core(context = applicationContext)
         setContent {
             G2_WeckMichMalTheme {
-                Greeting(modifier = Modifier, uiActions)
+                Greeting(modifier = Modifier, core)
             }
         }
     }
 }
 
 @Composable
-fun Greeting(modifier: Modifier, uiActions: UIActions?) {
+fun Greeting(modifier: Modifier, core: I_Core) {
     var text by remember { mutableStateOf("https://") }
 
     Column(modifier
@@ -80,7 +82,7 @@ fun Greeting(modifier: Modifier, uiActions: UIActions?) {
             modifier = modifier.padding(16.dp)
         )
         Button(
-            onClick = { uiActions?.setRaplaURL(text) },
+            onClick = { core.saveRaplaURL(text) },
             colors = ButtonColors(
                 contentColor = MaterialTheme.colorScheme.primary,
                 containerColor = MaterialTheme.colorScheme.onBackground,
@@ -97,7 +99,7 @@ fun Greeting(modifier: Modifier, uiActions: UIActions?) {
             )
         }
         Button(
-            onClick = { uiActions?.setRaplaURL(text) },
+            onClick = { core.saveRaplaURL("") },
             colors = ButtonColors(
                 contentColor = MaterialTheme.colorScheme.primary,
                 containerColor = MaterialTheme.colorScheme.error,
@@ -122,7 +124,7 @@ fun GreetingPreview() {
     G2_WeckMichMalTheme {
         Greeting(
             modifier = Modifier,
-            uiActions = null
+            core = MockupCore()
         )
     }
 }

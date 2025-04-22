@@ -45,6 +45,9 @@ abstract class PersistenceClass : I_PersistenceSpecification{
     override fun isApplicationOpenedFirstTime(): Boolean? {
         return null
     }
+    override fun getEvent(id: Long, days: Set<DayOfWeek>): EventEntity? {
+        return null
+    }
 }
 
 public class DateConverter {

@@ -10,35 +10,102 @@ import de.heinzenburger.g2_weckmichmal.persistence.ApplicationSettings
 import de.heinzenburger.g2_weckmichmal.persistence.Event
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
 import de.heinzenburger.g2_weckmichmal.specifications.EventEntity
-import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity
-import de.heinzenburger.g2_weckmichmal.ui.components.UIActions
+import de.heinzenburger.g2_weckmichmal.specifications.I_Core
 import de.heinzenburger.g2_weckmichmal.ui.components.WelcomeScreen
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalTime
-import java.time.format.DateTimeFormatter
 import java.util.logging.Logger
-import kotlin.concurrent.thread
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        UIActions(context = applicationContext).setWelcomeScreen()
+        Core(context = applicationContext).setWelcomeScreen()
     }
     companion object{
         val log: Logger = Logger.getLogger(AlarmConfiguration::class.java.name)
     }
 }
 
+
+/*
+Schön wäre es gewesen, wenn man einmalig irgendwo den Core instanziiert und dann dauernd mit dieser Instanz arbeitet, aber
+das stellt sich als schwer heraus.
+Android UI funktioniert mit Context. Der Context beschreibt die momentan im Vordergrund stehende Komponente.
+Soll eine neue Komponente im Vordergrund stehen, wird der Context weiter gereicht. Aus diesem Grund darf der Context
+nie irgendwo hängen bleiben, wie zum Beispiel als statische Variable. Das Problem bei unserer Architektur ist, dass sogar die
+tiefsten Komponenten wie die Persistenz einen Context brauchen um zu funktionieren. Deswegen braucht unser Core diesen Context.
+Man kann den Core also nicht einmalig instanziieren und dann in eine statische variable klatschen.
+Die zweite Option wäre die Instanz des Cores einfach immer an die Komponente im Vordergrund weiter zu reichen. Aber auch
+das krieg ich nicht hin. Also instanziieren wir momentan den Core jedes Mal neu wenn ein neuer Screen aufgerufen wird. Vielleicht
+ist das auch besser so
+ */
+
+
 data class Core(
     val context: Context
-){
-    fun saveRaplaURL(url : String){
+) : I_Core{
+    override fun saveRaplaURL(url : String){
         val applicationSettings = ApplicationSettings(context)
         val settingsEntity = applicationSettings.getApplicationSettings()
         settingsEntity.raplaURL = url
         if(!applicationSettings.saveOrUpdateApplicationSettings(settingsEntity)){
             Toast.makeText(context, "Etwas ist schiefgelaufen (saveRaplaURL)", Toast.LENGTH_LONG).show()
         }
+    }
+    override fun getAllAlarmConfigurations(): List<ConfigurationEntity>?{
+        val alarmConfiguration = AlarmConfiguration(context)
+        return alarmConfiguration.getAllAlarmConfigurations()
+    }
+    override fun getPlannedTimeForAlarmEntity(configurationEntity: ConfigurationEntity) : LocalTime?{
+        val event = Event(context)
+        return event.getEvent(configurationEntity.uid, configurationEntity.days)?.wakeUpTime
+        return null
+    }
+
+    override fun setWelcomeScreen() {
+        var intent = Intent(context, WelcomeScreen::class.java)
+        context.startActivity(intent)
+    }
+}
+
+
+class MockupCore : I_Core{
+    companion object{
+        val mockupConfigurations = listOf(ConfigurationEntity(
+            uid = 12345,
+            name = "Alarm 1",
+            days = setOf(DayOfWeek.MONDAY, DayOfWeek.SATURDAY),
+            fixedArrivalTime = null,
+            fixedTravelBuffer = null,
+            startBuffer = 20,
+            endBuffer = 10,
+            startStation = "Euro",
+            endStation = "Hochschule"
+        ))
+        val mockupEvents = listOf(EventEntity(
+            configID = 12345,
+            wakeUpTime = LocalTime.NOON,
+            days = setOf(DayOfWeek.MONDAY, DayOfWeek.SATURDAY),
+            date = LocalDate.of(2025,4,20)
+        ))
+    }
+    override fun saveRaplaURL(url : String){
+
+    }
+    override fun getAllAlarmConfigurations(): List<ConfigurationEntity>?{
+        return mockupConfigurations
+    }
+    override fun getPlannedTimeForAlarmEntity(configurationEntity: ConfigurationEntity) : LocalTime?{
+        mockupEvents.forEach {
+            if(it.configID == configurationEntity.uid && it.days == configurationEntity.days){
+                return it.wakeUpTime
+            }
+        }
+        return null
+    }
+
+    override fun setWelcomeScreen() {
+
     }
 }

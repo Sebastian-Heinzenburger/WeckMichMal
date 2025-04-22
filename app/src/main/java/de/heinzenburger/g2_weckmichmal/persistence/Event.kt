@@ -117,4 +117,16 @@ data class Event(
             return false
         }
     }
+
+    override fun getEvent(id: Long, days: Set<DayOfWeek>): EventEntity? {
+        try {
+            return return database.configurationDao().getByIdAndDays(id, DateConverter().fromSetOfDays(days).toString())
+        }
+        catch (e: Exception){
+            MainActivity.log.warning(e.message)
+            e.printStackTrace()
+            return null
+        }
+
+    }
 }

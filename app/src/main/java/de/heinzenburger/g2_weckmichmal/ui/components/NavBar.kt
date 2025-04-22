@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.unit.dp
+import de.heinzenburger.g2_weckmichmal.specifications.I_Core
 
 class NavBar : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -21,7 +22,7 @@ class NavBar : ComponentActivity() {
 
     companion object{
         @Composable
-        fun NavigationBar(modifier: Modifier, uiActions: UIActions?, callback: @Composable ((PaddingValues, UIActions?) -> Unit)) {
+        fun NavigationBar(modifier: Modifier, core: I_Core, callback: @Composable ((PaddingValues, I_Core) -> Unit)) {
             val iconSize = 35.dp
             val iconColor = MaterialTheme.colorScheme.primary
             Scaffold(
@@ -60,7 +61,7 @@ class NavBar : ComponentActivity() {
                     }
                 },
             ) { innerPadding ->
-                callback(innerPadding, uiActions)
+                callback(innerPadding, core)
             }
         }
     }
