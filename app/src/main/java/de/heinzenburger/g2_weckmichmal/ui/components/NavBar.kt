@@ -47,7 +47,7 @@ class NavBar : ComponentActivity() {
                                     Icons.Filled.AccessAlarm,
                                     contentDescription = "Localized description",
                                     modifier.size(iconSize),
-                                    tint = if(caller == AlarmClockOverviewScreen::class){iconSelectedColor}else{iconColor},
+                                    tint = if(caller == AlarmClockOverviewScreen::class || caller == AlarmClockEditScreen::class){iconSelectedColor}else{iconColor},
                                     )
                             }
                             IconButton(onClick = { core.setInformationScreen() }, modifier.size(90.dp)) {

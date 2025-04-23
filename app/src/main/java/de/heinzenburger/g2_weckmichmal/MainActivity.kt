@@ -11,10 +11,7 @@ import kotlin.concurrent.thread
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        thread {
-            MockupCore.insertMockupData(applicationContext)
-        }
-        Core(context = applicationContext).setWelcomeScreen()
+        Core(context = applicationContext).setAlarmClockOverviewScreen()
     }
     companion object{
         val log: Logger = Logger.getLogger(AlarmConfiguration::class.java.name)

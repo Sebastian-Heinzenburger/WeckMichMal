@@ -35,11 +35,11 @@ data class ApplicationSettings (
         val json = if(isApplicationOpenedFirstTime()){
             toJson(SettingsEntity(raplaURL = ""))
         } else{
-            JSONObject(File("settings.json").readText())
+            JSONObject(File(context.filesDir,"settings.json").readText())
         }
         return fromJson(json)
     }
     override fun isApplicationOpenedFirstTime(): Boolean{
-        return File(context.filesDir, "settings.json").exists();
+        return File(context.filesDir, "settings.json").exists()
     }
 }

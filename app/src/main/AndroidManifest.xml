@@ -41,6 +41,11 @@
             android:exported="true"
             android:theme="@style/Theme.G2_WeckMichMal">
         </activity>
+        <activity
+            android:name=".ui.components.AlarmClockEditScreen"
+            android:exported="true"
+            android:theme="@style/Theme.G2_WeckMichMal">
+        </activity>
     </application>
 
 </manifest>

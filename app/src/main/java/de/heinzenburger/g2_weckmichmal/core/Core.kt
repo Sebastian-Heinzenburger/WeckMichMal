@@ -9,11 +9,13 @@ import de.heinzenburger.g2_weckmichmal.persistence.Event
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
 import de.heinzenburger.g2_weckmichmal.specifications.EventEntity
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import de.heinzenburger.g2_weckmichmal.ui.components.AlarmClockEditScreen
 import de.heinzenburger.g2_weckmichmal.ui.components.AlarmClockOverviewScreen
 import de.heinzenburger.g2_weckmichmal.ui.components.InformationScreen
 import de.heinzenburger.g2_weckmichmal.ui.components.SettingsScreen
 import de.heinzenburger.g2_weckmichmal.ui.components.SingleAlarmConfigurationProperties
 import de.heinzenburger.g2_weckmichmal.ui.components.WelcomeScreen
+import java.time.DayOfWeek
 import java.time.LocalTime
 
 data class Core(
@@ -42,6 +44,16 @@ data class Core(
         val alarmConfiguration = AlarmConfiguration(context)
         event.removeEvent(uid)
         alarmConfiguration.removeAlarmConfiguration(uid)
+    }
+
+    override fun saveOrUpdateAlarmConfiguration(configurationEntity: ConfigurationEntity) {
+        val alarmConfiguration = AlarmConfiguration(context)
+        alarmConfiguration.saveOrUpdate(configurationEntity)
+    }
+
+    override fun saveOrUpdateEvent(eventEntity: EventEntity) {
+        val event = Event(context)
+        event.saveOrUpdate(eventEntity)
     }
 
     override fun getAlarmConfigurationProperties(): List<SingleAlarmConfigurationProperties>? {
@@ -85,6 +97,12 @@ data class Core(
 
     override fun setInformationScreen() {
         val intent = Intent(context, InformationScreen::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK;
+        context.startActivity(intent)
+    }
+
+    override fun setAlarmClockEditScreen() {
+        val intent = Intent(context, AlarmClockEditScreen::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK;
         context.startActivity(intent)
     }

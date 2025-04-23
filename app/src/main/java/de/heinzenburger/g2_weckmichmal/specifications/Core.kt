@@ -8,10 +8,13 @@ interface I_Core{
     fun getAllAlarmConfigurations(): List<ConfigurationEntity>?
     fun getAllEvents(): List<EventEntity>?
     fun deleteAlarmConfiguration(uid: Long)
+    fun saveOrUpdateAlarmConfiguration(configuration: ConfigurationEntity)
+    fun saveOrUpdateEvent(event: EventEntity)
     fun getAlarmConfigurationProperties(): List<SingleAlarmConfigurationProperties>?
     fun getPlannedTimeForAlarmEntity(configurationEntity: ConfigurationEntity) : LocalTime?
     fun setWelcomeScreen()
     fun setSettingsScreen()
     fun setAlarmClockOverviewScreen()
     fun setInformationScreen()
+    fun setAlarmClockEditScreen()
 }

@@ -86,6 +86,12 @@ class MockupCore : I_Core {
     override fun deleteAlarmConfiguration(uid: Long) {
     }
 
+    override fun saveOrUpdateAlarmConfiguration(configuration: ConfigurationEntity) {
+    }
+
+    override fun saveOrUpdateEvent(event: EventEntity) {
+    }
+
     override fun getAlarmConfigurationProperties(): List<SingleAlarmConfigurationProperties>? {
         var result = ArrayList<SingleAlarmConfigurationProperties>()
         mockupConfigurations.forEach {
@@ -126,5 +132,9 @@ class MockupCore : I_Core {
     }
 
     override fun setInformationScreen() {
+    }
+
+    override fun setAlarmClockEditScreen() {
+        TODO("Not yet implemented")
     }
 }
