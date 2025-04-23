@@ -62,6 +62,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
     }
 
     companion object{
+        var aPlatypus = true
         val SingleAlarmConfiguration :
                 @Composable (PaddingValues, I_Core, String, Set<DayOfWeek>, Boolean, LocalTime?)
                 -> Unit = { innerPadding: PaddingValues, core: I_Core, name : String,
@@ -147,12 +148,165 @@ class AlarmClockOverviewScreen : ComponentActivity(){
 
                 ){
                     Text(
-                        text = "X",
+                        text = "⨯",
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.background,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyLarge
                     )
                 }
+            }
+        }
+        val APlatypus :
+                @Composable (PaddingValues, I_Core, String, Set<DayOfWeek>, Boolean, LocalTime?)
+                -> Unit = { innerPadding: PaddingValues, core: I_Core, name : String,
+                            days : Set<DayOfWeek>, isActive : Boolean, time : LocalTime? ->
+            var userActivated by remember { mutableStateOf(isActive) }
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy((-18).dp),
+            ){
+                Box(
+                    modifier = Modifier
+                        .align(BiasAlignment.Horizontal(-0.6f))
+                        .zIndex(2f)
+                        .size(50.dp)
+                        .clip(GenericShape { size, _ ->
+                            moveTo(size.width*0.3f, size.height*0.5f)
+                            lineTo(size.width*0.7f, size.height*0.5f)
+                            lineTo(size.width*0.7f, size.height*0.9f)
+                            lineTo(size.width, size.height*0.9f)
+                            lineTo(size.width, size.height)
+                            lineTo(0f, size.height)
+                            lineTo(0f, size.height*0.9f)
+                            lineTo(size.width*0.3f, size.height*0.9f)
+                        })
+                        .background(color = Color(66, 48, 11))
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy((-10).dp)
+                ){
+                    Button(
+                        onClick = {
+                            core.setAlarmClockOverviewScreen()
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            contentColor = MaterialTheme.colorScheme.background,
+                            containerColor = MaterialTheme.colorScheme.secondary,
+                        ),
+                        contentPadding = PaddingValues(0.dp),
+                        modifier = Modifier
+                            .zIndex(1f)
+                            .border(2.dp, Color.Transparent,
+                                RoundedCornerShape(50))
+
+                    ){
+                        Text(
+                            text = "⨯",
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.background,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                    Column(
+                        Modifier
+                            .padding(0.dp, 16.dp)
+                            .clip(RoundedCornerShape(15))
+                            .background(MaterialTheme.colorScheme.onBackground)
+                            .fillMaxWidth(0.8f)
+                    ){
+                        Row(
+                            Modifier
+                                .padding()
+                                .background(Color.Transparent)
+                                .fillMaxWidth(1f)
+                        ) {
+                            Switch(
+                                checked = isActive,
+                                onCheckedChange = { userActivated = it },
+                                enabled = true,
+                                colors = SwitchDefaults.colors(
+                                    checkedBorderColor = MaterialTheme.colorScheme.background,
+                                    uncheckedBorderColor = MaterialTheme.colorScheme.background,
+                                    checkedIconColor = MaterialTheme.colorScheme.primary,
+                                    uncheckedIconColor = MaterialTheme.colorScheme.error
+                                ),
+                                modifier = Modifier.padding(10.dp, 10.dp, 0.dp, 0.dp)
+                            )
+                            Text(
+                                style = MaterialTheme.typography.bodyMedium,
+                                text = name,
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(16.dp, 24.dp, 0.dp, 0.dp)
+                            )
+                        }
+                        Row(
+                            Modifier
+                                .background(Color.Transparent)
+                                .fillMaxWidth(1f)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(2.dp, 0.dp),
+                            ){
+                                days.forEach {
+                                    Text(
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        text = it.name[0] +""+ it.name[1].lowercase(),
+                                        color = MaterialTheme.colorScheme.secondary,
+                                        modifier = Modifier.padding(5.dp, 0.dp, 0.dp, 3.dp),
+                                    )
+                                }
+                            }
+
+                            Text(
+                                style = MaterialTheme.typography.bodySmall,
+                                text = "Geplant um: $time",
+                                textAlign = TextAlign.Right,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(16.dp, 0.dp, 16.dp, 3.dp).fillMaxWidth(1f)
+                            )
+                        }
+                    }
+                    Button(
+                        onClick = {
+                            core.setAlarmClockOverviewScreen()
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(150,100,0),
+                        ),
+                        modifier = Modifier
+                            .zIndex(-1f)
+                            .size(50.dp, 40.dp)
+                            .padding(0.dp,20.dp,0.dp,0.dp)
+
+                    ){
+
+                    }
+                }
+                Box(
+                    modifier = Modifier
+                        .align(BiasAlignment.Horizontal(0f))
+                        .zIndex(2f)
+                        .width(200.dp)
+                        .height(30.dp)
+                        .clip(GenericShape { size, _ ->
+                            moveTo(size.width*0.17f, 0f)
+                            lineTo(size.width*0.17f, size.height)
+                            lineTo(size.width*0.05f, size.height)
+                            lineTo(size.width*0.05f, size.height*0.9f)
+                            lineTo(size.width*0.13f, size.height*0.9f)
+                            lineTo(size.width*0.13f, size.height*0f)
+
+                            moveTo(size.width*0.87f, 0f)
+                            lineTo(size.width*0.87f, size.height)
+                            lineTo(size.width*0.75f, size.height)
+                            lineTo(size.width*0.75f, size.height*0.9f)
+                            lineTo(size.width*0.83f, size.height*0.9f)
+                            lineTo(size.width*0.83f, size.height*0f)
+                        })
+                        .background(color = Color(251, 176, 51))
+                )
             }
         }
     }
@@ -182,10 +336,19 @@ val innerAlarmClockOverviewComposable : @Composable (PaddingValues, I_Core) -> U
             horizontalAlignment = Alignment.CenterHorizontally
         ){
             core.getAllAlarmConfigurations()?.forEach {
-                AlarmClockOverviewScreen.SingleAlarmConfiguration(
-                    innerPadding, core, it.name,
-                    it.days, true, core.getPlannedTimeForAlarmEntity(it)
-                )
+                if(AlarmClockOverviewScreen.aPlatypus){
+                    AlarmClockOverviewScreen.APlatypus(
+                        innerPadding, core, it.name,
+                        it.days, true, core.getPlannedTimeForAlarmEntity(it)
+                    )
+                }
+                else{
+                    AlarmClockOverviewScreen.SingleAlarmConfiguration(
+                        innerPadding, core, it.name,
+                        it.days, true, core.getPlannedTimeForAlarmEntity(it)
+                    )
+                }
+
             }
         }
     }
