@@ -16,6 +16,8 @@ import de.heinzenburger.g2_weckmichmal.MainActivity
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
 import java.time.DayOfWeek
 import java.time.LocalTime
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 data class AlarmConfiguration(
     val context: Context,

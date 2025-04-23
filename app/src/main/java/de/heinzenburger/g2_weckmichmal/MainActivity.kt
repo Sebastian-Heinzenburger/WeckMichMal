@@ -11,19 +11,23 @@ import de.heinzenburger.g2_weckmichmal.persistence.Event
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
 import de.heinzenburger.g2_weckmichmal.specifications.EventEntity
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
-import de.heinzenburger.g2_weckmichmal.ui.components.AlarmClockOverviewComposable
 import de.heinzenburger.g2_weckmichmal.ui.components.AlarmClockOverviewScreen
 import de.heinzenburger.g2_weckmichmal.ui.components.InformationScreen
 import de.heinzenburger.g2_weckmichmal.ui.components.SettingsScreen
+import de.heinzenburger.g2_weckmichmal.ui.components.SingleAlarmConfigurationProperties
 import de.heinzenburger.g2_weckmichmal.ui.components.WelcomeScreen
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalTime
 import java.util.logging.Logger
+import kotlin.concurrent.thread
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        thread {
+            MockupCore.insertMockupData(applicationContext)
+        }
         Core(context = applicationContext).setWelcomeScreen()
     }
     companion object{
@@ -61,10 +65,29 @@ data class Core(
         val alarmConfiguration = AlarmConfiguration(context)
         return alarmConfiguration.getAllAlarmConfigurations()
     }
+
+    override fun getAllEvents(): List<EventEntity>? {
+        val event = Event(context)
+        return event.getAllEvents()
+    }
+
+    override fun getAlarmConfigurationProperties(): List<SingleAlarmConfigurationProperties>? {
+        var result = ArrayList<SingleAlarmConfigurationProperties>()
+        getAllAlarmConfigurations()?.forEach {
+            it.log()
+            result.add(SingleAlarmConfigurationProperties(
+                wakeUpTime = getPlannedTimeForAlarmEntity(it),
+                name = it.name,
+                days = it.days,
+                uid = it.uid
+            ))
+        }
+        return result
+    }
+
     override fun getPlannedTimeForAlarmEntity(configurationEntity: ConfigurationEntity) : LocalTime?{
         val event = Event(context)
         return event.getEvent(configurationEntity.uid, configurationEntity.days)?.wakeUpTime
-        return null
     }
 
     override fun setWelcomeScreen() {
@@ -95,6 +118,16 @@ data class Core(
 
 class MockupCore : I_Core{
     companion object{
+        fun insertMockupData(context: Context){
+            val event = Event(context)
+            val configuration = AlarmConfiguration(context)
+            mockupConfigurations.forEach {
+                configuration.saveOrUpdate(it)
+            }
+            mockupEvents.forEach {
+                event.saveOrUpdate(it)
+            }
+        }
         val mockupConfigurations = listOf(
             ConfigurationEntity(
                 uid = 12345,
@@ -140,6 +173,29 @@ class MockupCore : I_Core{
     override fun getAllAlarmConfigurations(): List<ConfigurationEntity>?{
         return mockupConfigurations
     }
+
+    override fun getAllEvents(): List<EventEntity>? {
+        return mockupEvents
+    }
+
+    override fun getAlarmConfigurationProperties(): List<SingleAlarmConfigurationProperties>? {
+        var result = ArrayList<SingleAlarmConfigurationProperties>()
+        mockupConfigurations.forEach {
+            val config = it
+            mockupEvents.forEach {
+                if(config.days == it.days && config.uid == it.configID){
+                    result.add(SingleAlarmConfigurationProperties(
+                        wakeUpTime = it.wakeUpTime,
+                        name = config.name,
+                        days = config.days,
+                        uid = config.uid
+                    ))
+                }
+            }
+        }
+        return result
+    }
+
     override fun getPlannedTimeForAlarmEntity(configurationEntity: ConfigurationEntity) : LocalTime?{
         mockupEvents.forEach {
             if(it.configID == configurationEntity.uid && it.days == configurationEntity.days){

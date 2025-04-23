@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.expandHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -14,40 +13,42 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxColors
-import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import de.heinzenburger.g2_weckmichmal.Core
 import de.heinzenburger.g2_weckmichmal.MockupCore
+import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
+import de.heinzenburger.g2_weckmichmal.specifications.EventEntity
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
+import kotlinx.coroutines.flow.asFlow
 import java.time.DayOfWeek
 import java.time.LocalTime
+import kotlin.concurrent.thread
 
 class AlarmClockOverviewScreen : ComponentActivity(){
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -279,7 +280,6 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                             .zIndex(-1f)
                             .size(50.dp, 40.dp)
                             .padding(0.dp,20.dp,0.dp,0.dp)
-
                     ){
 
                     }
@@ -318,6 +318,15 @@ fun AlarmClockOverviewComposable(modifier: Modifier, core: I_Core) {
         AlarmClockOverviewScreen::class)
 }
 
+
+var configurationEntities = mutableStateOf(emptyList<SingleAlarmConfigurationProperties>())
+data class SingleAlarmConfigurationProperties(
+    val wakeUpTime: LocalTime?,
+    val name: String,
+    val days: Set<DayOfWeek>,
+    val uid: Long
+)
+
 val innerAlarmClockOverviewComposable : @Composable (PaddingValues, I_Core) -> Unit = { innerPadding: PaddingValues, core: I_Core ->
     Column(
         Modifier
@@ -335,20 +344,22 @@ val innerAlarmClockOverviewComposable : @Composable (PaddingValues, I_Core) -> U
             .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ){
-            core.getAllAlarmConfigurations()?.forEach {
+            configurationEntities.value.forEach {
                 if(AlarmClockOverviewScreen.aPlatypus){
                     AlarmClockOverviewScreen.APlatypus(
                         innerPadding, core, it.name,
-                        it.days, true, core.getPlannedTimeForAlarmEntity(it)
+                        it.days, true, it.wakeUpTime
                     )
                 }
                 else{
                     AlarmClockOverviewScreen.SingleAlarmConfiguration(
                         innerPadding, core, it.name,
-                        it.days, true, core.getPlannedTimeForAlarmEntity(it)
+                        it.days, true, it.wakeUpTime
                     )
                 }
-
+            }
+            thread{
+                configurationEntities.value = core.getAlarmConfigurationProperties()!!
             }
         }
     }

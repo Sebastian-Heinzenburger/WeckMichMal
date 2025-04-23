@@ -58,7 +58,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.androidx.material.icons.extended)
-    val room_version = "2.6.1"
 
     implementation(libs.androidx.room.runtime)
     implementation(libs.material3)
