@@ -39,13 +39,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import de.heinzenburger.g2_weckmichmal.Core
-import de.heinzenburger.g2_weckmichmal.MockupCore
-import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
-import de.heinzenburger.g2_weckmichmal.specifications.EventEntity
+import de.heinzenburger.g2_weckmichmal.core.Core
+import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
-import kotlinx.coroutines.flow.asFlow
 import java.time.DayOfWeek
 import java.time.LocalTime
 import kotlin.concurrent.thread
@@ -63,79 +60,87 @@ class AlarmClockOverviewScreen : ComponentActivity(){
     }
 
     companion object{
-        var aPlatypus = true
-        val SingleAlarmConfiguration :
-                @Composable (PaddingValues, I_Core, String, Set<DayOfWeek>, Boolean, LocalTime?)
-                -> Unit = { innerPadding: PaddingValues, core: I_Core, name : String,
-                            days : Set<DayOfWeek>, isActive : Boolean, time : LocalTime? ->
-            var userActivated by remember { mutableStateOf(isActive) }
+        var aPlatypus = false
 
+        val innerSingleAlarmConfiguration:
+                @Composable (PaddingValues, I_Core, SingleAlarmConfigurationProperties)
+                -> Unit = { innerPadding: PaddingValues, core: I_Core, properties: SingleAlarmConfigurationProperties ->
+            var userActivated by remember { mutableStateOf(properties.active) }
+
+            Column(
+                Modifier
+                    .padding(0.dp, 16.dp)
+                    .clip(RoundedCornerShape(15))
+                    .background(MaterialTheme.colorScheme.onBackground)
+                    .fillMaxWidth(0.8f)
+            ){
+                Row(
+                    Modifier
+                        .padding()
+                        .background(Color.Transparent)
+                        .fillMaxWidth(1f)
+                ) {
+                    Switch(
+                        checked = userActivated,
+                        onCheckedChange = { userActivated = it },
+                        enabled = true,
+                        colors = SwitchDefaults.colors(
+                            checkedBorderColor = MaterialTheme.colorScheme.background,
+                            uncheckedBorderColor = MaterialTheme.colorScheme.background,
+                            checkedIconColor = MaterialTheme.colorScheme.primary,
+                            uncheckedIconColor = MaterialTheme.colorScheme.error
+                        ),
+                        modifier = Modifier.padding(10.dp, 10.dp, 0.dp, 0.dp)
+                    )
+                    Text(
+                        style = MaterialTheme.typography.bodyMedium,
+                        text = properties.name,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(16.dp, 24.dp, 0.dp, 0.dp)
+                    )
+                }
+                Row(
+                    Modifier
+                        .background(Color.Transparent)
+                        .fillMaxWidth(1f)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(2.dp, 0.dp),
+                    ){
+                        properties.days.forEach {
+                            Text(
+                                style = MaterialTheme.typography.bodyMedium,
+                                text = it.name[0] +""+ it.name[1].lowercase(),
+                                color = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.padding(5.dp, 0.dp, 0.dp, 3.dp),
+                            )
+                        }
+                    }
+
+                    Text(
+                        style = MaterialTheme.typography.bodySmall,
+                        text = "Geplant um: ${properties.wakeUpTime}",
+                        textAlign = TextAlign.Right,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(16.dp, 0.dp, 16.dp, 3.dp).fillMaxWidth(1f)
+                    )
+                }
+            }
+        }
+
+        val SingleAlarmConfiguration :
+                @Composable (PaddingValues, I_Core, SingleAlarmConfigurationProperties)
+                -> Unit = { innerPadding: PaddingValues, core: I_Core, properties: SingleAlarmConfigurationProperties ->
             Box(
                 contentAlignment = Alignment.TopEnd
             ){
-                Column(
-                    Modifier
-                        .padding(0.dp, 16.dp)
-                        .clip(RoundedCornerShape(15))
-                        .background(MaterialTheme.colorScheme.onBackground)
-                        .fillMaxWidth(0.8f)
-                ){
-                    Row(
-                        Modifier
-                            .padding()
-                            .background(Color.Transparent)
-                            .fillMaxWidth(1f)
-                    ) {
-                        Switch(
-                            checked = isActive,
-                            onCheckedChange = { userActivated = it },
-                            enabled = true,
-                            colors = SwitchDefaults.colors(
-                                checkedBorderColor = MaterialTheme.colorScheme.background,
-                                uncheckedBorderColor = MaterialTheme.colorScheme.background,
-                                checkedIconColor = MaterialTheme.colorScheme.primary,
-                                uncheckedIconColor = MaterialTheme.colorScheme.error
-                            ),
-                            modifier = Modifier.padding(10.dp, 10.dp, 0.dp, 0.dp)
-                        )
-                        Text(
-                            style = MaterialTheme.typography.bodyMedium,
-                            text = name,
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(16.dp, 24.dp, 0.dp, 0.dp)
-                        )
-                    }
-                    Row(
-                        Modifier
-                            .background(Color.Transparent)
-                            .fillMaxWidth(1f)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(2.dp, 0.dp),
-                        ){
-                            days.forEach {
-                                Text(
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    text = it.name[0] +""+ it.name[1].lowercase(),
-                                    color = MaterialTheme.colorScheme.secondary,
-                                    modifier = Modifier.padding(5.dp, 0.dp, 0.dp, 3.dp),
-                                )
-                            }
-                        }
-
-                        Text(
-                            style = MaterialTheme.typography.bodySmall,
-                            text = "Geplant um: $time",
-                            textAlign = TextAlign.Right,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(16.dp, 0.dp, 16.dp, 3.dp).fillMaxWidth(1f)
-                        )
-                    }
-                }
+                innerSingleAlarmConfiguration(innerPadding, core, properties)
                 Button(
                     onClick = {
-                        core.setAlarmClockOverviewScreen()
+                        thread {
+                            core.deleteAlarmConfiguration(properties.uid)
+                        }
                     },
                     colors = ButtonDefaults.buttonColors(
                         contentColor = MaterialTheme.colorScheme.background,
@@ -157,12 +162,9 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                 }
             }
         }
-        val APlatypus :
-                @Composable (PaddingValues, I_Core, String, Set<DayOfWeek>, Boolean, LocalTime?)
-                -> Unit = { innerPadding: PaddingValues, core: I_Core, name : String,
-                            days : Set<DayOfWeek>, isActive : Boolean, time : LocalTime? ->
-            var userActivated by remember { mutableStateOf(isActive) }
 
+        val APlatypus : @Composable (PaddingValues, I_Core, SingleAlarmConfigurationProperties)
+                -> Unit = { innerPadding: PaddingValues, core: I_Core, properties: SingleAlarmConfigurationProperties ->
             Column(
                 verticalArrangement = Arrangement.spacedBy((-18).dp),
             ){
@@ -189,7 +191,9 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                 ){
                     Button(
                         onClick = {
-                            core.setAlarmClockOverviewScreen()
+                            thread {
+                                core.deleteAlarmConfiguration(properties.uid)
+                            }
                         },
                         colors = ButtonDefaults.buttonColors(
                             contentColor = MaterialTheme.colorScheme.background,
@@ -209,69 +213,12 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }
-                    Column(
-                        Modifier
-                            .padding(0.dp, 16.dp)
-                            .clip(RoundedCornerShape(15))
-                            .background(MaterialTheme.colorScheme.onBackground)
-                            .fillMaxWidth(0.8f)
-                    ){
-                        Row(
-                            Modifier
-                                .padding()
-                                .background(Color.Transparent)
-                                .fillMaxWidth(1f)
-                        ) {
-                            Switch(
-                                checked = isActive,
-                                onCheckedChange = { userActivated = it },
-                                enabled = true,
-                                colors = SwitchDefaults.colors(
-                                    checkedBorderColor = MaterialTheme.colorScheme.background,
-                                    uncheckedBorderColor = MaterialTheme.colorScheme.background,
-                                    checkedIconColor = MaterialTheme.colorScheme.primary,
-                                    uncheckedIconColor = MaterialTheme.colorScheme.error
-                                ),
-                                modifier = Modifier.padding(10.dp, 10.dp, 0.dp, 0.dp)
-                            )
-                            Text(
-                                style = MaterialTheme.typography.bodyMedium,
-                                text = name,
-                                textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(16.dp, 24.dp, 0.dp, 0.dp)
-                            )
-                        }
-                        Row(
-                            Modifier
-                                .background(Color.Transparent)
-                                .fillMaxWidth(1f)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(2.dp, 0.dp),
-                            ){
-                                days.forEach {
-                                    Text(
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        text = it.name[0] +""+ it.name[1].lowercase(),
-                                        color = MaterialTheme.colorScheme.secondary,
-                                        modifier = Modifier.padding(5.dp, 0.dp, 0.dp, 3.dp),
-                                    )
-                                }
-                            }
 
-                            Text(
-                                style = MaterialTheme.typography.bodySmall,
-                                text = "Geplant um: $time",
-                                textAlign = TextAlign.Right,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(16.dp, 0.dp, 16.dp, 3.dp).fillMaxWidth(1f)
-                            )
-                        }
-                    }
+                    innerSingleAlarmConfiguration(innerPadding, core, properties)
+
                     Button(
                         onClick = {
-                            core.setAlarmClockOverviewScreen()
+                            core.setInformationScreen()
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(150,100,0),
@@ -309,12 +256,68 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                 )
             }
         }
+
+        val innerAlarmClockOverviewComposable : @Composable (PaddingValues, I_Core) -> Unit = { innerPadding: PaddingValues, core: I_Core ->
+            Box() {
+                Column(
+                    Modifier
+                        .padding(innerPadding)
+                        .background(MaterialTheme.colorScheme.background)
+                ) {
+                    Text(
+                        style = MaterialTheme.typography.bodyMedium,
+                        text = "Wecker",
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                    Column(
+                        Modifier
+                            .background(MaterialTheme.colorScheme.background)
+                            .fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        configurationEntities.value.forEach {
+                            if (aPlatypus) {
+                                APlatypus(
+                                    innerPadding, core, it
+                                )
+                            } else {
+                                SingleAlarmConfiguration(
+                                    innerPadding, core, it
+                                )
+                            }
+                        }
+                        thread {
+                            configurationEntities.value = core.getAlarmConfigurationProperties()!!
+                        }
+                    }
+                }
+                Button(
+                    onClick = {
+
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        contentColor = MaterialTheme.colorScheme.primary,
+                        containerColor = MaterialTheme.colorScheme.secondary,
+                    ),
+                    contentPadding = PaddingValues(0.dp),
+                    modifier = Modifier
+                        .size(69.dp)
+                        .align(Alignment.TopCenter)
+                        .border(2.dp, Color.Transparent,
+                            RoundedCornerShape(50))
+                ) {
+                    Text(text = "+", style = MaterialTheme.typography.bodyLarge)
+                }
+            }
+        }
     }
 }
 
 @Composable
 fun AlarmClockOverviewComposable(modifier: Modifier, core: I_Core) {
-    NavBar.NavigationBar(modifier, core, innerAlarmClockOverviewComposable,
+    NavBar.NavigationBar(modifier, core, AlarmClockOverviewScreen.innerAlarmClockOverviewComposable,
         AlarmClockOverviewScreen::class)
 }
 
@@ -324,48 +327,9 @@ data class SingleAlarmConfigurationProperties(
     val wakeUpTime: LocalTime?,
     val name: String,
     val days: Set<DayOfWeek>,
-    val uid: Long
+    val uid: Long,
+    val active: Boolean
 )
-
-val innerAlarmClockOverviewComposable : @Composable (PaddingValues, I_Core) -> Unit = { innerPadding: PaddingValues, core: I_Core ->
-    Column(
-        Modifier
-            .padding(innerPadding)
-            .background(MaterialTheme.colorScheme.background)) {
-        Text(
-            style = MaterialTheme.typography.bodyMedium,
-            text = "Wecker",
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(16.dp)
-        )
-        Column(Modifier
-            .background(MaterialTheme.colorScheme.background)
-            .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ){
-            configurationEntities.value.forEach {
-                if(AlarmClockOverviewScreen.aPlatypus){
-                    AlarmClockOverviewScreen.APlatypus(
-                        innerPadding, core, it.name,
-                        it.days, true, it.wakeUpTime
-                    )
-                }
-                else{
-                    AlarmClockOverviewScreen.SingleAlarmConfiguration(
-                        innerPadding, core, it.name,
-                        it.days, true, it.wakeUpTime
-                    )
-                }
-            }
-            thread{
-                configurationEntities.value = core.getAlarmConfigurationProperties()!!
-            }
-        }
-    }
-}
-
-
 
 @Preview(showBackground = true)
 @Composable

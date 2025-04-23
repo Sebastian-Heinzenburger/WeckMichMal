@@ -7,6 +7,7 @@ interface I_Core{
     fun saveRaplaURL(url : String)
     fun getAllAlarmConfigurations(): List<ConfigurationEntity>?
     fun getAllEvents(): List<EventEntity>?
+    fun deleteAlarmConfiguration(uid: Long)
     fun getAlarmConfigurationProperties(): List<SingleAlarmConfigurationProperties>?
     fun getPlannedTimeForAlarmEntity(configurationEntity: ConfigurationEntity) : LocalTime?
     fun setWelcomeScreen()
