@@ -95,23 +95,44 @@ data class Core(
 
 class MockupCore : I_Core{
     companion object{
-        val mockupConfigurations = listOf(ConfigurationEntity(
-            uid = 12345,
-            name = "Alarm 1",
-            days = setOf(DayOfWeek.MONDAY, DayOfWeek.SATURDAY),
-            fixedArrivalTime = null,
-            fixedTravelBuffer = null,
-            startBuffer = 20,
-            endBuffer = 10,
-            startStation = "Euro",
-            endStation = "Hochschule"
-        ))
-        val mockupEvents = listOf(EventEntity(
-            configID = 12345,
-            wakeUpTime = LocalTime.NOON,
-            days = setOf(DayOfWeek.MONDAY, DayOfWeek.SATURDAY),
-            date = LocalDate.of(2025,4,20)
-        ))
+        val mockupConfigurations = listOf(
+            ConfigurationEntity(
+                uid = 12345,
+                name = "Alarm 1",
+                days = setOf(DayOfWeek.MONDAY, DayOfWeek.SATURDAY),
+                fixedArrivalTime = null,
+                fixedTravelBuffer = null,
+                startBuffer = 20,
+                endBuffer = 10,
+                startStation = "Euro",
+                endStation = "Hochschule"
+            ),
+            ConfigurationEntity(
+                uid = 12346,
+                name = "Alarm 2",
+                days = setOf(DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY, DayOfWeek.SUNDAY),
+                fixedArrivalTime = null,
+                fixedTravelBuffer = null,
+                startBuffer = 20,
+                endBuffer = 10,
+                startStation = "Euro",
+                endStation = "Hochschule"
+            )
+        )
+        val mockupEvents = listOf(
+            EventEntity(
+                configID = 12345,
+                wakeUpTime = LocalTime.NOON,
+                days = setOf(DayOfWeek.MONDAY, DayOfWeek.SATURDAY),
+                date = LocalDate.of(2025,4,20)
+            ),
+            EventEntity(
+                configID = 12346,
+                wakeUpTime = LocalTime.of(8, 0),
+                days = setOf(DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY, DayOfWeek.SUNDAY),
+                date = LocalDate.of(2025,4,20)
+            )
+        )
     }
     override fun saveRaplaURL(url : String){
 

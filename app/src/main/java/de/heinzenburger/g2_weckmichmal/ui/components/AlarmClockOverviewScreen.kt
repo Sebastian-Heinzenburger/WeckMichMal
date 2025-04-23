@@ -4,21 +4,29 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxColors
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -29,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -58,47 +67,90 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                 -> Unit = { innerPadding: PaddingValues, core: I_Core, name : String,
                             days : Set<DayOfWeek>, isActive : Boolean, time : LocalTime? ->
             var userActivated by remember { mutableStateOf(isActive) }
-            Column(
-                Modifier
-                    .padding(innerPadding)
-                    .background(MaterialTheme.colorScheme.onBackground)
+
+            Box(
+                contentAlignment = Alignment.TopEnd
             ){
-                Row(
+                Column(
                     Modifier
-                        .padding(innerPadding)
-                        .background(Color.Transparent)) {
-                    Switch(
-                        checked = isActive,
-                        onCheckedChange = { userActivated = it },
-                        enabled = true
-                    )
-                    Text(
-                        style = MaterialTheme.typography.bodyMedium,
-                        text = name,
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
-                Row(
-                    Modifier
-                        .padding(innerPadding)
-                        .background(Color.Transparent)) {
-                    days.forEach {
+                        .padding(0.dp, 16.dp)
+                        .clip(RoundedCornerShape(15))
+                        .background(MaterialTheme.colorScheme.onBackground)
+                        .fillMaxWidth(0.8f)
+                ){
+                    Row(
+                        Modifier
+                            .padding()
+                            .background(Color.Transparent)
+                            .fillMaxWidth(1f)
+                    ) {
+                        Switch(
+                            checked = isActive,
+                            onCheckedChange = { userActivated = it },
+                            enabled = true,
+                            colors = SwitchDefaults.colors(
+                                checkedBorderColor = MaterialTheme.colorScheme.background,
+                                uncheckedBorderColor = MaterialTheme.colorScheme.background,
+                                checkedIconColor = MaterialTheme.colorScheme.primary,
+                                uncheckedIconColor = MaterialTheme.colorScheme.error
+                            ),
+                            modifier = Modifier.padding(10.dp, 10.dp, 0.dp, 0.dp)
+                        )
                         Text(
                             style = MaterialTheme.typography.bodyMedium,
-                            text = it.name.take(2),
+                            text = name,
                             textAlign = TextAlign.Center,
                             color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(16.dp)
+                            modifier = Modifier.padding(16.dp, 24.dp, 0.dp, 0.dp)
                         )
                     }
+                    Row(
+                        Modifier
+                            .background(Color.Transparent)
+                            .fillMaxWidth(1f)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(2.dp, 0.dp),
+                        ){
+                            days.forEach {
+                                Text(
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    text = it.name[0] +""+ it.name[1].lowercase(),
+                                    color = MaterialTheme.colorScheme.secondary,
+                                    modifier = Modifier.padding(5.dp, 0.dp, 0.dp, 3.dp),
+                                )
+                            }
+                        }
+
+                        Text(
+                            style = MaterialTheme.typography.bodySmall,
+                            text = "Geplant um: $time",
+                            textAlign = TextAlign.Right,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(16.dp, 0.dp, 16.dp, 3.dp).fillMaxWidth(1f)
+                        )
+                    }
+                }
+                Button(
+                    onClick = {
+                        core.setAlarmClockOverviewScreen()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        contentColor = MaterialTheme.colorScheme.background,
+                        containerColor = MaterialTheme.colorScheme.secondary,
+                    ),
+                    contentPadding = PaddingValues(0.dp),
+                    modifier = Modifier
+                        .border(2.dp, Color.Transparent,
+                            RoundedCornerShape(50))
+                        .size(40.dp)
+
+                ){
                     Text(
-                        style = MaterialTheme.typography.bodyMedium,
-                        text = time.toString(),
+                        text = "X",
                         textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(16.dp)
+                        color = MaterialTheme.colorScheme.background,
+                        style = MaterialTheme.typography.bodyMedium,
                     )
                 }
             }
@@ -129,7 +181,7 @@ val innerAlarmClockOverviewComposable : @Composable (PaddingValues, I_Core) -> U
             .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ){
-            core?.getAllAlarmConfigurations()?.forEach {
+            core.getAllAlarmConfigurations()?.forEach {
                 AlarmClockOverviewScreen.SingleAlarmConfiguration(
                     innerPadding, core, it.name,
                     it.days, true, core.getPlannedTimeForAlarmEntity(it)
