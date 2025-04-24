@@ -293,6 +293,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                                 )
                             }
                         }
+
                         thread {
                             configurationEntities.value = core.getAlarmConfigurationProperties()!!
                         }

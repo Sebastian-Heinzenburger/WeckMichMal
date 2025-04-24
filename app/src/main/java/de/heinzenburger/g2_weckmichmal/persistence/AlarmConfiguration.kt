@@ -33,35 +33,14 @@ data class AlarmConfiguration(
         fun delete(configuration: ConfigurationEntity)
     }
 
-    @Database(entities = [ConfigurationEntity::class], version = 5)
-    @TypeConverters(DateConverter::class)
-    abstract class AppDatabase : RoomDatabase() {
-        abstract fun configurationDao(): ConfigurationDao
 
-        companion object{
-            @Volatile
-            private var INSTANCE: AppDatabase? = null
-
-            fun getDatabase(context: Context): AppDatabase{
-                return INSTANCE?: synchronized(this){
-                    val instance = Room.databaseBuilder(
-                        context.applicationContext,
-                        AppDatabase::class.java,
-                        "database"
-                    ).fallbackToDestructiveMigration().build()
-                    INSTANCE = instance
-                    instance
-                }
-            }
-        }
-    }
 
     private var database: AppDatabase = AppDatabase.getDatabase(context)
 
     override fun saveOrUpdate(config: ConfigurationEntity): Boolean {
         try {
-            database.configurationDao().deleteById(config.uid)
-            database.configurationDao().insert(config)
+            database.alarmConfigurationDao().deleteById(config.uid)
+            database.alarmConfigurationDao().insert(config)
             return true
         }
         catch (e: Exception){
@@ -73,7 +52,7 @@ data class AlarmConfiguration(
 
     override fun getAlarmConfiguration(id: Long): ConfigurationEntity? {
         try {
-            val result = database.configurationDao().getById(id)
+            val result = database.alarmConfigurationDao().getById(id)
             return result
         }
         catch (e: Exception){
@@ -85,7 +64,7 @@ data class AlarmConfiguration(
 
     override fun getAllAlarmConfigurations(): List<ConfigurationEntity>? {
         try {
-            val result = database.configurationDao().getAll()
+            val result = database.alarmConfigurationDao().getAll()
             return result
         }
         catch (e: Exception){
@@ -97,7 +76,7 @@ data class AlarmConfiguration(
 
     override fun removeAlarmConfiguration(id: Long): Boolean {
         try {
-            database.configurationDao().deleteById(id)
+            database.alarmConfigurationDao().deleteById(id)
             return true
         }
         catch (e: Exception){

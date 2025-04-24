@@ -13,8 +13,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.unit.dp
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
-import java.lang.reflect.Type
-import kotlin.reflect.KClass
 
 class NavBar : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

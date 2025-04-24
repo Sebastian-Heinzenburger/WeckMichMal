@@ -5,6 +5,7 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
+
 android {
     namespace = "de.heinzenburger.g2_weckmichmal"
     compileSdk = 35
@@ -28,6 +29,7 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -38,6 +40,7 @@ android {
     buildFeatures {
         compose = true
     }
+
 }
 
 dependencies {

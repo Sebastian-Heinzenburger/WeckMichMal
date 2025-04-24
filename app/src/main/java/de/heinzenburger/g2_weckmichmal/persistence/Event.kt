@@ -41,37 +41,14 @@ data class Event(
         fun delete(configuration: EventEntity)
     }
 
-    @Database(entities = [EventEntity::class], version = 5)
-    @TypeConverters(DateConverter::class)
-    abstract class AppDatabase : RoomDatabase() {
-        abstract fun configurationDao(): ConfigurationDao
-
-        companion object{
-            @Volatile
-            private var INSTANCE: AppDatabase? = null
-
-            fun getDatabase(context: Context): AppDatabase{
-                return INSTANCE?: synchronized(this){
-                    val instance = Room.databaseBuilder(
-                        context.applicationContext,
-                        AppDatabase::class.java,
-                        "database"
-                    ).fallbackToDestructiveMigration().build()
-                    INSTANCE = instance
-                    instance
-                }
-            }
-        }
-    }
-
     private var database: AppDatabase = AppDatabase.getDatabase(context)
 
     override fun saveOrUpdate(event: EventEntity): Boolean {
         try {
-            database.configurationDao().deleteByIdAndDays(event.configID,
+            database.eventConfigurationDao().deleteByIdAndDays(event.configID,
                 DateConverter().fromSetOfDays(event.days).toString()
             )
-            database.configurationDao().insert(event)
+            database.eventConfigurationDao().insert(event)
             return true
         }
         catch (e: Exception){
@@ -83,7 +60,7 @@ data class Event(
 
     override fun getAllEvents(): List<EventEntity>? {
         try {
-            val result = database.configurationDao().getAll()
+            val result = database.eventConfigurationDao().getAll()
             return result
         }
         catch (e: Exception){
@@ -95,7 +72,7 @@ data class Event(
 
     override fun removeEvent(configID: Long, days: Set<DayOfWeek>): Boolean {
         try {
-            database.configurationDao().deleteByIdAndDays(configID,
+            database.eventConfigurationDao().deleteByIdAndDays(configID,
                 DateConverter().fromSetOfDays(days).toString()
             )
             return true
@@ -108,7 +85,7 @@ data class Event(
     }
     override fun removeEvent(configID: Long): Boolean {
         try {
-            database.configurationDao().deleteById(configID)
+            database.eventConfigurationDao().deleteById(configID)
             return true
         }
         catch (e: Exception){
@@ -120,10 +97,10 @@ data class Event(
 
     override fun getEvent(id: Long, days: Set<DayOfWeek>): EventEntity? {
         try {
-            return database.configurationDao().getByIdAndDays(id, DateConverter().fromSetOfDays(days).toString())
+            return database.eventConfigurationDao().getByIdAndDays(id, DateConverter().fromSetOfDays(days).toString())
         }
         catch (e: Exception){
-            MainActivity.log.warning(e.message)
+            MainActivity.log.severe(e.message)
             e.printStackTrace()
             return null
         }

@@ -1,6 +1,12 @@
 package de.heinzenburger.g2_weckmichmal.persistence
 
+import android.content.Context
+import androidx.room.Database
+import androidx.room.Room
+import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
+import androidx.room.TypeConverters
+import de.heinzenburger.g2_weckmichmal.MainActivity
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
 import de.heinzenburger.g2_weckmichmal.specifications.EventEntity
 import de.heinzenburger.g2_weckmichmal.specifications.I_PersistenceSpecification
@@ -102,7 +108,46 @@ public class DateConverter {
             }
         }
         return result
-
     }
+}
 
+
+@Database(entities = [ConfigurationEntity::class, EventEntity::class], version = 15,exportSchema = true)
+@TypeConverters(DateConverter::class)
+abstract class AppDatabase : RoomDatabase() {
+    abstract fun alarmConfigurationDao(): AlarmConfiguration.ConfigurationDao
+    abstract fun eventConfigurationDao(): Event.ConfigurationDao
+
+    companion object{
+        @Volatile
+        private var INSTANCE: AppDatabase? = null
+
+        fun getDatabase(context: Context): AppDatabase{
+            return INSTANCE?: synchronized(this){
+                val instance = Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "database"
+                ).fallbackToDestructiveMigration().build()
+                INSTANCE = instance
+                instance
+            }
+        }
+        fun logDatabaseSchema(db: RoomDatabase) {
+            val tableCursor = db.query("SELECT name FROM sqlite_master WHERE type='table'", null)
+            while (tableCursor.moveToNext()) {
+                val tableName = tableCursor.getString(0)
+                MainActivity.log.info( "Table: $tableName")
+
+                val columnCursor = db.query("PRAGMA table_info($tableName)", null)
+                while (columnCursor.moveToNext()) {
+                    val columnName = columnCursor.getString(columnCursor.getColumnIndexOrThrow("name"))
+                    val columnType = columnCursor.getString(columnCursor.getColumnIndexOrThrow("type"))
+                    MainActivity.log.info("-- Column: $columnName ($columnType)")
+                }
+                columnCursor.close()
+            }
+            tableCursor.close()
+        }
+    }
 }
