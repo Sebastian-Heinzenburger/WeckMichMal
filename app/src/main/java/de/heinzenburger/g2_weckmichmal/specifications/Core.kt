@@ -5,6 +5,7 @@ import java.time.LocalTime
 
 interface I_Core{
     fun saveRaplaURL(url : String)
+    fun getRaplaURL(): String?
     fun getAllAlarmConfigurations(): List<ConfigurationEntity>?
     fun getAllEvents(): List<EventEntity>?
     fun deleteAlarmConfiguration(uid: Long)

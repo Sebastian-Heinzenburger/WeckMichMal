@@ -1,23 +1,16 @@
 package de.heinzenburger.g2_weckmichmal.persistence
 
 import android.content.Context
-import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Delete
-import androidx.room.Entity
 import androidx.room.Insert
-import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import de.heinzenburger.g2_weckmichmal.MainActivity
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
-import java.time.DayOfWeek
-import java.time.LocalTime
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
 
 data class AlarmConfiguration(
     val context: Context,
@@ -40,7 +33,7 @@ data class AlarmConfiguration(
         fun delete(configuration: ConfigurationEntity)
     }
 
-    @Database(entities = [ConfigurationEntity::class], version = 1)
+    @Database(entities = [ConfigurationEntity::class], version = 5)
     @TypeConverters(DateConverter::class)
     abstract class AppDatabase : RoomDatabase() {
         abstract fun configurationDao(): ConfigurationDao

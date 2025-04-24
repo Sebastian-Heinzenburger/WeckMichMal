@@ -33,7 +33,8 @@ class MockupCore : I_Core {
                 startBuffer = 20,
                 endBuffer = 10,
                 startStation = "Euro",
-                endStation = "Hochschule"
+                endStation = "Hochschule",
+                isActive = true
             ),
             ConfigurationEntity(
                 uid = 12346,
@@ -49,7 +50,8 @@ class MockupCore : I_Core {
                 startBuffer = 20,
                 endBuffer = 10,
                 startStation = "Euro",
-                endStation = "Hochschule"
+                endStation = "Hochschule",
+                isActive = false
             )
         )
         val mockupEvents = listOf(
@@ -75,6 +77,11 @@ class MockupCore : I_Core {
     override fun saveRaplaURL(url : String){
 
     }
+
+    override fun getRaplaURL(): String? {
+        return "https://"
+    }
+
     override fun getAllAlarmConfigurations(): List<ConfigurationEntity>?{
         return mockupConfigurations
     }
@@ -135,6 +142,5 @@ class MockupCore : I_Core {
     }
 
     override fun setAlarmClockEditScreen() {
-        TODO("Not yet implemented")
     }
 }

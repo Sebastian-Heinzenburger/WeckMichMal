@@ -37,6 +37,10 @@ class SettingsScreen : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val core = Core(context = applicationContext)
+        val locUrl = core.getRaplaURL()
+        if(locUrl != null){
+            url.value = locUrl
+        }
         setContent {
             G2_WeckMichMalTheme {
                 SettingsComposable(modifier = Modifier, core)
@@ -50,8 +54,9 @@ fun SettingsComposable(modifier: Modifier, uiActions: I_Core) {
     NavBar.NavigationBar(modifier, uiActions, innerSettingsComposable, SettingsScreen::class)
 }
 
+var url = mutableStateOf("https://")
+
 val innerSettingsComposable : @Composable (PaddingValues, I_Core) -> Unit = { innerPadding: PaddingValues, core: I_Core ->
-    var text by remember { mutableStateOf("https://") }
     Column(
         Modifier
             .padding(innerPadding)
@@ -70,8 +75,8 @@ val innerSettingsComposable : @Composable (PaddingValues, I_Core) -> Unit = { in
         ){
             TextField(
                 shape = RoundedCornerShape(8.dp),
-                value = text,
-                onValueChange = {text = it},
+                value = url.value,
+                onValueChange = {url.value = it},
                 textStyle = MaterialTheme.typography.bodyMedium,
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = MaterialTheme.colorScheme.primary,
@@ -80,7 +85,7 @@ val innerSettingsComposable : @Composable (PaddingValues, I_Core) -> Unit = { in
                 modifier = Modifier.padding(16.dp)
             )
             Button(
-                onClick = { core.saveRaplaURL(text) },
+                onClick = { core.saveRaplaURL(url.value) },
                 colors = ButtonColors(
                     contentColor = MaterialTheme.colorScheme.primary,
                     containerColor = MaterialTheme.colorScheme.onBackground,

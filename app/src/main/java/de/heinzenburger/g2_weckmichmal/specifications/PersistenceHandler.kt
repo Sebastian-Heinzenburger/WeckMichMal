@@ -108,6 +108,7 @@ interface I_PersistenceSpecification {
  * @property endBuffer The time buffer (in minutes) after travel and before the journey ends.
  * @property startStation The DB Navigator conform name of the start station for the journey.
  * @property endStation The DB Navigator conform name of the end station for the journey.
+ * @property isActive Whether the User enabled the Alarm
  */
 @Entity(tableName = "configurationentity")
 data class ConfigurationEntity(
@@ -128,10 +129,12 @@ data class ConfigurationEntity(
     /** The DB Navigator conform name of the start station for the journey. */
     @ColumnInfo(name = "startStation") var startStation: String?,
     /** The DB Navigator conform name of the end station for the journey. */
-    @ColumnInfo(name = "endStation") var endStation: String?
+    @ColumnInfo(name = "endStation") var endStation: String?,
+    /** The DB Navigator conform name of the end station for the journey. */
+    @ColumnInfo(name = "isActive") var isActive: Boolean
 ){
     fun log(){
-        MainActivity.log.info("Logging Alarm configuration with id $uid:\n$name\n$days\n$fixedArrivalTime\n$fixedTravelBuffer\n$startBuffer\n$endBuffer\n$startStation\n$endStation")
+        MainActivity.log.info("Logging Alarm configuration with id $uid:\n$name\n$days\n$fixedArrivalTime\n$fixedTravelBuffer\n$startBuffer\n$endBuffer\n$startStation\n$endStation\n$isActive")
     }
 }
 

@@ -29,6 +29,12 @@ data class Core(
             Toast.makeText(context, "Etwas ist schiefgelaufen (saveRaplaURL)", Toast.LENGTH_LONG).show()
         }
     }
+
+    override fun getRaplaURL(): String? {
+        val applicationSettings = ApplicationSettings(context)
+        return applicationSettings.getApplicationSettings().raplaURL
+    }
+
     override fun getAllAlarmConfigurations(): List<ConfigurationEntity>?{
         val alarmConfiguration = AlarmConfiguration(context)
         return alarmConfiguration.getAllAlarmConfigurations()

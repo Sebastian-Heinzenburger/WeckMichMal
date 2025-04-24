@@ -41,7 +41,7 @@ data class Event(
         fun delete(configuration: EventEntity)
     }
 
-    @Database(entities = [EventEntity::class], version = 2)
+    @Database(entities = [EventEntity::class], version = 5)
     @TypeConverters(DateConverter::class)
     abstract class AppDatabase : RoomDatabase() {
         abstract fun configurationDao(): ConfigurationDao
@@ -120,13 +120,12 @@ data class Event(
 
     override fun getEvent(id: Long, days: Set<DayOfWeek>): EventEntity? {
         try {
-            return return database.configurationDao().getByIdAndDays(id, DateConverter().fromSetOfDays(days).toString())
+            return database.configurationDao().getByIdAndDays(id, DateConverter().fromSetOfDays(days).toString())
         }
         catch (e: Exception){
             MainActivity.log.warning(e.message)
             e.printStackTrace()
             return null
         }
-
     }
 }

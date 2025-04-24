@@ -78,7 +78,8 @@ class AlarmClockEditScreen : ComponentActivity() {
                                     startBuffer = 20,
                                     endBuffer = 30,
                                     startStation = "Hier fang ich an",
-                                    endStation = "Da hör ich auf"
+                                    endStation = "Da hör ich auf",
+                                    isActive = true
                                 )
                                 core.saveOrUpdateAlarmConfiguration(config)
                                 core.saveOrUpdateEvent(EventEntity(

@@ -40,6 +40,6 @@ data class ApplicationSettings (
         return fromJson(json)
     }
     override fun isApplicationOpenedFirstTime(): Boolean{
-        return File(context.filesDir, "settings.json").exists()
+        return !File(context.filesDir, "settings.json").exists()
     }
 }
