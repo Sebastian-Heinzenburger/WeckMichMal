@@ -66,7 +66,11 @@ dependencies {
     implementation(libs.material3)
 
     // ICS parsing lib
-    implementation("org.mnode.ical4j:ical4j:4.1.1")
+    implementation(libs.ical4j)
+
+    testImplementation(libs.junit.jupiter.api)  // JUnit 5
+    testImplementation(libs.junit.jupiter.engine)  // JUnit 5 engine
+    testImplementation(libs.mockito.kotlin)  // Mockito Kotlin for mocking
 
     // Compose UI base dependencies
     implementation(libs.ui)
