@@ -83,6 +83,11 @@ data class Core(
         return event.getEvent(configurationEntity.uid, configurationEntity.days)?.wakeUpTime
     }
 
+    override fun isApplicationOpenedFirstTime(): Boolean? {
+        val alarmConfiguration = AlarmConfiguration(context)
+        return alarmConfiguration.isApplicationOpenedFirstTime()
+    }
+
     override fun setWelcomeScreen() {
         val intent = Intent(context, WelcomeScreen::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK;

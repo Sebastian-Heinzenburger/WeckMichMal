@@ -1,0 +1,63 @@
+@startuml
+    actor User
+    participant ui
+    participant core
+    participant persistence
+    participant wakeupcalculator
+    participant db
+    participant rapla
+    participant sebastian
+    actor os
+
+    User -> ui : 1.öffne app
+    ui -> core : startUpdateScheduler
+    core -> sebastian : startUpdateScheduler
+    sebastian -> os : scheduleUpdateLogic
+    os -> os : backgroundPopup
+
+    ui -> core : isApplicationOpenedFirstTime
+    core -> persistence : isApplicationOpenedFirstTime
+    persistence -> core : True/false
+    core -> ui : True/False
+    ui -> ui : 1.true WelcomeScreen
+    ui -> ui : 1.false AlarmOverview
+
+
+    
+
+    User -> ui : 1.true Input Vorlesungsplan-URL
+    ui -> core : saveRaplaURL
+    core -> persistence : saveOrUpdateApplicationConfiguration
+    persistence -> core : Success/Failure
+    core -> ui : Success/Failure
+    ui -> ui : AlarmOverview/Toastmessage
+
+    User -> ui : 2.a Create Alarm
+    User -> ui : 2.b Edit Alarm
+    ui -> ui : EditAlarm
+    
+
+    User -> ui : Inputs Alarm Parameters
+    ui -> core : generateOrUpdateAlarmConfiguration
+    core -> wakeupcalculator : calculateNextEvent
+    wakeupcalculator -> rapla : Opt fetchCoursesBetween
+    rapla -> wakeupcalculator : List of Courses
+    wakeupcalculator -> db : Opt planRoute
+    db -> wakeupcalculator : List of Routes
+    wakeupcalculator -> core : EventEntity
+    core -> persistence : saveOrUpdate config
+    persistence -> core : Success/Failure
+    core -> persistence : saveOrUpdate event
+    persistence -> core : Success/Failure
+    core -> ui : Success/Failure
+    ui -> ui : AlarmOverview/Toastmessage
+
+    User -> ui : Open AlarmOverview
+    ui -> core : getAlarmConfigurationProperties
+    core -> persistence : getAlarmConfigurations
+    persistence -> core : List of ConfigurationEntities
+    core -> persistence : getEvents
+    persistence -> core : List of EventEntities
+    core -> ui : List of SingleAlarmConfigurationProperties
+    
+@enduml

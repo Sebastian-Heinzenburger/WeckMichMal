@@ -129,6 +129,10 @@ class MockupCore : I_Core {
         return null
     }
 
+    override fun isApplicationOpenedFirstTime(): Boolean? {
+        return true
+    }
+
     override fun setWelcomeScreen() {
     }
 

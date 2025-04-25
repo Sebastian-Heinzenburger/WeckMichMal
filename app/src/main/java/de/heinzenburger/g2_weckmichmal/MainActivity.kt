@@ -9,7 +9,14 @@ import java.util.logging.Logger
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Core(context = applicationContext).setAlarmClockOverviewScreen()
+        val core = Core(context = applicationContext)
+        val isOpenedFirsttime = core.isApplicationOpenedFirstTime()
+        if( isOpenedFirsttime != null && isOpenedFirsttime){
+            core.setWelcomeScreen()
+        }
+        else{
+            core.setAlarmClockOverviewScreen()
+        }
     }
     companion object{
         val log: Logger = Logger.getLogger(AlarmConfiguration::class.java.name)

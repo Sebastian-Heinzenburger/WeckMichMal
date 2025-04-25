@@ -13,6 +13,7 @@ interface I_Core{
     fun saveOrUpdateEvent(event: EventEntity)
     fun getAlarmConfigurationProperties(): List<SingleAlarmConfigurationProperties>?
     fun getPlannedTimeForAlarmEntity(configurationEntity: ConfigurationEntity) : LocalTime?
+    fun isApplicationOpenedFirstTime() : Boolean?
     fun setWelcomeScreen()
     fun setSettingsScreen()
     fun setAlarmClockOverviewScreen()

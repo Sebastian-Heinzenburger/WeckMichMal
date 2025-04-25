@@ -1,0 +1,35 @@
+@startuml
+    actor os
+    participant core
+    participant persistence
+    participant wakeupcalculator
+    participant rapla
+    participant db
+    participant sebastian
+    participant ui
+
+    os -> core : runUpdateLogic
+    core -> persistence : getAllAlarmConfigurations
+    persistence -> core : List of Configuration Entities
+    core -> persistence : getAllEvents
+    persistence -> core : List of Event Entities
+    core -> wakeupcalculator : batchCalculateNextEvents List of Configuration Entities
+    wakeupcalculator -> rapla : Opt batchFetchCoursesBetween
+    rapla -> wakeupcalculator : List of Courses
+    wakeupcalculator -> db : Opt planRoute
+    db -> wakeupcalculator : List of Routes
+    wakeupcalculator -> core : List of EventEntities
+    core -> persistence : saveOrUpdate List of  EventEntities
+    persistence -> core : Success/Failure
+    core -> sebastian : magic temporal next event
+    sebastian -> os : schedule wakeup activity
+    os -> core : runWakeUpLogic 
+    core -> persistence : getTemporalNextEventEntity
+    persistence -> core : EventEntity
+    core -> ui : setWakeUpScreen
+    
+
+    
+
+
+@enduml
