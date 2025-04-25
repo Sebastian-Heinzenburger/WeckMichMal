@@ -18,27 +18,29 @@ interface I_WakeUpCalculationSpecification {
     @Throws(Exception::class)
     fun calculateNextEvent(configuration: ConfigurationEntity): EventEntity
 
-    /**
-     * Computes an [EventEntity] for a specific [DayOfWeek] based on the provided [ConfigurationEntity].
-     *
-     * @param configuration The [ConfigurationEntity] that contains the settings for the alarm,
-     * including time buffers, stations, and other parameters influencing the event's calculation.
-     * @param day The [DayOfWeek] for which the event should be computed.
-     * @return The calculated [EventEntity] for the specified day.
-     * @throws Exception if the calculation fails due to invalid configuration or other issues.
-     */
-    @Throws(Exception::class)
-    fun calculateEventForDay(configuration: ConfigurationEntity, day: DayOfWeek): EventEntity
+//    /**
+//     * Computes an [EventEntity] for a specific [DayOfWeek] based on the provided [ConfigurationEntity].
+//     *
+//     * @param configuration The [ConfigurationEntity] that contains the settings for the alarm,
+//     * including time buffers, stations, and other parameters influencing the event's calculation.
+//     * @param day The [DayOfWeek] for which the event should be computed.
+//     * @return The calculated [EventEntity] for the specified day.
+//     * @throws Exception if the calculation fails due to invalid configuration or other issues.
+//     */
+//    @Throws(Exception::class)
+//    fun calculateEventForDay(configuration: ConfigurationEntity, day: DayOfWeek): EventEntity
+//
+//    /**
+//     * Computes an [EventEntity] for a specific calendar date based on the provided [ConfigurationEntity].
+//     *
+//     * @param configuration The [ConfigurationEntity] that contains the settings for the alarm,
+//     * including time buffers, stations, and other parameters influencing the event's calculation.
+//     * @param date The [LocalDate] for which the event should be computed.
+//     * @return The calculated [EventEntity] for the specified date.
+//     * @throws Exception if the calculation fails due to invalid configuration or other issues.
+//     */
+//    @Throws(Exception::class)
+//    fun calculateEventForDate(configuration: ConfigurationEntity, date: LocalDate): EventEntity
 
-    /**
-     * Computes an [EventEntity] for a specific calendar date based on the provided [ConfigurationEntity].
-     *
-     * @param configuration The [ConfigurationEntity] that contains the settings for the alarm,
-     * including time buffers, stations, and other parameters influencing the event's calculation.
-     * @param date The [LocalDate] for which the event should be computed.
-     * @return The calculated [EventEntity] for the specified date.
-     * @throws Exception if the calculation fails due to invalid configuration or other issues.
-     */
-    @Throws(Exception::class)
-    fun calculateEventForDate(configuration: ConfigurationEntity, date: LocalDate): EventEntity
+    fun batchCalculateNextEvent(configurations: List<ConfigurationEntity>): List<EventEntity>
 }

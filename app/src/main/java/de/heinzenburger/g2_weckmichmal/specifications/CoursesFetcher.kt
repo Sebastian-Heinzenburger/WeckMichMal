@@ -1,6 +1,7 @@
 package de.heinzenburger.g2_weckmichmal.specifications
 
 import java.time.LocalDateTime
+import java.time.temporal.Temporal
 
 /**
  * Interface defining the behavior for fetching courses.
@@ -15,7 +16,29 @@ interface I_CoursesFetcherSpecification {
      * @return A list of [Course] objects representing the courses within the specified time range.
      */
     @Throws(Exception::class)
-    fun fetchCoursesBetween(start: LocalDateTime, end: LocalDateTime): List<Course>
+    fun fetchCoursesBetween(period: Period): List<Course>
+
+
+    fun batchFetchCoursesBetween(periods: List<BatchTuple<Period>>): List<BatchTuple<List<Course>>>
+}
+
+data class BatchTuple<T> (
+    val id: Long,
+    val value: T
+) {
+    fun isSameBatch(otherTuple: BatchTuple<*>): Boolean {
+        return id  == otherTuple.id
+    }
+}
+
+
+data class Period (
+    val start: LocalDateTime,
+    val end: LocalDateTime
+) {
+    fun toCalPeriod(): net.fortuna.ical4j.model.Period<Temporal> {
+        return net.fortuna.ical4j.model.Period(start, end)
+    }
 }
 
 /**

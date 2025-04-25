@@ -1,9 +1,10 @@
 package de.heinzenburger.g2_weckmichmal.api.rapla
 
+import de.heinzenburger.g2_weckmichmal.specifications.BatchTuple
 import de.heinzenburger.g2_weckmichmal.specifications.Course
 import de.heinzenburger.g2_weckmichmal.specifications.I_CoursesFetcherSpecification
+import de.heinzenburger.g2_weckmichmal.specifications.Period
 import net.fortuna.ical4j.data.CalendarBuilder
-import net.fortuna.ical4j.model.Period
 import net.fortuna.ical4j.model.property.Attendee
 import net.fortuna.ical4j.model.component.VEvent
 import net.fortuna.ical4j.model.parameter.Cn
@@ -17,31 +18,46 @@ import java.net.URL
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZonedDateTime
-import java.time.temporal.Temporal
+import kotlin.collections.map
 import kotlin.jvm.optionals.getOrNull
 
 class CoursesFetcher(private val raplaUrl: URL): I_CoursesFetcherSpecification {
 
-    private val VALID_CATEGORIES = setOf<String>("Prüfung", "Lehrveranstaltung");
+    private val validCategories = setOf<String>("Prüfung", "Lehrveranstaltung");
 
     @Throws(Exception::class)
     override fun fetchCoursesBetween(
-        start: LocalDateTime,
-        end: LocalDateTime
+        period: Period
     ): List<Course> {
-        val inputStreamRapla = fetchRapla();
-        if(inputStreamRapla == null) return throw Exception("Could not load RAPLA");
+        val inputStreamRAPLA = fetchRapla()?: throw Exception("Could not load RAPLA");
 
-        val validPeriod = Period<Temporal>(start, end);
-
-        val icalBuilder = CalendarBuilder();
-        return icalBuilder
-            .build(inputStreamRapla)
+        return CalendarBuilder()
+            .build(inputStreamRAPLA)
             .getComponents<VEvent>("VEVENT")
-            .filter { c -> eventInCategory(c, VALID_CATEGORIES) }
-            .map { c -> c.getOccurrences(validPeriod) }
+            .filter { c -> eventInCategory(c, validCategories) }
+            .map { c -> c.getOccurrences(period.toCalPeriod()) }
             .flatten().mapNotNull { c -> eventToCourse(c) }
             .toList()
+    }
+
+    override fun batchFetchCoursesBetween(periods: List<BatchTuple<Period>>): List<BatchTuple<List<Course>>> {
+        val inputStreamRAPLA = fetchRapla()?: throw Exception("Could not load RAPLA");
+
+        val validEvents = CalendarBuilder()
+            .build(inputStreamRAPLA)
+            .getComponents<VEvent>("VEVENT")
+            .filter { c -> eventInCategory(c, validCategories) }
+            .filterNotNull();
+
+        return periods.map { batchEntry ->
+            BatchTuple(
+                batchEntry.id,
+                validEvents
+                    .map { c -> c.getOccurrences(batchEntry.value.toCalPeriod()) }
+                    .flatten().mapNotNull { c -> eventToCourse(c) }
+                    .toList()
+            )
+        }
     }
 
     fun eventToCourse(e: VEvent): Course? {
@@ -93,20 +109,8 @@ class CoursesFetcher(private val raplaUrl: URL): I_CoursesFetcherSpecification {
     fun fetchRapla(): InputStream? {
         return try{
             raplaUrl.openConnection().inputStream
-        } catch (e: Error) {
+        } catch (_: Error) {
             return null;
         }
     }
 }
-
-
-fun main() {
-    val url = URL("https://rapla.dhbw-karlsruhe.de/rapla?page=ical&user=ritterbusch&file=TINF23BN2")
-    val fetcher = CoursesFetcher (url)
-    val start = LocalDateTime.now();
-    val end = LocalDateTime.now().plusDays(5)
-
-    fetcher.fetchCoursesBetween(start, end).forEach { e -> println(e) }
-}
-
-
