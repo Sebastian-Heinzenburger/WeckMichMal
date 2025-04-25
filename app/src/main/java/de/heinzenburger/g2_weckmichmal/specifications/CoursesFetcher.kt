@@ -14,6 +14,7 @@ interface I_CoursesFetcherSpecification {
      * @param end The end date and time of the time range.
      * @return A list of [Course] objects representing the courses within the specified time range.
      */
+    @Throws(Exception::class)
     fun fetchCoursesBetween(start: LocalDateTime, end: LocalDateTime): List<Course>
 }
 
@@ -29,13 +30,13 @@ interface I_CoursesFetcherSpecification {
 data class Course (
 
     /** Name of the Course */
-    val name: String,
+    val name: String?,
 
     /** Name of the Lecturer */
-    val lecturer: String,
+    val lecturer: String?,
 
     /** Room number of the Course */
-    val room: String,
+    val room: String?,
 
     /** Date and Time at which the course starts */
     val startDate: LocalDateTime,
