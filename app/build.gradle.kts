@@ -65,6 +65,9 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.material3)
 
+    // ICS parsing lib
+    implementation("org.mnode.ical4j:ical4j:4.1.1")
+
     // Compose UI base dependencies
     implementation(libs.ui)
     implementation(libs.androidx.material)
