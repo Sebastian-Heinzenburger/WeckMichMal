@@ -84,23 +84,14 @@ class AlarmClockEditScreen : ComponentActivity() {
                     Button(
                         onClick = {
                             thread{
-                                val config = ConfigurationEntity(
-                                    name = "Test",
-                                    days = setOf(DayOfWeek.THURSDAY, DayOfWeek.TUESDAY),
-                                    fixedArrivalTime = null,
-                                    fixedTravelBuffer = null,
-                                    startBuffer = 20,
-                                    endBuffer = 30,
-                                    startStation = "Hier fang ich an",
-                                    endStation = "Da hör ich auf",
-                                    isActive = true
-                                )
-                                core.saveOrUpdateAlarmConfiguration(config)
+                                core.saveOrUpdateAlarmConfiguration(configurationEntity)
                                 core.saveOrUpdateEvent(EventEntity(
-                                    configID = config.uid,
+                                    configID = configurationEntity.uid,
                                     wakeUpTime = LocalTime.NOON,
-                                    days = config.days,
-                                    date = LocalDate.now()
+                                    days = configurationEntity.days,
+                                    date = LocalDate.now(),
+                                    courses = EventEntity.emptyEvent.courses,
+                                    routes = EventEntity.emptyEvent.routes
                                 ))
                                 core.setAlarmClockOverviewScreen()
                             }

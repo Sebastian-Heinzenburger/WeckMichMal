@@ -7,11 +7,21 @@ import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
 import de.heinzenburger.g2_weckmichmal.specifications.EventEntity
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
 import de.heinzenburger.g2_weckmichmal.ui.components.SingleAlarmConfigurationProperties
-import java.time.DayOfWeek
-import java.time.LocalDate
 import java.time.LocalTime
 
 class MockupCore : I_Core {
+    override fun runUpdateLogic() {
+    }
+
+    override fun runWakeUpLogic() {
+    }
+
+    override fun startUpdateScheduler() {
+    }
+
+    override fun generateOrUpdateAlarmConfiguration() {
+    }
+
     companion object{
         fun insertMockupData(context: Context){
             val event = Event(context)
@@ -23,56 +33,8 @@ class MockupCore : I_Core {
                 event.saveOrUpdate(it)
             }
         }
-        val mockupConfigurations = listOf(
-            ConfigurationEntity(
-                uid = 12345,
-                name = "Alarm 1",
-                days = setOf(DayOfWeek.MONDAY, DayOfWeek.SATURDAY),
-                fixedArrivalTime = null,
-                fixedTravelBuffer = null,
-                startBuffer = 20,
-                endBuffer = 10,
-                startStation = "Euro",
-                endStation = "Hochschule",
-                isActive = true
-            ),
-            ConfigurationEntity(
-                uid = 12346,
-                name = "Alarm 2",
-                days = setOf(
-                    DayOfWeek.THURSDAY,
-                    DayOfWeek.FRIDAY,
-                    DayOfWeek.SATURDAY,
-                    DayOfWeek.SUNDAY
-                ),
-                fixedArrivalTime = null,
-                fixedTravelBuffer = null,
-                startBuffer = 20,
-                endBuffer = 10,
-                startStation = "Euro",
-                endStation = "Hochschule",
-                isActive = false
-            )
-        )
-        val mockupEvents = listOf(
-            EventEntity(
-                configID = 12345,
-                wakeUpTime = LocalTime.NOON,
-                days = setOf(DayOfWeek.MONDAY, DayOfWeek.SATURDAY),
-                date = LocalDate.of(2025, 4, 20)
-            ),
-            EventEntity(
-                configID = 12346,
-                wakeUpTime = LocalTime.of(8, 0),
-                days = setOf(
-                    DayOfWeek.THURSDAY,
-                    DayOfWeek.FRIDAY,
-                    DayOfWeek.SATURDAY,
-                    DayOfWeek.SUNDAY
-                ),
-                date = LocalDate.of(2025, 4, 20)
-            )
-        )
+        val mockupConfigurations = listOf(ConfigurationEntity.emptyConfiguration)
+        val mockupEvents = listOf(EventEntity.emptyEvent)
     }
     override fun saveRaplaURL(url : String){
 

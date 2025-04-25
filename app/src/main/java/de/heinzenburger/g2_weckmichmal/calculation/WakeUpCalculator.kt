@@ -58,7 +58,9 @@ class WakeUpCalculator(
             configID = config.uid,
             wakeUpTime = wakeUpTime.toLocalTime(),
             date = date,
-            days = config.days
+            days = config.days,
+            courses = null,
+            routes = null
         )
     }
 

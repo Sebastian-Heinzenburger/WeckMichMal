@@ -4,6 +4,13 @@ import de.heinzenburger.g2_weckmichmal.ui.components.SingleAlarmConfigurationPro
 import java.time.LocalTime
 
 interface I_Core{
+    /*
+    Does not have any state, needs context as parameter
+     */
+    fun runUpdateLogic()
+    fun runWakeUpLogic()
+    fun startUpdateScheduler()
+    fun generateOrUpdateAlarmConfiguration()
     fun saveRaplaURL(url : String)
     fun getRaplaURL(): String?
     fun getAllAlarmConfigurations(): List<ConfigurationEntity>?
