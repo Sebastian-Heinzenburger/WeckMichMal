@@ -8,13 +8,19 @@ import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import de.heinzenburger.g2_weckmichmal.MainActivity
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
+import de.heinzenburger.g2_weckmichmal.specifications.Course
 import de.heinzenburger.g2_weckmichmal.specifications.EventEntity
 import de.heinzenburger.g2_weckmichmal.specifications.I_PersistenceSpecification
+import de.heinzenburger.g2_weckmichmal.specifications.Route
+import de.heinzenburger.g2_weckmichmal.specifications.RouteSection
 import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity
+import org.json.JSONArray
+import org.json.JSONObject
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 
 abstract class PersistenceClass : I_PersistenceSpecification{
@@ -56,7 +62,11 @@ abstract class PersistenceClass : I_PersistenceSpecification{
     }
 }
 
-public class DateConverter {
+public class DataConverter {
+    companion object {
+        val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
+    }
+
     @TypeConverter
     fun toLocalDate(dateLong: Long?): LocalDate? {
         return if (dateLong == null) {
@@ -82,7 +92,6 @@ public class DateConverter {
     fun fromLocalTime(time: LocalTime?): Long? {
         return time?.toNanoOfDay()
     }
-
     @TypeConverter
     fun toSetOfDays(stringDays: String?): Set<DayOfWeek>? {
         if (stringDays == null) {
@@ -109,11 +118,113 @@ public class DateConverter {
         }
         return result
     }
+    @TypeConverter
+    fun fromListOfCourses(courses: List<Course>?): String?{
+        if(courses != null){
+            var result = JSONArray()
+            courses.forEach {
+                var course = JSONObject()
+                course.put("name",it.name)
+                course.put("lecturer",it.lecturer)
+                course.put("room",it.room)
+                course.put("startDate",it.startDate)
+                course.put("endDate",it.endDate)
+                result.put(course)
+            }
+            return result.toString()
+        }
+        else {
+            return null
+        }
+    }
+    @TypeConverter
+    fun toListOfCourses(courses: String?): List<Course>?{
+        if(courses != null){
+
+            var result = mutableListOf<Course>()
+            var array = JSONArray(courses)
+            for (i in 0 until array.length()) {
+                val jsonObject = array.getJSONObject(i)
+                MainActivity.log.severe(jsonObject.get("startDate") as String)
+                result.add(Course(
+                    name = jsonObject.getString("name"),
+                    lecturer = jsonObject.getString("lecturer"),
+                    room = jsonObject.getString("room"),
+                    startDate = LocalDateTime.parse(jsonObject.getString("startDate"), formatter),
+                    endDate = LocalDateTime.parse(jsonObject.getString("endDate"), formatter),
+                ))
+            }
+            return result
+        }
+        return null
+    }
+    @TypeConverter
+    fun fromListOfRoutes(routes: List<Route>?): String?{
+        if(routes != null){
+            var result = JSONArray()
+            routes.forEach {
+                var course = JSONObject()
+                course.put("startStation",it.startStation)
+                course.put("endStation",it.endStation)
+                course.put("startTime",it.startTime)
+                course.put("endTime",it.endTime)
+                var sections = JSONArray()
+                it.sections.forEach {
+                    var section = JSONObject()
+                    section.put("vehicleName",it.vehicleName)
+                    section.put("startTime",it.startTime)
+                    section.put("endTime",it.endTime)
+                    section.put("startStation",it.startStation)
+                    section.put("endStation",it.endStation)
+                    sections.put(section)
+                }
+                course.put("sections",sections)
+                result.put(course)
+            }
+            return result.toString()
+        }
+        else{
+            return null
+        }
+
+    }
+    @TypeConverter
+    fun toListOfRoutes(routes: String?): List<Route>?{
+        if(routes != null){
+            var result = mutableListOf<Route>()
+            var array = JSONArray(routes)
+            for (i in 0 until array.length()) {
+                val jsonObject = array.getJSONObject(i)
+                val sections = mutableListOf<RouteSection>()
+                val sectionsArray = jsonObject.getJSONArray("sections")
+                for (j in 0 until sectionsArray.length()) {
+                    val sectionJSONObject = sectionsArray.getJSONObject(j)
+                    sections.add(RouteSection(
+                        vehicleName = sectionJSONObject.getString("vehicleName"),
+                        startTime = LocalDateTime.parse(jsonObject.getString("startTime"), formatter),
+                        startStation = sectionJSONObject.getString("startStation"),
+                        endTime = LocalDateTime.parse(jsonObject.getString("endTime"), formatter),
+                        endStation = sectionJSONObject.getString("endStation"),
+                    ))
+                }
+                result.add(Route(
+                    startStation = jsonObject.getString("startStation"),
+                    endStation = jsonObject.getString("endStation"),
+                    startTime = LocalDateTime.parse(jsonObject.getString("startTime"), formatter),
+                    endTime = LocalDateTime.parse(jsonObject.getString("endTime"), formatter),
+                    sections = sections
+                ))
+            }
+            return result
+        }
+        else{
+            return null
+        }
+    }
 }
 
-
-@Database(entities = [ConfigurationEntity::class, EventEntity::class], version = 15,exportSchema = true)
-@TypeConverters(DateConverter::class)
+@Database(entities = [ConfigurationEntity::class, EventEntity::class], version = 16,exportSchema = true)
+@TypeConverters(DataConverter::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun alarmConfigurationDao(): AlarmConfiguration.ConfigurationDao
     abstract fun eventConfigurationDao(): Event.ConfigurationDao

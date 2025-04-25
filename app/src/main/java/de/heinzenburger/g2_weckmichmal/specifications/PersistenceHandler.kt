@@ -4,10 +4,10 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import de.heinzenburger.g2_weckmichmal.MainActivity
-import de.heinzenburger.g2_weckmichmal.persistence.AlarmConfiguration
-import de.heinzenburger.g2_weckmichmal.persistence.Event
+import de.heinzenburger.g2_weckmichmal.persistence.DataConverter
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 
 /**
@@ -131,10 +131,24 @@ data class ConfigurationEntity(
     /** The DB Navigator conform name of the end station for the journey. */
     @ColumnInfo(name = "endStation") var endStation: String?,
     /** The DB Navigator conform name of the end station for the journey. */
-    @ColumnInfo(name = "isActive") var isActive: Boolean
+    @ColumnInfo(name = "isActive") var isActive: Boolean,
 ){
     fun log(){
         MainActivity.log.info("Logging Alarm configuration with id $uid:\n$name\n$days\n$fixedArrivalTime\n$fixedTravelBuffer\n$startBuffer\n$endBuffer\n$startStation\n$endStation\n$isActive")
+    }
+    companion object{
+        val emptyConfiguration = ConfigurationEntity(
+            uid = 0,
+            name = "",
+            days = setOf(DayOfWeek.MONDAY),
+            fixedArrivalTime = null,
+            fixedTravelBuffer = null,
+            startBuffer = 0,
+            endBuffer = 0,
+            startStation = "",
+            endStation = "",
+            isActive = true
+        )
     }
 }
 
@@ -144,20 +158,55 @@ data class ConfigurationEntity(
  * @property wakeUpTime The time to ring the alarm, calculated based on the alarm configuration.
  * @property days A set of [DayOfWeek] elements representing the days selected for the configuration.
  * @property date The specific date this event references.
+ * @property courses The courses following this day.
+ * @property routes The specific date this event references.
  */
-@Entity(tableName = "evententity", primaryKeys = ["configID","days"])
+@Entity(tableName = "evententity")
 data class EventEntity(
     /** The unique identifier of the corresponding alarm configuration. */
-    @ColumnInfo(name = "configID") var configID: Long,
+    @PrimaryKey val configID: Long,
     /** The time to ring the alarm, calculated based on the alarm configuration. */
     @ColumnInfo(name = "wakeuptime") var wakeUpTime: LocalTime,
     /** A set of [DayOfWeek] elements representing the days selected for the configuration. */
     @ColumnInfo(name = "days") var days: Set<DayOfWeek>,
     /** The specific date this event references. */
-    @ColumnInfo(name = "date") var date: LocalDate
+    @ColumnInfo(name = "date") var date: LocalDate,
+    /** The courses following this day. */
+    @ColumnInfo(name = "courses") var courses: List<Course>?,
+    /** The specific date this event references. */
+    @ColumnInfo(name = "routes") var routes: List<Route>?
 ){
     fun log(){
-        MainActivity.log.info("Logging Event with id $configID:\n$wakeUpTime\n$days\n$date")
+        MainActivity.log.info("Logging Event with id $configID:\n$wakeUpTime\n$days\n$date\n${DataConverter().fromListOfCourses(courses)}\n${
+            DataConverter().fromListOfRoutes(routes)}")
+    }
+    companion object{
+        val emptyEvent = EventEntity(
+            configID = 0,
+            wakeUpTime = LocalTime.NOON,
+            days = emptySet(),
+            date = LocalDate.of(2025,1,1),
+            courses = listOf(Course(
+                name = "",
+                lecturer = "",
+                room = "",
+                startDate = LocalDateTime.of(2025,1,1,12,0),
+                endDate = LocalDateTime.of(2025,1,1,12,0)
+            )),
+            routes = listOf(Route(
+                startStation = "",
+                endStation = "",
+                startTime = LocalDateTime.of(2025,1,1,12,0),
+                endTime = LocalDateTime.of(2025,1,1,12,0),
+                sections = listOf(RouteSection(
+                    vehicleName = "",
+                    startTime = LocalDateTime.of(2025,1,1,12,0),
+                    startStation = "",
+                    endTime = LocalDateTime.of(2025,1,1,12,0),
+                    endStation = ""
+                ))
+            ))
+        )
     }
 }
 

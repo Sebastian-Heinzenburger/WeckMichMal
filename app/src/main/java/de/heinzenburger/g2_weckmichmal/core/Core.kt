@@ -21,6 +21,22 @@ import java.time.LocalTime
 data class Core(
     val context: Context
 ) : I_Core {
+    override fun runUpdateLogic() {
+        TODO("Not yet implemented")
+    }
+
+    override fun runWakeUpLogic() {
+        TODO("Not yet implemented")
+    }
+
+    override fun startUpdateScheduler() {
+        TODO("Not yet implemented")
+    }
+
+    override fun generateOrUpdateAlarmConfiguration() {
+        TODO("Not yet implemented")
+    }
+
     override fun saveRaplaURL(url : String){
         val applicationSettings = ApplicationSettings(context)
         val settingsEntity = applicationSettings.getApplicationSettings()
@@ -90,31 +106,36 @@ data class Core(
 
     override fun setWelcomeScreen() {
         val intent = Intent(context, WelcomeScreen::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK;
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         context.startActivity(intent)
     }
 
     override fun setSettingsScreen() {
         val intent = Intent(context, SettingsScreen::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK;
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         context.startActivity(intent)
     }
 
     override fun setAlarmClockOverviewScreen() {
         val intent = Intent(context, AlarmClockOverviewScreen::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK;
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         context.startActivity(intent)
     }
 
     override fun setInformationScreen() {
         val intent = Intent(context, InformationScreen::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK;
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         context.startActivity(intent)
     }
 
     override fun setAlarmClockEditScreen() {
         val intent = Intent(context, AlarmClockEditScreen::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK;
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         context.startActivity(intent)
     }
 }
