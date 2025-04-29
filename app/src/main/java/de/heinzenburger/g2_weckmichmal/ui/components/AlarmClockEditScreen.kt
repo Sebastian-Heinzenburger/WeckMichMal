@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
@@ -24,9 +25,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -59,6 +62,7 @@ import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
+import java.time.DayOfWeek
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
@@ -511,6 +515,43 @@ class AlarmClockEditScreen : ComponentActivity() {
                             )
                         }
                     }
+                    Text(
+                        style = MaterialTheme.typography.bodyMedium,
+                        text = "Gültig für",
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(top = 24.dp, start = 24.dp)
+                    )
+                    Row{
+                        selectedDays.value.forEachIndexed { index, active ->
+
+                            TextButton(
+                                modifier = Modifier
+                                    .padding(start = 0.dp).width(50.dp),
+                                onClick = {
+                                    var days = selectedDays.value.toMutableList()
+                                    days[index] = !days[index]
+                                    selectedDays.value = days
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color.Transparent
+                                )
+                            ) {
+                                val day = DayOfWeek.entries.get(index).name
+                                Text(
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    text = day[0]+day[1].lowercase(),
+                                    textAlign = TextAlign.Center,
+                                    color = if(active){
+                                        MaterialTheme.colorScheme.secondary
+                                    } else{
+                                        MaterialTheme.colorScheme.onBackground
+                                    },
+                                    modifier = Modifier.padding(0.dp)
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -532,6 +573,7 @@ var openStartBufferPickerDialog = mutableStateOf(false)
 var openEndBufferPickerDialog = mutableStateOf(false)
 var startStation = mutableStateOf("Startbahnhof")
 var endStation = mutableStateOf("Endbahnhof")
+var selectedDays = mutableStateOf(listOf(true,true,true,true,true,false,false))
 
 @Composable
 fun MinutePickerDialog(
@@ -542,6 +584,7 @@ fun MinutePickerDialog(
 ) {
     Dialog(onDismissRequest = { onDismiss() }) {
         Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(375.dp)
@@ -578,13 +621,13 @@ fun MinutePickerDialog(
                         onClick = { onDismiss() },
                         modifier = Modifier.padding(8.dp),
                     ) {
-                        Text("Dismiss", color = MaterialTheme.colorScheme.background)
+                        Text("Dismiss", color = MaterialTheme.colorScheme.primary)
                     }
                     TextButton(
                         onClick = { onConfirm((sliderPosition.floatValue).toInt()) },
                         modifier = Modifier.padding(8.dp),
                     ) {
-                        Text("Confirm", color = MaterialTheme.colorScheme.background)
+                        Text("Confirm", color = MaterialTheme.colorScheme.primary)
                     }
                 }
             }
@@ -623,6 +666,7 @@ fun TimePickerDialog(
     content: @Composable () -> Unit
 ) {
     AlertDialog(
+        containerColor = MaterialTheme.colorScheme.background,
         onDismissRequest = onDismiss,
         dismissButton = {
             TextButton(onClick = { onDismiss() }) {
