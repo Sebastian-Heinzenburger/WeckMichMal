@@ -68,9 +68,9 @@ dependencies {
     // ICS parsing lib
     implementation(libs.ical4j)
 
-    testImplementation(libs.junit.jupiter.api)  // JUnit 5
-    testImplementation(libs.junit.jupiter.engine)  // JUnit 5 engine
-    testImplementation(libs.mockito.kotlin)  // Mockito Kotlin for mocking
+    testImplementation(libs.junit.jupiter.api)
+    testImplementation(libs.junit.jupiter.engine)
+    testImplementation(libs.mockito.kotlin)
 
     // Compose UI base dependencies
     implementation(libs.ui)

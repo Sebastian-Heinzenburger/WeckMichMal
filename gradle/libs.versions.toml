@@ -1,5 +1,8 @@
 [versions]
 agp = "8.7.2"
+ical4j = "4.1.1"
+junitJupiterApi = "5.10.0"
+junitJupiterEngine = "5.10.0"
 kotlin = "2.0.0"
 coreKtx = "1.15.0"
 junit = "4.13.2"
@@ -11,6 +14,7 @@ composeBom = "2024.04.01"
 material = "<latest-version>"
 material3 = "<latest-version>"
 materialIconsExtended = "1.7.8"
+mockitoKotlin = "4.1.0"
 roomKtx = "2.6.1"
 ui = "<latest-version>"
 uiTooling = "<latest-version>"
@@ -22,6 +26,7 @@ androidx-material-icons-extended = { module = "androidx.compose.material:materia
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomKtx" }
 androidx-room-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomKtx" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomKtx" }
+ical4j = { module = "org.mnode.ical4j:ical4j", version.ref = "ical4j" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -35,7 +40,10 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junitJupiterApi" }
+junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junitJupiterEngine" }
 material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
+mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockitoKotlin" }
 ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
 ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "uiTooling" }
 
