@@ -1,8 +1,10 @@
 package de.heinzenburger.g2_weckmichmal.specifications
 
 import androidx.room.ColumnInfo
+import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import androidx.room.Relation
 import de.heinzenburger.g2_weckmichmal.MainActivity
 import de.heinzenburger.g2_weckmichmal.persistence.DataConverter
 import java.time.DayOfWeek
@@ -13,56 +15,62 @@ import java.time.LocalTime
 /**
  * Interface defining the behavior for the persistence layer.
  */
-interface I_PersistenceSpecification {
+interface I_AlarmConfiguration{
     /**
      * Saves or updates the alarm configuration in the persistence layer.
      *
      * @param config The [ConfigurationEntity] object that contains the data to be saved or updated.
      */
     fun saveOrUpdate(config: ConfigurationEntity): Boolean
-
-    /**
-     * Saves or updates an event in the persistence layer.
-     *
-     * @param event The [EventEntity] object that contains the data to be saved or updated.
-     */
-    fun saveOrUpdate(event: EventEntity): Boolean
-
     /**
      * Returns the alarm configuration from the persistence layer.
      *
      * @return A ConfigurationEntity object representing the saved alarm configuration.
      */
     fun getAlarmConfiguration(id: Long): ConfigurationEntity?
-
     /**
      * Returns all alarm configurations listed in the persistence layer.
      *
      * @return A list of [ConfigurationEntity] objects representing all the saved alarm configurations.
      */
     fun getAllAlarmConfigurations(): List<ConfigurationEntity>?
-
-    /**
-     * Returns all events listed in the persistence layer.
-     *
-     * @return A list of [EventEntity] objects representing all the saved events.
-     */
-    fun getAllEvents(): List<EventEntity>?
-
-    /**
-     * Returns the alarm configuration from the persistence layer.
-     *
-     * @return A ConfigurationEntity object representing the saved alarm configuration.
-     */
-    fun getEvent(id: Long, days : Set<DayOfWeek>): EventEntity?
-
     /**
      * Removes the alarm configuration from the persistence layer.
      *
      * @param id The id of the [ConfigurationEntity] object to be removed from the persistence layer.
      */
     fun removeAlarmConfiguration(id: Long): Boolean
+    /**
+     * Returns a [ConfigurationEntity] with corresponding [EventEntity]
+     *
+     * @param id The id of the [ConfigurationEntity] object.
+     */
+    fun getConfigurationAndEvent(id: Long): ConfigurationAndEventEntity?
+    /**
+     * Returns a list of all [ConfigurationEntity] with corresponding [EventEntity]
+     */
+    fun getAllConfigurationAndEvent(): List<ConfigurationAndEventEntity>?
 
+}
+interface I_Event{
+    /**
+     * Saves or updates an event in the persistence layer.
+     *
+     * @param event The [EventEntity] object that contains the data to be saved or updated.
+     */
+    fun saveOrUpdate(event: EventEntity): Boolean
+    /**
+     * Returns all events listed in the persistence layer.
+     *
+     * @return A list of [EventEntity] objects representing all the saved events.
+     */
+    fun getAllEvents(): List<EventEntity>?
+    /**
+     * Returns the alarm configuration from the persistence layer.
+     *
+     * @return A ConfigurationEntity object representing the saved alarm configuration.
+     */
+    fun getEvent(id: Long, days : Set<DayOfWeek>): EventEntity?
     /**
      * Removes an event from the persistence layer.
      *
@@ -70,14 +78,14 @@ interface I_PersistenceSpecification {
      * @param days The days of the [ConfigurationEntity] object corresponding to the Event.
      */
     fun removeEvent(configID: Long, days: Set<DayOfWeek>): Boolean
-
     /**
      * Removes an event from the persistence layer.
      *
      * @param configID The id of the [ConfigurationEntity] object corresponding to the Event.
      */
     fun removeEvent(configID: Long): Boolean
-
+}
+interface I_ApplicationSettings {
     /**
      * Overrides the application settings in the persistence layer with the given parameter.
      */
@@ -209,6 +217,14 @@ data class EventEntity(
         )
     }
 }
+data class ConfigurationAndEventEntity(
+    @Embedded val configurationEntity: ConfigurationEntity,
+    @Relation(
+        parentColumn = "uid",
+        entityColumn = "configID"
+    )
+    val eventEntity: EventEntity?
+)
 
 /**
  * @property raplaURL The WebLink leading to the RAPLA schedule.

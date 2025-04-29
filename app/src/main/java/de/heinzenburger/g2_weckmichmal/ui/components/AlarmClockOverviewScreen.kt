@@ -43,10 +43,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
+import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationAndEventEntity
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
-import java.time.DayOfWeek
-import java.time.LocalTime
 import kotlin.concurrent.thread
 
 class AlarmClockOverviewScreen : ComponentActivity(){
@@ -65,9 +64,9 @@ class AlarmClockOverviewScreen : ComponentActivity(){
         var aPlatypus = false
 
         val innerSingleAlarmConfiguration:
-                @Composable (PaddingValues, I_Core, SingleAlarmConfigurationProperties)
-                -> Unit = { innerPadding: PaddingValues, core: I_Core, properties: SingleAlarmConfigurationProperties ->
-            var userActivated by remember { mutableStateOf(properties.active) }
+                @Composable (PaddingValues, I_Core, ConfigurationAndEventEntity)
+                -> Unit = { innerPadding: PaddingValues, core: I_Core, properties: ConfigurationAndEventEntity ->
+            var userActivated by remember { mutableStateOf(properties.configurationEntity.isActive) }
 
             Column(
                 Modifier
@@ -96,7 +95,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                     )
                     Text(
                         style = MaterialTheme.typography.bodyMedium,
-                        text = properties.name,
+                        text = properties.configurationEntity.name,
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(16.dp, 24.dp, 0.dp, 0.dp)
@@ -110,7 +109,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                     Row(
                         modifier = Modifier.padding(2.dp, 0.dp),
                     ){
-                        properties.days.forEach {
+                        properties.configurationEntity.days.forEach {
                             Text(
                                 style = MaterialTheme.typography.bodyMedium,
                                 text = it.name[0] +""+ it.name[1].lowercase(),
@@ -122,7 +121,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
 
                     Text(
                         style = MaterialTheme.typography.bodySmall,
-                        text = "Geplant um: ${properties.wakeUpTime}",
+                        text = "Geplant um: ${properties.eventEntity?.wakeUpTime}",
                         textAlign = TextAlign.Right,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(16.dp, 0.dp, 16.dp, 3.dp).fillMaxWidth(1f)
@@ -132,8 +131,8 @@ class AlarmClockOverviewScreen : ComponentActivity(){
         }
 
         val SingleAlarmConfiguration :
-                @Composable (PaddingValues, I_Core, SingleAlarmConfigurationProperties)
-                -> Unit = { innerPadding: PaddingValues, core: I_Core, properties: SingleAlarmConfigurationProperties ->
+                @Composable (PaddingValues, I_Core, ConfigurationAndEventEntity)
+                -> Unit = { innerPadding: PaddingValues, core: I_Core, properties: ConfigurationAndEventEntity ->
             Box(
                 contentAlignment = Alignment.TopEnd
             ){
@@ -141,7 +140,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                 Button(
                     onClick = {
                         thread {
-                            core.deleteAlarmConfiguration(properties.uid)
+                            core.deleteAlarmConfiguration(properties.configurationEntity.uid)
                             core.setAlarmClockOverviewScreen()
                         }
                     },
@@ -166,8 +165,8 @@ class AlarmClockOverviewScreen : ComponentActivity(){
             }
         }
 
-        val APlatypus : @Composable (PaddingValues, I_Core, SingleAlarmConfigurationProperties)
-                -> Unit = { innerPadding: PaddingValues, core: I_Core, properties: SingleAlarmConfigurationProperties ->
+        val APlatypus : @Composable (PaddingValues, I_Core, ConfigurationAndEventEntity)
+                -> Unit = { innerPadding: PaddingValues, core: I_Core, properties: ConfigurationAndEventEntity ->
             Column(
                 verticalArrangement = Arrangement.spacedBy((-18).dp),
             ){
@@ -195,7 +194,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                     Button(
                         onClick = {
                             thread {
-                                core.deleteAlarmConfiguration(properties.uid)
+                                core.deleteAlarmConfiguration(properties.configurationEntity.uid)
                             }
                         },
                         colors = ButtonDefaults.buttonColors(
@@ -295,7 +294,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                         }
 
                         thread {
-                            configurationEntities.value = core.getAlarmConfigurationProperties()!!
+                            configurationEntities.value = core.getAllConfigurationAndEvent()!!
                         }
                     }
                 }
@@ -329,14 +328,8 @@ fun AlarmClockOverviewComposable(modifier: Modifier, core: I_Core) {
 }
 
 
-var configurationEntities = mutableStateOf(emptyList<SingleAlarmConfigurationProperties>())
-data class SingleAlarmConfigurationProperties(
-    val wakeUpTime: LocalTime?,
-    val name: String,
-    val days: Set<DayOfWeek>,
-    val uid: Long,
-    val active: Boolean
-)
+var configurationEntities = mutableStateOf(emptyList<ConfigurationAndEventEntity>())
+
 
 @Preview(showBackground = true)
 @Composable

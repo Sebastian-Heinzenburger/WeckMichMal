@@ -3,38 +3,61 @@ package de.heinzenburger.g2_weckmichmal.core
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import de.heinzenburger.g2_weckmichmal.api.db.RoutePlanner
+import de.heinzenburger.g2_weckmichmal.api.rapla.CoursesFetcher
+import de.heinzenburger.g2_weckmichmal.calculation.WakeUpCalculator
 import de.heinzenburger.g2_weckmichmal.persistence.AlarmConfiguration
 import de.heinzenburger.g2_weckmichmal.persistence.ApplicationSettings
 import de.heinzenburger.g2_weckmichmal.persistence.Event
+import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationAndEventEntity
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
 import de.heinzenburger.g2_weckmichmal.specifications.EventEntity
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import de.heinzenburger.g2_weckmichmal.specifications.I_RoutePlannerSpecification
 import de.heinzenburger.g2_weckmichmal.ui.components.AlarmClockEditScreen
 import de.heinzenburger.g2_weckmichmal.ui.components.AlarmClockOverviewScreen
 import de.heinzenburger.g2_weckmichmal.ui.components.InformationScreen
 import de.heinzenburger.g2_weckmichmal.ui.components.SettingsScreen
-import de.heinzenburger.g2_weckmichmal.ui.components.SingleAlarmConfigurationProperties
 import de.heinzenburger.g2_weckmichmal.ui.components.WelcomeScreen
+import java.net.URL
 import java.time.DayOfWeek
+import java.time.LocalDate
 import java.time.LocalTime
 
 data class Core(
     val context: Context
 ) : I_Core {
     override fun runUpdateLogic() {
-        TODO("Not yet implemented")
     }
 
     override fun runWakeUpLogic() {
-        TODO("Not yet implemented")
     }
 
     override fun startUpdateScheduler() {
-        TODO("Not yet implemented")
     }
 
-    override fun generateOrUpdateAlarmConfiguration() {
-        TODO("Not yet implemented")
+    override fun generateOrUpdateAlarmConfiguration(configurationEntity: ConfigurationEntity) {
+        val alarmConfiguration = AlarmConfiguration(context)
+        val event = Event(context)
+        alarmConfiguration.saveOrUpdate(configurationEntity)
+        /*event.saveOrUpdate(WakeUpCalculator(
+            routePlanner = I_RoutePlannerSpecification,
+            courseFetcher = CoursesFetcher(URL(getRaplaURL()))
+        ).calculateNextEvent(configurationEntity))*/
+        var eventEntity = EventEntity(
+            configID = configurationEntity.uid,
+            wakeUpTime = LocalTime.NOON,
+            days = setOf(DayOfWeek.MONDAY, DayOfWeek.THURSDAY),
+            date = LocalDate.now(),
+            courses = null,
+            routes = null
+        )
+        event.saveOrUpdate(eventEntity)
+    }
+
+    override fun getAllConfigurationAndEvent(): List<ConfigurationAndEventEntity>? {
+        val alarmConfiguration = AlarmConfiguration(context)
+        return alarmConfiguration.getAllConfigurationAndEvent()
     }
 
     override fun saveRaplaURL(url : String){
@@ -51,16 +74,6 @@ data class Core(
         return applicationSettings.getApplicationSettings().raplaURL
     }
 
-    override fun getAllAlarmConfigurations(): List<ConfigurationEntity>?{
-        val alarmConfiguration = AlarmConfiguration(context)
-        return alarmConfiguration.getAllAlarmConfigurations()
-    }
-
-    override fun getAllEvents(): List<EventEntity>? {
-        val event = Event(context)
-        return event.getAllEvents()
-    }
-
     override fun deleteAlarmConfiguration(uid: Long) {
         val event = Event(context)
         val alarmConfiguration = AlarmConfiguration(context)
@@ -68,40 +81,9 @@ data class Core(
         alarmConfiguration.removeAlarmConfiguration(uid)
     }
 
-    override fun saveOrUpdateAlarmConfiguration(configurationEntity: ConfigurationEntity) {
-        val alarmConfiguration = AlarmConfiguration(context)
-        alarmConfiguration.saveOrUpdate(configurationEntity)
-    }
-
-    override fun saveOrUpdateEvent(eventEntity: EventEntity) {
-        val event = Event(context)
-        event.saveOrUpdate(eventEntity)
-    }
-
-    override fun getAlarmConfigurationProperties(): List<SingleAlarmConfigurationProperties>? {
-        var result = ArrayList<SingleAlarmConfigurationProperties>()
-        getAllAlarmConfigurations()?.forEach {
-            result.add(
-                SingleAlarmConfigurationProperties(
-                    wakeUpTime = getPlannedTimeForAlarmEntity(it),
-                    name = it.name,
-                    days = it.days,
-                    uid = it.uid,
-                    active = true
-                )
-            )
-        }
-        return result
-    }
-
-    override fun getPlannedTimeForAlarmEntity(configurationEntity: ConfigurationEntity) : LocalTime?{
-        val event = Event(context)
-        return event.getEvent(configurationEntity.uid, configurationEntity.days)?.wakeUpTime
-    }
-
     override fun isApplicationOpenedFirstTime(): Boolean? {
-        val alarmConfiguration = AlarmConfiguration(context)
-        return alarmConfiguration.isApplicationOpenedFirstTime()
+        val settings = ApplicationSettings(context)
+        return settings.isApplicationOpenedFirstTime()
     }
 
     override fun setWelcomeScreen() {

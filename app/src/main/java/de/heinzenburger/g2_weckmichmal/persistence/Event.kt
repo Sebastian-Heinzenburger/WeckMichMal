@@ -7,11 +7,12 @@ import androidx.room.Insert
 import androidx.room.Query
 import de.heinzenburger.g2_weckmichmal.MainActivity
 import de.heinzenburger.g2_weckmichmal.specifications.EventEntity
+import de.heinzenburger.g2_weckmichmal.specifications.I_Event
 import java.time.DayOfWeek
 
 data class Event(
     val context: Context
-): PersistenceClass() {
+): I_Event {
     @Dao
     interface ConfigurationDao{
         @Query("SELECT * FROM evententity")

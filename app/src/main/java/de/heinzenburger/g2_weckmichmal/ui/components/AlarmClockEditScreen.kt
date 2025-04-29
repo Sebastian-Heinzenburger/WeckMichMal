@@ -84,15 +84,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                     Button(
                         onClick = {
                             thread{
-                                core.saveOrUpdateAlarmConfiguration(configurationEntity)
-                                core.saveOrUpdateEvent(EventEntity(
-                                    configID = configurationEntity.uid,
-                                    wakeUpTime = LocalTime.NOON,
-                                    days = configurationEntity.days,
-                                    date = LocalDate.now(),
-                                    courses = EventEntity.emptyEvent.courses,
-                                    routes = EventEntity.emptyEvent.routes
-                                ))
+                                core.generateOrUpdateAlarmConfiguration(configurationEntity)
                                 core.setAlarmClockOverviewScreen()
                             }
                         },

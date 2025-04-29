@@ -2,21 +2,18 @@ package de.heinzenburger.g2_weckmichmal.persistence
 
 import android.content.Context
 import androidx.room.Dao
-import androidx.room.Database
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
-import androidx.room.Room
-import androidx.room.RoomDatabase
-import androidx.room.TypeConverters
+import androidx.room.Transaction
 import de.heinzenburger.g2_weckmichmal.MainActivity
+import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationAndEventEntity
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
-import de.heinzenburger.g2_weckmichmal.specifications.EventEntity
-import java.time.DayOfWeek
+import de.heinzenburger.g2_weckmichmal.specifications.I_AlarmConfiguration
 
 data class AlarmConfiguration(
     val context: Context,
-): PersistenceClass() {
+): I_AlarmConfiguration {
     @Dao
     interface ConfigurationDao{
         @Query("SELECT * FROM configurationentity")
@@ -33,6 +30,14 @@ data class AlarmConfiguration(
 
         @Delete
         fun delete(configuration: ConfigurationEntity)
+
+        @Transaction
+        @Query("SELECT * FROM configurationentity")
+        fun getConfigurationsAndEvents(): List<ConfigurationAndEventEntity>
+
+        @Transaction
+        @Query("SELECT * FROM configurationentity WHERE uid = :uid")
+        fun getConfigurationAndEvent(uid: Long): ConfigurationAndEventEntity
     }
 
 
@@ -85,6 +90,30 @@ data class AlarmConfiguration(
             MainActivity.log.warning(e.message)
             e.printStackTrace()
             return false
+        }
+    }
+
+    override fun getConfigurationAndEvent(id: Long): ConfigurationAndEventEntity? {
+        try {
+            val result = database.alarmConfigurationDao().getConfigurationAndEvent(id)
+            return result
+        }
+        catch (e: Exception){
+            MainActivity.log.warning(e.message)
+            e.printStackTrace()
+            return null
+        }
+    }
+
+    override fun getAllConfigurationAndEvent(): List<ConfigurationAndEventEntity>? {
+        try {
+            val result = database.alarmConfigurationDao().getConfigurationsAndEvents()
+            return result
+        }
+        catch (e: Exception){
+            MainActivity.log.warning(e.message)
+            e.printStackTrace()
+            return null
         }
     }
 }

@@ -10,10 +10,8 @@ import de.heinzenburger.g2_weckmichmal.MainActivity
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
 import de.heinzenburger.g2_weckmichmal.specifications.Course
 import de.heinzenburger.g2_weckmichmal.specifications.EventEntity
-import de.heinzenburger.g2_weckmichmal.specifications.I_PersistenceSpecification
 import de.heinzenburger.g2_weckmichmal.specifications.Route
 import de.heinzenburger.g2_weckmichmal.specifications.RouteSection
-import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity
 import org.json.JSONArray
 import org.json.JSONObject
 import java.time.DayOfWeek
@@ -22,45 +20,6 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
-
-abstract class PersistenceClass : I_PersistenceSpecification{
-    override fun saveOrUpdate(config: ConfigurationEntity): Boolean {
-        return false
-    }
-    override fun saveOrUpdate(event: EventEntity): Boolean{
-        return false
-    }
-    override fun getAlarmConfiguration(id: Long): ConfigurationEntity? {
-        return null
-    }
-    override fun getAllAlarmConfigurations(): List<ConfigurationEntity>?{
-        return null
-    }
-    override fun getAllEvents(): List<EventEntity>?{
-        return null
-    }
-    override fun removeAlarmConfiguration(id: Long): Boolean{
-        return false
-    }
-    override fun removeEvent(configID: Long, days: Set<DayOfWeek>): Boolean{
-        return false
-    }
-    override fun removeEvent(configID: Long): Boolean{
-        return false
-    }
-    override fun getApplicationSettings(): SettingsEntity? {
-        return null
-    }
-    override fun saveOrUpdateApplicationSettings(settings: SettingsEntity): Boolean {
-        return false
-    }
-    override fun isApplicationOpenedFirstTime(): Boolean? {
-        return null
-    }
-    override fun getEvent(id: Long, days: Set<DayOfWeek>): EventEntity? {
-        return null
-    }
-}
 
 public class DataConverter {
     companion object {
@@ -145,7 +104,6 @@ public class DataConverter {
             var array = JSONArray(courses)
             for (i in 0 until array.length()) {
                 val jsonObject = array.getJSONObject(i)
-                MainActivity.log.severe(jsonObject.get("startDate") as String)
                 result.add(Course(
                     name = jsonObject.getString("name"),
                     lecturer = jsonObject.getString("lecturer"),

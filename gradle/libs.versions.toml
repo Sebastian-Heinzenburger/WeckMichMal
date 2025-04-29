@@ -1,5 +1,5 @@
 [versions]
-agp = "8.7.2"
+agp = "8.9.0"
 ical4j = "4.1.1"
 junitJupiterApi = "5.10.0"
 junitJupiterEngine = "5.10.0"

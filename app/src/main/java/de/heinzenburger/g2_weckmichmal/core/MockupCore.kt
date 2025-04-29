@@ -3,11 +3,10 @@ package de.heinzenburger.g2_weckmichmal.core
 import android.content.Context
 import de.heinzenburger.g2_weckmichmal.persistence.AlarmConfiguration
 import de.heinzenburger.g2_weckmichmal.persistence.Event
+import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationAndEventEntity
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
 import de.heinzenburger.g2_weckmichmal.specifications.EventEntity
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
-import de.heinzenburger.g2_weckmichmal.ui.components.SingleAlarmConfigurationProperties
-import java.time.LocalTime
 
 class MockupCore : I_Core {
     override fun runUpdateLogic() {
@@ -17,9 +16,6 @@ class MockupCore : I_Core {
     }
 
     override fun startUpdateScheduler() {
-    }
-
-    override fun generateOrUpdateAlarmConfiguration() {
     }
 
     companion object{
@@ -44,55 +40,26 @@ class MockupCore : I_Core {
         return "https://"
     }
 
-    override fun getAllAlarmConfigurations(): List<ConfigurationEntity>?{
-        return mockupConfigurations
+    override fun isApplicationOpenedFirstTime(): Boolean? {
+        return true
     }
 
-    override fun getAllEvents(): List<EventEntity>? {
-        return mockupEvents
+    override fun generateOrUpdateAlarmConfiguration(configurationEntity: ConfigurationEntity) {
     }
 
-    override fun deleteAlarmConfiguration(uid: Long) {
-    }
-
-    override fun saveOrUpdateAlarmConfiguration(configuration: ConfigurationEntity) {
-    }
-
-    override fun saveOrUpdateEvent(event: EventEntity) {
-    }
-
-    override fun getAlarmConfigurationProperties(): List<SingleAlarmConfigurationProperties>? {
-        var result = ArrayList<SingleAlarmConfigurationProperties>()
+    override fun getAllConfigurationAndEvent(): List<ConfigurationAndEventEntity>? {
+        var result = mutableListOf<ConfigurationAndEventEntity>()
         mockupConfigurations.forEach {
-            val config = it
-            mockupEvents.forEach {
-                if(config.days == it.days && config.uid == it.configID){
-                    result.add(
-                        SingleAlarmConfigurationProperties(
-                            wakeUpTime = it.wakeUpTime,
-                            name = config.name,
-                            days = config.days,
-                            uid = config.uid,
-                            active = true
-                        )
-                    )
-                }
-            }
+            val configurationEntity = it
+            var eventEntity : EventEntity? = null
+            mockupEvents.forEach { if(it.configID == configurationEntity.uid){ eventEntity = it } }
+            result.add(ConfigurationAndEventEntity(configurationEntity,eventEntity))
         }
+
         return result
     }
 
-    override fun getPlannedTimeForAlarmEntity(configurationEntity: ConfigurationEntity) : LocalTime?{
-        mockupEvents.forEach {
-            if(it.configID == configurationEntity.uid && it.days == configurationEntity.days){
-                return it.wakeUpTime
-            }
-        }
-        return null
-    }
-
-    override fun isApplicationOpenedFirstTime(): Boolean? {
-        return true
+    override fun deleteAlarmConfiguration(uid: Long) {
     }
 
     override fun setWelcomeScreen() {
