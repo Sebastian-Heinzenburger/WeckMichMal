@@ -40,7 +40,8 @@ class RoutePlannerTest {
         assert(result.all { it.endStation == "Duale Hochschule, Karlsruhe" }) { "Expected all routes to end at 'Duale Hochschule Karlsruhe'" }
         assert(result.all {
             val duration = Duration.between(it.startTime, it.endTime)
-            (duration.toHours() >= 0.1) && (duration.toHours() <= 3)
-        }) { "Expected all routes to be between 6 minutes and 3 hours" }
+            (duration.toMinutes() >= 20) && (duration.toMinutes() <= 60*3)
+        }) { "Expected all routes to be between 20 minutes and 3 hours" }
     }
+
 }
