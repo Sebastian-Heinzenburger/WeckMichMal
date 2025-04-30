@@ -79,12 +79,11 @@ assembleDebug:
     paths:
       - app/build/outputs/
 
-# Run only DB API test at first
 debugTests:
   needs: [lintDebug, assembleDebug]
   interruptible: true
   stage: test
   script:
     # - ./gradlew -Pci --console=plain :app:testDebug
-    - ./gradlew :app:testDebugUnitTest  --tests "de.heinzenburger.g2_weckmichmal.api.db.RoutePlannerTest"
+    - ./gradlew :app:testDebugUnitTest
 
