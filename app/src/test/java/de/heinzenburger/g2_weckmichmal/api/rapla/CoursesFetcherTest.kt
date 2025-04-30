@@ -13,7 +13,7 @@ class CoursesFetcherTest {
     fun `test fetchCoursesBetween successfully returns courses`() {
         val url = URL("https://rapla.dhbw-karlsruhe.de/rapla?page=ical&user=ritterbusch&file=TINF23BN2")
         val fetcher = CoursesFetcher(url)
-        val start = LocalDateTime.now()
+        val start = LocalDateTime.of(2025, 4, 29, 13, 12);
         val end = start.plusDays(5)
 
         val courses = fetcher.fetchCoursesBetween(Period(start, end))
@@ -26,7 +26,7 @@ class CoursesFetcherTest {
     fun `test batchFetchCoursesBetween returns a list of courses`() {
         val url = URL("https://rapla.dhbw-karlsruhe.de/rapla?page=ical&user=ritterbusch&file=TINF23BN2")
         val fetcher = CoursesFetcher(url)
-        val start = LocalDateTime.now()
+        val start = LocalDateTime.of(2025, 4, 29, 13, 12);
         val end = start.plusDays(5)
 
         val periods = listOf(

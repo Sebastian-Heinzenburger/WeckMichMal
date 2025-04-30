@@ -1,6 +1,7 @@
 package de.heinzenburger.g2_weckmichmal.calculation
 
 import de.heinzenburger.g2_weckmichmal.specifications.*
+import java.time.Clock
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -9,6 +10,8 @@ class WakeUpCalculator(
     private val routePlanner: I_RoutePlannerSpecification,
     private val courseFetcher: I_CoursesFetcherSpecification
 ) : I_WakeUpCalculationSpecification {
+
+    var clock = Clock.systemDefaultZone()
 
     override fun calculateNextEvent(configuration: ConfigurationEntity): EventEntity {
         val nextDate = getNextValidDate(configuration.days)
@@ -130,7 +133,7 @@ class WakeUpCalculator(
     }
 
     private fun getNextValidDate(days: Set<DayOfWeek>): LocalDate {
-        val today = LocalDate.now()
+        val today = LocalDate.now(clock)
         return (0..6)
             .map { today.plusDays(it.toLong()) }
             .firstOrNull { it.dayOfWeek in days }
