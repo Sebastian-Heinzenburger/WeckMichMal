@@ -4,6 +4,7 @@ import de.heinzenburger.g2_weckmichmal.specifications.*
 import org.junit.Test
 import org.junit.Assert.*
 import org.mockito.kotlin.*
+import java.time.Clock
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -49,6 +50,11 @@ class WakeUpCalculatorTest {
         )
         whenever(routePlannerMock.planRoute(any(), any(), any())).thenReturn(listOf(route))
 
+        // dirty hack because its not always Monday.
+        wakeUpCalculator.clock = Clock.fixed(
+            LocalDateTime.of(2025, 4, 28, 8, 0).atZone(java.time.ZoneId.systemDefault()).toInstant(),
+            java.time.ZoneId.systemDefault().rules.getOffset(LocalDateTime.of(2025, 4, 28, 8, 0))
+        )
         val result = wakeUpCalculator.calculateNextEvent(configuration)
 
         assertNotNull(result)
