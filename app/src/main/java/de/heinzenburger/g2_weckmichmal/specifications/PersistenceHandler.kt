@@ -141,6 +141,7 @@ data class ConfigurationEntity(
     /** The DB Navigator conform name of the end station for the journey. */
     @ColumnInfo(name = "isActive") var isActive: Boolean,
 ){
+    @Suppress("unused")
     fun log(){
         MainActivity.log.info("Logging Alarm configuration with id $uid:\n$name\n$days\n$fixedArrivalTime\n$fixedTravelBuffer\n$startBuffer\n$endBuffer\n$startStation\n$endStation\n$isActive")
     }
@@ -184,6 +185,7 @@ data class EventEntity(
     /** The specific date this event references. */
     @ColumnInfo(name = "routes") var routes: List<Route>?
 ){
+    @Suppress("unused")
     fun log(){
         MainActivity.log.info("Logging Event with id $configID:\n$wakeUpTime\n$days\n$date\n${DataConverter().fromListOfCourses(courses)}\n${
             DataConverter().fromListOfRoutes(routes)}")
@@ -233,6 +235,7 @@ data class SettingsEntity(
     /** The WebLink leading to the RAPLA schedule. */
     var raplaURL: String
 ){
+    @Suppress("unused")
     fun log(){
         MainActivity.log.info("Logging SettingsEntity:\n$raplaURL")
     }

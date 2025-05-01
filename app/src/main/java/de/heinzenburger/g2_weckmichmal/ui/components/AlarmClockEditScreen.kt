@@ -78,25 +78,25 @@ class AlarmClockEditScreen : ComponentActivity() {
         }
     }
     companion object{
-        var openArrivalTimePickerDialog : MutableState<Boolean> = mutableStateOf(false)
-        var openTravelTimePickerDialog : MutableState<Boolean> = mutableStateOf(false)
-        var openStartBufferPickerDialog : MutableState<Boolean> = mutableStateOf(false)
-        var openEndBufferPickerDialog : MutableState<Boolean> = mutableStateOf(false)
+        private var openArrivalTimePickerDialog : MutableState<Boolean> = mutableStateOf(false)
+        private var openTravelTimePickerDialog : MutableState<Boolean> = mutableStateOf(false)
+        private var openStartBufferPickerDialog : MutableState<Boolean> = mutableStateOf(false)
+        private var openEndBufferPickerDialog : MutableState<Boolean> = mutableStateOf(false)
 
         //These are static. They are storing all necessary information for an alarm configuration
         //Everytime an alarm is created, the reset function has to be called before calling this view so all configurations are set to default
         //If an alarm is to be updated, the current configuration is passed as parameter to reset function
-        lateinit var alarmName : MutableState<String>
-        lateinit var manuallySetArrivalTime: MutableState<LocalTime> //Set if arrival time shouldnt be dependent on lecture plan
-        lateinit var isManualArrivalTime : MutableState<Boolean>
-        lateinit var manuallySetTravelTime: MutableIntState //Set if travel time shouldnt be dependent on Deutsche Bahn
-        lateinit var isManualTravelTime : MutableState<Boolean>
-        lateinit var setStartBufferTime: MutableIntState //Set if arrival time shouldnt be dependent on lecture plan
-        lateinit var setEndBufferTime: MutableIntState //Time between arrival and lecture start
-        lateinit var startStation: MutableState<String>
-        lateinit var endStation: MutableState<String>
-        lateinit var selectedDays: MutableState<List<Boolean>> //All days where this alarm applies to
-        lateinit var configurationEntity : ConfigurationEntity //The configuration stored in the database
+        private lateinit var alarmName : MutableState<String>
+        private lateinit var manuallySetArrivalTime: MutableState<LocalTime> //Set if arrival time shouldnt be dependent on lecture plan
+        private lateinit var isManualArrivalTime : MutableState<Boolean>
+        private lateinit var manuallySetTravelTime: MutableIntState //Set if travel time shouldnt be dependent on Deutsche Bahn
+        private lateinit var isManualTravelTime : MutableState<Boolean>
+        private lateinit var setStartBufferTime: MutableIntState //Set if arrival time shouldnt be dependent on lecture plan
+        private lateinit var setEndBufferTime: MutableIntState //Time between arrival and lecture start
+        private lateinit var startStation: MutableState<String>
+        private lateinit var endStation: MutableState<String>
+        private lateinit var selectedDays: MutableState<List<Boolean>> //All days where this alarm applies to
+        private lateinit var configurationEntity : ConfigurationEntity //The configuration stored in the database
 
         fun reset(configurationEntity: ConfigurationEntity?){
             if(configurationEntity == null){
@@ -179,7 +179,7 @@ class AlarmClockEditScreen : ComponentActivity() {
         }
 
         //All components are stored as variables so they can be used as callbacks if needed
-        val innerDatengrundlageComposable : @Composable (PaddingValues, I_Core) -> Unit =
+        private val innerDatengrundlageComposable : @Composable (PaddingValues, I_Core) -> Unit =
         { innerPadding: PaddingValues, core: I_Core ->
             val arrivalOptions = listOf("Manuelle Ankuftszeit", "Ankuftszeit nach Vorlesungsplan")
             //Dont really know what this is doing
@@ -199,8 +199,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(top = 24.dp, start = 24.dp)
             )
-            Row(
-            ) {
+            Row{
                 Column(
                     Modifier
                         .fillMaxWidth()
@@ -291,7 +290,7 @@ class AlarmClockEditScreen : ComponentActivity() {
 
             }
         }
-        val innerFahrtwegComposable : @Composable (PaddingValues, I_Core) -> Unit =
+        private val innerFahrtwegComposable : @Composable (PaddingValues, I_Core) -> Unit =
             { innerPadding: PaddingValues, core: I_Core ->
                 val rideOptions = listOf("Bahnverbindung", "Manuelle Fahrtzeit")
                 val (rideSelectedOption, onRideOptionSelected) = remember {
@@ -313,8 +312,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(top = 24.dp, start = 24.dp)
                     )
-                    Row(
-                    ) {
+                    Row{
                         Column(
                             Modifier
                                 .fillMaxWidth()
@@ -450,7 +448,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                     }
                 }
             }
-        val innerZeitaufwandComposable : @Composable (PaddingValues, I_Core) -> Unit =
+        private val innerZeitaufwandComposable : @Composable (PaddingValues, I_Core) -> Unit =
             { innerPadding: PaddingValues, core: I_Core ->
                 Text(
                     style = MaterialTheme.typography.bodyMedium,
@@ -525,7 +523,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                     }
                 }
             }
-        val innerGueltigkeitComposable : @Composable (PaddingValues, I_Core) -> Unit =
+        private val innerGueltigkeitComposable : @Composable (PaddingValues, I_Core) -> Unit =
             { innerPadding: PaddingValues, core: I_Core ->
                 Text(
                     style = MaterialTheme.typography.bodyMedium,
@@ -560,7 +558,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                                 containerColor = Color.Transparent
                             )
                         ) {
-                            val day = DayOfWeek.entries.get(index).name
+                            val day = DayOfWeek.entries[index].name
                             Text(
                                 style = MaterialTheme.typography.bodyMedium,
                                 text = day[0]+day[1].lowercase(),
@@ -739,6 +737,8 @@ fun EditComposable(modifier: Modifier, core: I_Core) {
     NavBar.NavigationBar(modifier, core, AlarmClockEditScreen.innerEditComposable, caller = AlarmClockEditScreen::class)
 }
 
+//Dialogs for Picking LocalTime and Minutes
+//Are stored outside of Class because they are public and independent components
 @Composable
 fun MinutePickerDialog(
     onConfirm: (Int) -> Unit,
@@ -799,7 +799,7 @@ fun MinutePickerDialog(
     }
 }
 
-//I dont know why both functions are needed to display the time picker dialog
+//I dont know why both functions are needed to display the time picker dialog, but thats okay
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DialWithDialogExample(

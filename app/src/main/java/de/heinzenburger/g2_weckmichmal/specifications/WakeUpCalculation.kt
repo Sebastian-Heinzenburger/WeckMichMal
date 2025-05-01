@@ -1,7 +1,6 @@
 package de.heinzenburger.g2_weckmichmal.specifications
 
 import java.time.DayOfWeek
-import java.time.LocalDate
 
 /**
  * Interface defining the behavior for the wake-up time calculation.

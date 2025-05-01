@@ -11,19 +11,20 @@ data class ApplicationSettings (
     val context: Context
 ) : I_ApplicationSettings{
     private fun toJson(settingsEntity: SettingsEntity) : JSONObject{
-        var json = JSONObject();
-        json.put("rapla", settingsEntity.raplaURL);
+        var json = JSONObject()
+        json.put("rapla", settingsEntity.raplaURL) //Only configuration so far
         return json
     }
     private fun fromJson(jsonObject: JSONObject) : SettingsEntity{
         var settingsEntity = SettingsEntity(
             raplaURL = jsonObject.get("rapla").toString()
-        );
+        )
         return settingsEntity
     }
     override fun saveOrUpdateApplicationSettings(settings: SettingsEntity): Boolean {
         try {
             var json = toJson(settings)
+            //context.filesDir is the apps personal data folder
             File(context.filesDir, "settings.json").writeText(json.toString())
             return true
         }
@@ -41,6 +42,7 @@ data class ApplicationSettings (
         return fromJson(json)
     }
     override fun isApplicationOpenedFirstTime(): Boolean{
+        //Application is considered opened first time if the configuration file doesn't yet exist
         return !File(context.filesDir, "settings.json").exists()
     }
 }

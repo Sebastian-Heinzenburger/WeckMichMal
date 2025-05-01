@@ -31,27 +31,26 @@ data class AlarmConfiguration(
         @Delete
         fun delete(configuration: ConfigurationEntity)
 
+        //Combining Events with their corresponding Configuration
         @Transaction
         @Query("SELECT * FROM configurationentity")
         fun getConfigurationsAndEvents(): List<ConfigurationAndEventEntity>
-
         @Transaction
         @Query("SELECT * FROM configurationentity WHERE uid = :uid")
         fun getConfigurationAndEvent(uid: Long): ConfigurationAndEventEntity
     }
 
-
-
     private var database: AppDatabase = AppDatabase.getDatabase(context)
 
     override fun saveOrUpdate(config: ConfigurationEntity): Boolean {
         try {
+            //Updating means deleting and inserting again
             database.alarmConfigurationDao().deleteById(config.uid)
             database.alarmConfigurationDao().insert(config)
             return true
         }
         catch (e: Exception){
-            MainActivity.log.warning(e.message)
+            MainActivity.log.severe(e.message)
             e.printStackTrace()
             return false
         }
@@ -63,7 +62,7 @@ data class AlarmConfiguration(
             return result
         }
         catch (e: Exception){
-            MainActivity.log.warning(e.message)
+            MainActivity.log.severe(e.message)
             e.printStackTrace()
             return null
         }
@@ -75,7 +74,7 @@ data class AlarmConfiguration(
             return result
         }
         catch (e: Exception){
-            MainActivity.log.warning(e.message)
+            MainActivity.log.severe(e.message)
             e.printStackTrace()
             return null
         }
@@ -87,7 +86,7 @@ data class AlarmConfiguration(
             return true
         }
         catch (e: Exception){
-            MainActivity.log.warning(e.message)
+            MainActivity.log.severe(e.message)
             e.printStackTrace()
             return false
         }
@@ -99,7 +98,7 @@ data class AlarmConfiguration(
             return result
         }
         catch (e: Exception){
-            MainActivity.log.warning(e.message)
+            MainActivity.log.severe(e.message)
             e.printStackTrace()
             return null
         }
@@ -111,7 +110,7 @@ data class AlarmConfiguration(
             return result
         }
         catch (e: Exception){
-            MainActivity.log.warning(e.message)
+            MainActivity.log.severe(e.message)
             e.printStackTrace()
             return null
         }

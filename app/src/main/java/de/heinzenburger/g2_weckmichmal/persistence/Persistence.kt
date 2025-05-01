@@ -21,11 +21,12 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 
-public class DataConverter {
+//Data Converter achieves storing complex data types like dates in a SQLite Database by converting them into Numbers or Strings
+class DataConverter {
     companion object {
-        val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
+        private val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
     }
-
+    //LocalDate is converted to days since 1970
     @TypeConverter
     fun toLocalDate(dateLong: Long?): LocalDate? {
         return if (dateLong == null) {
@@ -39,6 +40,7 @@ public class DataConverter {
         return date?.toEpochDay()
     }
 
+    //LocalTime is converted to nanoseconds since 00:00 at night
     @TypeConverter
     fun toLocalTime(timeLong: Long?): LocalTime? {
         return if (timeLong == null) {
@@ -51,6 +53,9 @@ public class DataConverter {
     fun fromLocalTime(time: LocalTime?): Long? {
         return time?.toNanoOfDay()
     }
+
+    //Set<DayOfWeek> is converted to a 7 char long string where every digit is either 1 or 0
+    //E.g. 1000100 for {Monday, Friday}
     @TypeConverter
     fun toSetOfDays(stringDays: String?): Set<DayOfWeek>? {
         if (stringDays == null) {
@@ -77,6 +82,8 @@ public class DataConverter {
         }
         return result
     }
+
+    //All attributes of courses are converted into JSON format
     @TypeConverter
     fun fromListOfCourses(courses: List<Course>?): String?{
         if(courses != null){
@@ -99,7 +106,6 @@ public class DataConverter {
     @TypeConverter
     fun toListOfCourses(courses: String?): List<Course>?{
         if(courses != null){
-
             var result = mutableListOf<Course>()
             var array = JSONArray(courses)
             for (i in 0 until array.length()) {
@@ -116,6 +122,8 @@ public class DataConverter {
         }
         return null
     }
+
+    //All attributes of routes are converted into JSON format
     @TypeConverter
     fun fromListOfRoutes(routes: List<Route>?): String?{
         if(routes != null){
@@ -181,6 +189,10 @@ public class DataConverter {
     }
 }
 
+
+//Definition of the database. It consists of ConfigurationEntity Table and EventEntity Table
+//eportSchema doesn't work... I don't know why but I want to keep it anyways, hoping the schema will be randomly exported to the project directory anytime soon
+//Version needs to be updated everytime something changes in the table structure. This will destroy all data because of fallbackToDestructiveMigration
 @Database(entities = [ConfigurationEntity::class, EventEntity::class], version = 16,exportSchema = true)
 @TypeConverters(DataConverter::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -202,6 +214,7 @@ abstract class AppDatabase : RoomDatabase() {
                 instance
             }
         }
+        @Suppress("unused")
         fun logDatabaseSchema(db: RoomDatabase) {
             val tableCursor = db.query("SELECT name FROM sqlite_master WHERE type='table'", null)
             while (tableCursor.moveToNext()) {

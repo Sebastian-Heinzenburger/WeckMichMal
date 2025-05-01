@@ -61,13 +61,13 @@ class AlarmClockOverviewScreen : ComponentActivity(){
     }
 
     companion object{
-        //List of all configurationAndEvent Entities existant in database
-        var configurationAndEventEntities = mutableStateOf(emptyList<ConfigurationAndEventEntity>())
-
         var aPlatypus = false //Static variable to set Platypus mode
 
+        //List of all configurationAndEvent Entities existant in database
+        private var configurationAndEventEntities = mutableStateOf(emptyList<ConfigurationAndEventEntity>())
+
         //Elements in Configuration Component that stay the same, regardless of Platypus
-        val innerSingleAlarmConfiguration:
+        private val innerSingleAlarmConfiguration:
                 @Composable (PaddingValues, I_Core, ConfigurationAndEventEntity)
                 -> Unit = { innerPadding: PaddingValues, core: I_Core, properties: ConfigurationAndEventEntity ->
             var userActivated by remember { mutableStateOf(properties.configurationEntity.isActive) }
@@ -135,7 +135,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
         }
 
         //UI Arrangement for Components when Platypus mode is off
-        val SingleAlarmConfiguration :
+        private val SingleAlarmConfiguration :
                 @Composable (PaddingValues, I_Core, ConfigurationAndEventEntity)
                 -> Unit = { innerPadding: PaddingValues, core: I_Core, properties: ConfigurationAndEventEntity ->
             Box(
@@ -171,7 +171,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
         }
 
         //UI Arrangement for Components when Platypus mode is activated
-        val APlatypus : @Composable (PaddingValues, I_Core, ConfigurationAndEventEntity)
+        private val APlatypus : @Composable (PaddingValues, I_Core, ConfigurationAndEventEntity)
                 -> Unit = { innerPadding: PaddingValues, core: I_Core, properties: ConfigurationAndEventEntity ->
             Column(
                 verticalArrangement = Arrangement.spacedBy((-18).dp),
@@ -267,7 +267,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
 
         //Main Component, is passed to Navbar. Contains all configuration components and plus icon
         val innerAlarmClockOverviewComposable : @Composable (PaddingValues, I_Core) -> Unit = { innerPadding: PaddingValues, core: I_Core ->
-            Box() {
+            Box {
                 Column(
                     Modifier
                         .padding(innerPadding)
