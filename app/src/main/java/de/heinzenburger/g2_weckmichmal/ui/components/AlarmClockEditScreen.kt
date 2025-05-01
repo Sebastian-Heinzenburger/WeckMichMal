@@ -40,6 +40,8 @@ import androidx.compose.material3.TimePickerDefaults
 import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableIntState
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -76,8 +78,29 @@ class AlarmClockEditScreen : ComponentActivity() {
         }
     }
     companion object{
+        var openArrivalTimePickerDialog : MutableState<Boolean> = mutableStateOf(false)
+        var openTravelTimePickerDialog : MutableState<Boolean> = mutableStateOf(false)
+        var openStartBufferPickerDialog : MutableState<Boolean> = mutableStateOf(false)
+        var openEndBufferPickerDialog : MutableState<Boolean> = mutableStateOf(false)
+
+        //These are static. They are storing all necessary information for an alarm configuration
+        //Everytime an alarm is created, the reset function has to be called before calling this view so all configurations are set to default
+        //If an alarm is to be updated, the current configuration is passed as parameter to reset function
+        lateinit var alarmName : MutableState<String>
+        lateinit var manuallySetArrivalTime: MutableState<LocalTime> //Set if arrival time shouldnt be dependent on lecture plan
+        lateinit var isManualArrivalTime : MutableState<Boolean>
+        lateinit var manuallySetTravelTime: MutableIntState //Set if travel time shouldnt be dependent on Deutsche Bahn
+        lateinit var isManualTravelTime : MutableState<Boolean>
+        lateinit var setStartBufferTime: MutableIntState //Set if arrival time shouldnt be dependent on lecture plan
+        lateinit var setEndBufferTime: MutableIntState //Time between arrival and lecture start
+        lateinit var startStation: MutableState<String>
+        lateinit var endStation: MutableState<String>
+        lateinit var selectedDays: MutableState<List<Boolean>> //All days where this alarm applies to
+        lateinit var configurationEntity : ConfigurationEntity //The configuration stored in the database
+
         fun reset(configurationEntity: ConfigurationEntity?){
             if(configurationEntity == null){
+                //All default values
                 alarmName = mutableStateOf("Wecker 1")
                 manuallySetArrivalTime = mutableStateOf(LocalTime.NOON)
                 manuallySetTravelTime = mutableIntStateOf(15)
@@ -118,7 +141,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                 //Manual set Arrival Time
                 isManualArrivalTime = mutableStateOf(configurationEntity.fixedArrivalTime != null)
                 manuallySetArrivalTime = if(isManualArrivalTime.value){
-                    mutableStateOf(configurationEntity.fixedArrivalTime)
+                    mutableStateOf(configurationEntity.fixedArrivalTime!!)
                 } else{
                     mutableStateOf(LocalTime.NOON)
                 }
@@ -141,7 +164,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                 }
 
                 AlarmClockEditScreen.configurationEntity = ConfigurationEntity(
-                    uid = configurationEntity.uid,
+                    uid = configurationEntity.uid, //Use the same uid as the configuration that is changed
                     name = "Wecker 1",
                     days = setOf(),
                     fixedArrivalTime = null,
@@ -154,35 +177,12 @@ class AlarmClockEditScreen : ComponentActivity() {
                 )
             }
         }
-        var alarmName = mutableStateOf("Wecker 1")
-        var manuallySetArrivalTime = mutableStateOf(LocalTime.NOON)
-        var manuallySetTravelTime = mutableIntStateOf(15)
-        var setStartBufferTime = mutableIntStateOf(30)
-        var setEndBufferTime = mutableIntStateOf(5)
-        var openArrivalTimePickerDialog =  mutableStateOf(false)
-        var openTravelTimePickerDialog =  mutableStateOf(false)
-        var openStartBufferPickerDialog = mutableStateOf(false)
-        var openEndBufferPickerDialog = mutableStateOf(false)
-        var startStation = mutableStateOf("Startbahnhof")
-        var endStation = mutableStateOf("Endbahnhof")
-        var selectedDays = mutableStateOf(listOf(true,true,true,true,true,false,false))
-        var isManualArrivalTime = mutableStateOf(false)
-        var isManualTravelTime = mutableStateOf(false)
-        var configurationEntity = ConfigurationEntity(
-            name = "Wecker 1",
-            days = setOf(),
-            fixedArrivalTime = null,
-            fixedTravelBuffer = null,
-            startBuffer = 30,
-            endBuffer = 10,
-            startStation = null,
-            endStation = null,
-            isActive = true
-        )
 
+        //All components are stored as variables so they can be used as callbacks if needed
         val innerDatengrundlageComposable : @Composable (PaddingValues, I_Core) -> Unit =
         { innerPadding: PaddingValues, core: I_Core ->
             val arrivalOptions = listOf("Manuelle Ankuftszeit", "Ankuftszeit nach Vorlesungsplan")
+            //Dont really know what this is doing
             val (arrivalSelectedOption, onArrivalOptionSelected) = remember {
                 if(isManualArrivalTime.value){
                     mutableStateOf(arrivalOptions[0])
@@ -204,7 +204,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                 Column(
                     Modifier
                         .fillMaxWidth()
-                        .selectableGroup()
+                        .selectableGroup() //All radio buttons in this column correspond to one group
                 ) {
                     Row(
                         Modifier
@@ -577,10 +577,11 @@ class AlarmClockEditScreen : ComponentActivity() {
                 }
             }
 
-        @OptIn(ExperimentalMaterial3Api::class)
+        //Main component that is sent as navbar as callback
+        @OptIn(ExperimentalMaterial3Api::class) //Needed because Time Picker is yet experimental
         val innerEditComposable : @Composable (PaddingValues, I_Core) -> Unit =
         { innerPadding: PaddingValues, core: I_Core ->
-
+            //Open time picker dialogs when corresponding boolean set to true
             when {
                 openArrivalTimePickerDialog.value -> {
                     DialWithDialogExample(
@@ -663,6 +664,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                         modifier = Modifier.padding(16.dp)
                     )
                     Button(
+                        //Save to database when clicked
                         onClick = {
                             thread{
                                 //Name of Alarm
@@ -690,9 +692,6 @@ class AlarmClockEditScreen : ComponentActivity() {
                                     if(active) days.add(DayOfWeek.entries[index])
                                 }
                                 configurationEntity.days = days
-
-
-                                configurationEntity.log()
 
                                 core.generateOrUpdateAlarmConfiguration(configurationEntity)
                                 core.setAlarmClockOverviewScreen()
@@ -800,6 +799,7 @@ fun MinutePickerDialog(
     }
 }
 
+//I dont know why both functions are needed to display the time picker dialog
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DialWithDialogExample(
@@ -833,7 +833,6 @@ fun DialWithDialogExample(
             )
     }
 }
-
 @Composable
 fun TimePickerDialog(
     onDismiss: () -> Unit,
@@ -859,9 +858,11 @@ fun TimePickerDialog(
     )
 }
 
+
 @Preview(showBackground = true)
 @Composable
 fun EditPreview() {
+    AlarmClockEditScreen.reset(null)
     G2_WeckMichMalTheme {
         EditComposable(
             modifier = Modifier,

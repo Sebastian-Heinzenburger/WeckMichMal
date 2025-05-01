@@ -43,7 +43,9 @@ class WelcomeScreen : ComponentActivity() {
         }
     }
 }
-
+//Very similar to settings screen... maybe worth merging.
+//This one does not contain navbar and has additional welcome text
+//Is only called when json settings file is not found on android device
 @Composable
 fun Greeting(modifier: Modifier, core: I_Core) {
     var text by remember { mutableStateOf("https://") }

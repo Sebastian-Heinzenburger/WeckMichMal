@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -24,7 +23,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -63,8 +61,12 @@ class AlarmClockOverviewScreen : ComponentActivity(){
     }
 
     companion object{
-        var aPlatypus = false
+        //List of all configurationAndEvent Entities existant in database
+        var configurationAndEventEntities = mutableStateOf(emptyList<ConfigurationAndEventEntity>())
 
+        var aPlatypus = false //Static variable to set Platypus mode
+
+        //Elements in Configuration Component that stay the same, regardless of Platypus
         val innerSingleAlarmConfiguration:
                 @Composable (PaddingValues, I_Core, ConfigurationAndEventEntity)
                 -> Unit = { innerPadding: PaddingValues, core: I_Core, properties: ConfigurationAndEventEntity ->
@@ -132,6 +134,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
             }
         }
 
+        //UI Arrangement for Components when Platypus mode is off
         val SingleAlarmConfiguration :
                 @Composable (PaddingValues, I_Core, ConfigurationAndEventEntity)
                 -> Unit = { innerPadding: PaddingValues, core: I_Core, properties: ConfigurationAndEventEntity ->
@@ -167,6 +170,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
             }
         }
 
+        //UI Arrangement for Components when Platypus mode is activated
         val APlatypus : @Composable (PaddingValues, I_Core, ConfigurationAndEventEntity)
                 -> Unit = { innerPadding: PaddingValues, core: I_Core, properties: ConfigurationAndEventEntity ->
             Column(
@@ -261,6 +265,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
             }
         }
 
+        //Main Component, is passed to Navbar. Contains all configuration components and plus icon
         val innerAlarmClockOverviewComposable : @Composable (PaddingValues, I_Core) -> Unit = { innerPadding: PaddingValues, core: I_Core ->
             Box() {
                 Column(
@@ -283,7 +288,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                             .fillMaxSize(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        configurationEntities.value.forEach {
+                        configurationAndEventEntities.value.forEach {
                             Button(
                                 onClick = {
                                     AlarmClockEditScreen.reset(it.configurationEntity)
@@ -308,7 +313,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                         }
 
                         thread {
-                            configurationEntities.value = core.getAllConfigurationAndEvent()!!
+                            configurationAndEventEntities.value = core.getAllConfigurationAndEvent()!!
                         }
                     }
                 }
@@ -341,10 +346,6 @@ fun AlarmClockOverviewComposable(modifier: Modifier, core: I_Core) {
     NavBar.NavigationBar(modifier, core, AlarmClockOverviewScreen.innerAlarmClockOverviewComposable,
         AlarmClockOverviewScreen::class)
 }
-
-
-var configurationEntities = mutableStateOf(emptyList<ConfigurationAndEventEntity>())
-
 
 @Preview(showBackground = true)
 @Composable

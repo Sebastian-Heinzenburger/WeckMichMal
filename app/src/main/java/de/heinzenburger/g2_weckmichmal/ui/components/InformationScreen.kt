@@ -32,30 +32,32 @@ class InformationScreen : ComponentActivity() {
             }
         }
     }
+    companion object{
+        //When text is clicked, platypus mode in AlarmClockOverviewScreen is activated hehe
+        val innerInformationComposable : @Composable (PaddingValues, I_Core) -> Unit =
+            { innerPadding: PaddingValues, core: I_Core ->
+                Button(
+                    modifier = Modifier.padding(0.dp,50.dp,0.dp,0.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                    onClick = {
+                        AlarmClockOverviewScreen.aPlatypus = !AlarmClockOverviewScreen.aPlatypus
+                    }
+                ) {
+                    Text(
+                        style = MaterialTheme.typography.titleMedium,
+                        text = "Ich fürchte, dass dieser Screen unverändert in der Production landen wird",
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+            }
+    }
 }
 
 @Composable
 fun InformationComposable(modifier: Modifier, core: I_Core) {
-    NavBar.NavigationBar(modifier, core, innerInformationComposable, caller = InformationScreen::class)
+    NavBar.NavigationBar(modifier, core, InformationScreen.innerInformationComposable, caller = InformationScreen::class)
 }
-
-val innerInformationComposable : @Composable (PaddingValues, I_Core) -> Unit =
-    { innerPadding: PaddingValues, core: I_Core ->
-        Button(
-            modifier = Modifier.padding(0.dp,50.dp,0.dp,0.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-            onClick = {
-                AlarmClockOverviewScreen.aPlatypus = !AlarmClockOverviewScreen.aPlatypus
-            }
-        ) {
-            Text(
-                style = MaterialTheme.typography.titleMedium,
-                text = "Ich fürchte, dass dieser Screen unverändert in der Production landen wird",
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-        }
-    }
 
 @Preview(showBackground = true)
 @Composable
