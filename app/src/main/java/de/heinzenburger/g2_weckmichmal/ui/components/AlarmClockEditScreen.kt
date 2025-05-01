@@ -71,6 +71,7 @@ class AlarmClockEditScreen : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val core = Core(context = applicationContext)
+        reset()
         setContent {
             G2_WeckMichMalTheme {
                 EditComposable(modifier = Modifier, core)
@@ -78,19 +79,45 @@ class AlarmClockEditScreen : ComponentActivity() {
         }
     }
     companion object{
-
+        fun reset(){
+            manuallySetArrivalTime = mutableStateOf(LocalTime.NOON)
+            manuallySetTravelTime = mutableIntStateOf(15)
+            setStartBufferTime = mutableIntStateOf(30)
+            setEndBufferTime = mutableIntStateOf(5)
+            openArrivalTimePickerDialog =  mutableStateOf(false)
+            openTravelTimePickerDialog =  mutableStateOf(false)
+            openStartBufferPickerDialog = mutableStateOf(false)
+            openEndBufferPickerDialog = mutableStateOf(false)
+            startStation = mutableStateOf("Startbahnhof")
+            endStation = mutableStateOf("Endbahnhof")
+            selectedDays = mutableStateOf(listOf(true,true,true,true,true,false,false))
+            isManualArrivalTime = mutableStateOf(false)
+            isManualTravelTime = mutableStateOf(false)
+            configurationEntity = ConfigurationEntity(
+                name = "Wecker 1",
+                days = setOf(),
+                fixedArrivalTime = null,
+                fixedTravelBuffer = null,
+                startBuffer = 30,
+                endBuffer = 10,
+                startStation = null,
+                endStation = null,
+                isActive = true
+            )
+        }
         var manuallySetArrivalTime = mutableStateOf(LocalTime.NOON)
         var manuallySetTravelTime = mutableIntStateOf(15)
         var setStartBufferTime = mutableIntStateOf(30)
         var setEndBufferTime = mutableIntStateOf(5)
-        var openArrivalTimePickerDialog =  mutableStateOf(true)
+        var openArrivalTimePickerDialog =  mutableStateOf(false)
         var openTravelTimePickerDialog =  mutableStateOf(false)
         var openStartBufferPickerDialog = mutableStateOf(false)
         var openEndBufferPickerDialog = mutableStateOf(false)
         var startStation = mutableStateOf("Startbahnhof")
         var endStation = mutableStateOf("Endbahnhof")
         var selectedDays = mutableStateOf(listOf(true,true,true,true,true,false,false))
-
+        var isManualArrivalTime = mutableStateOf(false)
+        var isManualTravelTime = mutableStateOf(false)
         var configurationEntity = ConfigurationEntity(
             name = "Wecker 1",
             days = setOf(),
@@ -98,15 +125,15 @@ class AlarmClockEditScreen : ComponentActivity() {
             fixedTravelBuffer = null,
             startBuffer = 30,
             endBuffer = 10,
-            startStation = "",
-            endStation = "",
+            startStation = null,
+            endStation = null,
             isActive = true
         )
 
         val innerDatengrundlageComposable : @Composable (PaddingValues, I_Core) -> Unit =
         { innerPadding: PaddingValues, core: I_Core ->
             val arrivalOptions = listOf("Manuelle Ankuftszeit", "Ankuftszeit nach Vorlesungsplan")
-            val (arrivalSelectedOption, onArrivalOptionSelected) = remember { mutableStateOf(arrivalOptions[0]) }
+            val (arrivalSelectedOption, onArrivalOptionSelected) = remember { mutableStateOf(arrivalOptions[1]) }
 
             Text(
                 style = MaterialTheme.typography.bodyMedium,
@@ -126,7 +153,10 @@ class AlarmClockEditScreen : ComponentActivity() {
                         Modifier
                             .selectable(
                                 selected = (arrivalOptions[0] == arrivalSelectedOption),
-                                onClick = { onArrivalOptionSelected(arrivalOptions[0]) },
+                                onClick = {
+                                    onArrivalOptionSelected(arrivalOptions[0])
+                                    isManualArrivalTime.value = true
+                                          },
                                 role = Role.RadioButton
                             )
                             .padding(horizontal = 16.dp),
@@ -176,7 +206,10 @@ class AlarmClockEditScreen : ComponentActivity() {
                         Modifier
                             .selectable(
                                 selected = (arrivalOptions[1] == arrivalSelectedOption),
-                                onClick = { onArrivalOptionSelected(arrivalOptions[1]) },
+                                onClick = {
+                                    onArrivalOptionSelected(arrivalOptions[1])
+                                    isManualArrivalTime.value = false
+                                          },
                                 role = Role.RadioButton
                             )
                             .padding(horizontal = 16.dp, vertical = 4.dp),
@@ -227,7 +260,10 @@ class AlarmClockEditScreen : ComponentActivity() {
                                 Modifier
                                     .selectable(
                                         selected = (rideOptions[0] == rideSelectedOption),
-                                        onClick = { onRideOptionSelected(rideOptions[0]) },
+                                        onClick = {
+                                            onRideOptionSelected(rideOptions[0])
+                                            isManualTravelTime.value = false
+                                                  },
                                         role = Role.RadioButton
                                     )
                                     .padding(horizontal = 16.dp),
@@ -302,7 +338,10 @@ class AlarmClockEditScreen : ComponentActivity() {
                                 Modifier
                                     .selectable(
                                         selected = (rideOptions[1] == rideSelectedOption),
-                                        onClick = { onRideOptionSelected(rideOptions[1]) },
+                                        onClick = {
+                                            onRideOptionSelected(rideOptions[1])
+                                            isManualTravelTime.value = true
+                                                  },
                                         role = Role.RadioButton
                                     )
                                     .padding(horizontal = 16.dp, vertical = 4.dp),
@@ -432,16 +471,22 @@ class AlarmClockEditScreen : ComponentActivity() {
                     modifier = Modifier.padding(top = 24.dp, start = 24.dp)
                 )
                 Box(
-                    modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth()
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .fillMaxWidth()
                 ){
                     selectedDays.value.forEachIndexed { index, active ->
 
                         TextButton(
                             modifier = Modifier
-                                .padding(start = 0.dp).width(50.dp).align(BiasAlignment(
-                                    (2*(index/6f)-1),
-                                    verticalBias = 0f
-                                )),
+                                .padding(start = 0.dp)
+                                .width(50.dp)
+                                .align(
+                                    BiasAlignment(
+                                        (2 * (index / 6f) - 1),
+                                        verticalBias = 0f
+                                    )
+                                ),
                             onClick = {
                                 var days = selectedDays.value.toMutableList()
                                 days[index] = !days[index]
@@ -556,6 +601,35 @@ class AlarmClockEditScreen : ComponentActivity() {
                     Button(
                         onClick = {
                             thread{
+                                //Name is already set at TextField component
+
+                                //fixed arrival time if selected, else null
+                                if(isManualArrivalTime.value){
+                                    configurationEntity.fixedArrivalTime = manuallySetArrivalTime.value
+                                }
+                                //fixed travel time if selected, else null
+                                if(isManualTravelTime.value){
+                                    configurationEntity.fixedTravelBuffer = manuallySetTravelTime.intValue
+                                }
+                                //stations needed, else null
+                                else{
+                                    configurationEntity.startStation = startStation.value
+                                    configurationEntity.endStation = endStation.value
+                                }
+                                //set required start and endbuffer
+                                configurationEntity.startBuffer = setStartBufferTime.intValue
+                                configurationEntity.endBuffer = setEndBufferTime.intValue
+
+                                //Setting days parameter
+                                var days = mutableSetOf<DayOfWeek>()
+                                selectedDays.value.forEachIndexed { index, active ->
+                                    if(active) days.add(DayOfWeek.entries[index])
+                                }
+                                configurationEntity.days = days
+
+
+                                configurationEntity.log()
+
                                 core.generateOrUpdateAlarmConfiguration(configurationEntity)
                                 core.setAlarmClockOverviewScreen()
                             }
@@ -601,8 +675,6 @@ class AlarmClockEditScreen : ComponentActivity() {
 fun EditComposable(modifier: Modifier, core: I_Core) {
     NavBar.NavigationBar(modifier, core, AlarmClockEditScreen.innerEditComposable, caller = AlarmClockEditScreen::class)
 }
-
-
 
 @Composable
 fun MinutePickerDialog(
