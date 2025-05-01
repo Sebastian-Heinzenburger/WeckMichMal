@@ -21,7 +21,6 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.darkColors
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -37,7 +36,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TimePicker
-import androidx.compose.material3.TimePickerColors
 import androidx.compose.material3.TimePickerDefaults
 import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.rememberTimePickerState
@@ -71,7 +69,6 @@ class AlarmClockEditScreen : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val core = Core(context = applicationContext)
-        reset()
         setContent {
             G2_WeckMichMalTheme {
                 EditComposable(modifier = Modifier, core)
@@ -79,32 +76,85 @@ class AlarmClockEditScreen : ComponentActivity() {
         }
     }
     companion object{
-        fun reset(){
-            manuallySetArrivalTime = mutableStateOf(LocalTime.NOON)
-            manuallySetTravelTime = mutableIntStateOf(15)
-            setStartBufferTime = mutableIntStateOf(30)
-            setEndBufferTime = mutableIntStateOf(5)
-            openArrivalTimePickerDialog =  mutableStateOf(false)
-            openTravelTimePickerDialog =  mutableStateOf(false)
-            openStartBufferPickerDialog = mutableStateOf(false)
-            openEndBufferPickerDialog = mutableStateOf(false)
-            startStation = mutableStateOf("Startbahnhof")
-            endStation = mutableStateOf("Endbahnhof")
-            selectedDays = mutableStateOf(listOf(true,true,true,true,true,false,false))
-            isManualArrivalTime = mutableStateOf(false)
-            isManualTravelTime = mutableStateOf(false)
-            configurationEntity = ConfigurationEntity(
-                name = "Wecker 1",
-                days = setOf(),
-                fixedArrivalTime = null,
-                fixedTravelBuffer = null,
-                startBuffer = 30,
-                endBuffer = 10,
-                startStation = null,
-                endStation = null,
-                isActive = true
-            )
+        fun reset(configurationEntity: ConfigurationEntity?){
+            if(configurationEntity == null){
+                alarmName = mutableStateOf("Wecker 1")
+                manuallySetArrivalTime = mutableStateOf(LocalTime.NOON)
+                manuallySetTravelTime = mutableIntStateOf(15)
+                setStartBufferTime = mutableIntStateOf(30)
+                setEndBufferTime = mutableIntStateOf(5)
+                startStation = mutableStateOf("Startbahnhof")
+                endStation = mutableStateOf("Endbahnhof")
+                selectedDays = mutableStateOf(listOf(true,true,true,true,true,false,false))
+                isManualArrivalTime = mutableStateOf(false)
+                isManualTravelTime = mutableStateOf(false)
+                AlarmClockEditScreen.configurationEntity = ConfigurationEntity(
+                    name = "Wecker 1",
+                    days = setOf(),
+                    fixedArrivalTime = null,
+                    fixedTravelBuffer = null,
+                    startBuffer = 30,
+                    endBuffer = 10,
+                    startStation = null,
+                    endStation = null,
+                    isActive = true
+                )
+            }
+            else{
+                //Set Alarm Name
+                alarmName = mutableStateOf(configurationEntity.name)
+
+                //BufferTimes
+                setStartBufferTime = mutableIntStateOf(configurationEntity.startBuffer)
+                setEndBufferTime = mutableIntStateOf(configurationEntity.endBuffer)
+
+                //Convert Day of Week to Boolean List
+                var days = mutableListOf<Boolean>()
+                DayOfWeek.entries.forEach { day ->
+                    days.add(configurationEntity.days.contains(day))
+                }
+                selectedDays = mutableStateOf(days)
+
+                //Manual set Arrival Time
+                isManualArrivalTime = mutableStateOf(configurationEntity.fixedArrivalTime != null)
+                manuallySetArrivalTime = if(isManualArrivalTime.value){
+                    mutableStateOf(configurationEntity.fixedArrivalTime)
+                } else{
+                    mutableStateOf(LocalTime.NOON)
+                }
+
+                //Manual set Travel Time
+                isManualTravelTime = mutableStateOf(configurationEntity.fixedTravelBuffer != null)
+                manuallySetTravelTime = if(isManualTravelTime.value){
+                    mutableIntStateOf(configurationEntity.fixedTravelBuffer!!)
+                } else{
+                    mutableIntStateOf(15)
+                }
+                //Stations if needed
+                if(isManualTravelTime.value){
+                    startStation = mutableStateOf("Startbahnhof")
+                    endStation = mutableStateOf("Endbahnhof")
+                }
+                else{
+                    startStation = mutableStateOf(configurationEntity.startStation!!)
+                    endStation = mutableStateOf(configurationEntity.endStation!!)
+                }
+
+                AlarmClockEditScreen.configurationEntity = ConfigurationEntity(
+                    uid = configurationEntity.uid,
+                    name = "Wecker 1",
+                    days = setOf(),
+                    fixedArrivalTime = null,
+                    fixedTravelBuffer = null,
+                    startBuffer = 30,
+                    endBuffer = 10,
+                    startStation = null,
+                    endStation = null,
+                    isActive = true
+                )
+            }
         }
+        var alarmName = mutableStateOf("Wecker 1")
         var manuallySetArrivalTime = mutableStateOf(LocalTime.NOON)
         var manuallySetTravelTime = mutableIntStateOf(15)
         var setStartBufferTime = mutableIntStateOf(30)
@@ -133,7 +183,14 @@ class AlarmClockEditScreen : ComponentActivity() {
         val innerDatengrundlageComposable : @Composable (PaddingValues, I_Core) -> Unit =
         { innerPadding: PaddingValues, core: I_Core ->
             val arrivalOptions = listOf("Manuelle Ankuftszeit", "Ankuftszeit nach Vorlesungsplan")
-            val (arrivalSelectedOption, onArrivalOptionSelected) = remember { mutableStateOf(arrivalOptions[1]) }
+            val (arrivalSelectedOption, onArrivalOptionSelected) = remember {
+                if(isManualArrivalTime.value){
+                    mutableStateOf(arrivalOptions[0])
+                }
+                else{
+                    mutableStateOf(arrivalOptions[1])
+                }
+            }
 
             Text(
                 style = MaterialTheme.typography.bodyMedium,
@@ -237,7 +294,14 @@ class AlarmClockEditScreen : ComponentActivity() {
         val innerFahrtwegComposable : @Composable (PaddingValues, I_Core) -> Unit =
             { innerPadding: PaddingValues, core: I_Core ->
                 val rideOptions = listOf("Bahnverbindung", "Manuelle Fahrtzeit")
-                val (rideSelectedOption, onRideOptionSelected) = remember { mutableStateOf(rideOptions[0]) }
+                val (rideSelectedOption, onRideOptionSelected) = remember {
+                    if(isManualTravelTime.value){
+                        mutableStateOf(rideOptions[1])
+                    }
+                    else{
+                        mutableStateOf(rideOptions[0])
+                    }
+                }
 
                 Column (
                     modifier = Modifier.selectableGroup()
@@ -601,8 +665,8 @@ class AlarmClockEditScreen : ComponentActivity() {
                     Button(
                         onClick = {
                             thread{
-                                //Name is already set at TextField component
-
+                                //Name of Alarm
+                                configurationEntity.name = alarmName.value
                                 //fixed arrival time if selected, else null
                                 if(isManualArrivalTime.value){
                                     configurationEntity.fixedArrivalTime = manuallySetArrivalTime.value
@@ -651,8 +715,8 @@ class AlarmClockEditScreen : ComponentActivity() {
                 }
                 TextField(
                     shape = RoundedCornerShape(8.dp),
-                    value = configurationEntity.name,
-                    onValueChange = {configurationEntity.name = it},
+                    value = alarmName.value,
+                    onValueChange = {alarmName.value = it},
                     textStyle = MaterialTheme.typography.bodyMedium,
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = MaterialTheme.colorScheme.primary,

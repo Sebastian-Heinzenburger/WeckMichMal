@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -23,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -282,14 +284,26 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         configurationEntities.value.forEach {
-                            if (aPlatypus) {
-                                APlatypus(
-                                    innerPadding, core, it
-                                )
-                            } else {
-                                SingleAlarmConfiguration(
-                                    innerPadding, core, it
-                                )
+                            Button(
+                                onClick = {
+                                    AlarmClockEditScreen.reset(it.configurationEntity)
+                                    core.setAlarmClockEditScreen()
+                                          },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color.Transparent
+                                ),
+                                contentPadding = PaddingValues(0.dp),
+                                shape = RoundedCornerShape(0.dp)
+                            ){
+                                if (aPlatypus) {
+                                    APlatypus(
+                                        innerPadding, core, it
+                                    )
+                                } else {
+                                    SingleAlarmConfiguration(
+                                        innerPadding, core, it
+                                    )
+                                }
                             }
                         }
 
@@ -300,6 +314,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                 }
                 Button(
                     onClick = {
+                        AlarmClockEditScreen.reset(null)
                         core.setAlarmClockEditScreen()
                     },
                     colors = ButtonDefaults.buttonColors(
