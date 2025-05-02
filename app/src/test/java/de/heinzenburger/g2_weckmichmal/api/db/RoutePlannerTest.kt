@@ -17,7 +17,7 @@ class RoutePlannerTest {
     }
 
     @Test
-    fun `deriveValidStationNames with Wiesloch-Wall`() {
+    fun `deriveValidStationNames with Wiesloch-Wahldoof`() {
         val routePlanner = RoutePlanner()
         val stationName = "Wiesloch-Wahldoof"
         val result = routePlanner.deriveValidStationNames(stationName)
