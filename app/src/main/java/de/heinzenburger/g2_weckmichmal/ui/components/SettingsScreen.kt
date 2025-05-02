@@ -18,10 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -47,62 +44,64 @@ class SettingsScreen : ComponentActivity() {
             }
         }
     }
+    companion object{
+        private var url = mutableStateOf("https://") //At the moment, only possible configuration
+
+        //Main component
+        val innerSettingsComposable : @Composable (PaddingValues, I_Core) -> Unit = { innerPadding: PaddingValues, core: I_Core ->
+            Column(
+                Modifier
+                    .padding(innerPadding)
+                    .background(MaterialTheme.colorScheme.background)) {
+                Text(
+                    style = MaterialTheme.typography.bodyMedium,
+                    text = "Einstellungen",
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(16.dp)
+                )
+                Column(Modifier
+                    .background(MaterialTheme.colorScheme.background).fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ){
+                    TextField(
+                        shape = RoundedCornerShape(8.dp),
+                        value = url.value,
+                        onValueChange = {url.value = it},
+                        textStyle = MaterialTheme.typography.bodyMedium,
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = MaterialTheme.colorScheme.primary,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.primary
+                        ),
+                        modifier = Modifier.padding(16.dp)
+                    )
+                    Button(
+                        onClick = { core.saveRaplaURL(url.value) },
+                        colors = ButtonColors(
+                            contentColor = MaterialTheme.colorScheme.primary,
+                            containerColor = MaterialTheme.colorScheme.onBackground,
+                            disabledContainerColor = MaterialTheme.colorScheme.error,
+                            disabledContentColor = MaterialTheme.colorScheme.error
+                        ),
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Vorlesungsplan speichern",
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(8.dp),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
 fun SettingsComposable(modifier: Modifier, uiActions: I_Core) {
-    NavBar.NavigationBar(modifier, uiActions, innerSettingsComposable, SettingsScreen::class)
-}
-
-var url = mutableStateOf("https://")
-
-val innerSettingsComposable : @Composable (PaddingValues, I_Core) -> Unit = { innerPadding: PaddingValues, core: I_Core ->
-    Column(
-        Modifier
-            .padding(innerPadding)
-            .background(MaterialTheme.colorScheme.background)) {
-        Text(
-            style = MaterialTheme.typography.bodyMedium,
-            text = "Einstellungen",
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(16.dp)
-        )
-        Column(Modifier
-            .background(MaterialTheme.colorScheme.background).fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ){
-            TextField(
-                shape = RoundedCornerShape(8.dp),
-                value = url.value,
-                onValueChange = {url.value = it},
-                textStyle = MaterialTheme.typography.bodyMedium,
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.primary,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.primary
-                ),
-                modifier = Modifier.padding(16.dp)
-            )
-            Button(
-                onClick = { core.saveRaplaURL(url.value) },
-                colors = ButtonColors(
-                    contentColor = MaterialTheme.colorScheme.primary,
-                    containerColor = MaterialTheme.colorScheme.onBackground,
-                    disabledContainerColor = MaterialTheme.colorScheme.error,
-                    disabledContentColor = MaterialTheme.colorScheme.error
-                ),
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = "Vorlesungsplan speichern",
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(8.dp),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-        }
-    }
+    NavBar.NavigationBar(modifier, uiActions, SettingsScreen.innerSettingsComposable, SettingsScreen::class)
 }
 
 @Preview(showBackground = true)

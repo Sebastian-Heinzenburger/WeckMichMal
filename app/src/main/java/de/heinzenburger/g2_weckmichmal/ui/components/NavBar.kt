@@ -21,6 +21,8 @@ class NavBar : ComponentActivity() {
     }
 
     companion object{
+        //Navbar Component at the bottom of the screen. All other components should be displayed inside of this component.
+        //Therefore, the components shall be passed as function parameter (callback)
         @Composable
         fun <T> NavigationBar(modifier: Modifier, core: I_Core, callback: @Composable ((PaddingValues, I_Core) -> Unit), caller : T) {
             val iconSize = 35.dp
