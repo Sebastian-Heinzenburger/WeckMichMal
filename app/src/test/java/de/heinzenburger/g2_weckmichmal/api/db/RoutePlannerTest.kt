@@ -17,6 +17,14 @@ class RoutePlannerTest {
     }
 
     @Test
+    fun `deriveValidStationNames with Wiesloch-Wall`() {
+        val routePlanner = RoutePlanner()
+        val stationName = "Wiesloch-Wahldoof"
+        val result = routePlanner.deriveValidStationNames(stationName)
+        assert(result.contains("Wiesloch-Walldorf")) { "Expected 'Wiesloch-Walldorf' in the result" }
+    }
+
+    @Test
     fun `deriveValidStationNames with Duale Hochschule Karlsruhe`() {
         val routePlanner = RoutePlanner()
         val stationName = "Duale Hochschule Karlsr"
