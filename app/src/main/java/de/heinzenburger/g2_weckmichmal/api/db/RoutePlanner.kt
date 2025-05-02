@@ -15,12 +15,12 @@ typealias StationID = String
 
 class RoutePlanner : I_RoutePlannerSpecification {
 
-    var DB_API_BASE_URL_WITHOUT_SLASH_AT_THE_END = "https://www.bahn.de/web/api"
+    var DB_API_BASE_URL_WITHOUT_SLASH_IN_THE_END = "https://www.bahn.de/web/api"
 
     private fun fetchStations(stationNameQuery: String): JSONArray {
         val urlEncodedStationName = URLEncoder.encode(stationNameQuery, "UTF-8")
         val url =
-            URL("${DB_API_BASE_URL_WITHOUT_SLASH_AT_THE_END}/reiseloesung/orte?suchbegriff=${urlEncodedStationName}&typ=ALL&limit=10")
+            URL("${DB_API_BASE_URL_WITHOUT_SLASH_IN_THE_END}/reiseloesung/orte?suchbegriff=${urlEncodedStationName}&typ=ALL&limit=10")
         val connection = url.openConnection()
         val response = connection.getInputStream().bufferedReader().use { it.readText() }
         return JSONArray(response)
@@ -36,7 +36,7 @@ class RoutePlanner : I_RoutePlannerSpecification {
         startStation: String, endStation: String, timeOfArrival: LocalDateTime
     ): List<Route> {
 
-        val url = URL("${DB_API_BASE_URL_WITHOUT_SLASH_AT_THE_END}/angebote/fahrplan")
+        val url = URL("${DB_API_BASE_URL_WITHOUT_SLASH_IN_THE_END}/angebote/fahrplan")
         val httpConnection = url.openConnection()
         httpConnection.setRequestProperty("Accept", "application/json")
         httpConnection.setRequestProperty("Content-Type", "application/json")
