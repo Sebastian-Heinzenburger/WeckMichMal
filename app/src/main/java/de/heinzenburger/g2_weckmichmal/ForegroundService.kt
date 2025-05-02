@@ -8,6 +8,8 @@ import android.content.Intent
 import android.media.MediaPlayer
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import java.time.Duration
+import java.time.LocalDateTime
 import kotlin.concurrent.thread
 
 class ForegroundService : Service() {
@@ -27,13 +29,13 @@ class ForegroundService : Service() {
 
         // Simulate a long-running task
         thread {
-            var i = 0
             while (true) {
-                if (i++ == 20) {
+                if (Duration.between(LocalDateTime.now(), LocalDateTime.of(2025, 5, 3, 8, 0)).toMinutes() < 0) {
                     mediaPlayer = MediaPlayer.create(this, R.raw.alarm)
                     mediaPlayer?.start()
+                    break
                 }
-                Thread.sleep(1000)
+                Thread.sleep(30 * 1000)
                 MainActivity.log.severe("I am running in the foreground")
             }
         }
