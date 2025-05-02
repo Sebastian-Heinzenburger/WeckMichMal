@@ -80,4 +80,8 @@ dependencies {
     implementation(libs.ui.tooling)
     ksp(libs.androidx.room.room.compiler)
 
+    // for JSON parsing
+    testImplementation("org.json:json:20210307")
+
+
 }
