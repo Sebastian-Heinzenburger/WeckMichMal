@@ -29,15 +29,14 @@ class ForegroundService : Service() {
 
         // Simulate a long-running task
         thread {
-            while (true) {
-                if (Duration.between(LocalDateTime.now(), LocalDateTime.of(2025, 5, 3, 8, 0)).toMinutes() < 0) {
-                    mediaPlayer = MediaPlayer.create(this, R.raw.alarm)
-                    mediaPlayer?.start()
-                    break
-                }
+            while (Duration.between(LocalDateTime.now(), LocalDateTime.of(2025, 5, 3, 8, 0))
+                    .toMinutes() > 0
+            ) {
                 Thread.sleep(30 * 1000)
                 MainActivity.log.severe("I am running in the foreground")
             }
+            mediaPlayer = MediaPlayer.create(this, R.raw.alarm)
+            mediaPlayer?.start()
         }
         return START_STICKY
     }
