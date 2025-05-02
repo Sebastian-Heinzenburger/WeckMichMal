@@ -102,7 +102,7 @@ data class Core(
         alarmConfiguration.removeAlarmConfiguration(uid)
     }
 
-    override fun isApplicationOpenedFirstTime(): Boolean? {
+    override fun isApplicationOpenedFirstTime(): Boolean {
         val settings = ApplicationSettings(context)
         return settings.isApplicationOpenedFirstTime()
     }
