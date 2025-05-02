@@ -5,8 +5,11 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
+import android.content.Context
 import android.media.MediaPlayer
 import android.os.IBinder
+import android.os.VibrationEffect
+import android.os.Vibrator
 import androidx.core.app.NotificationCompat
 import java.time.Duration
 import java.time.LocalDateTime
@@ -15,28 +18,42 @@ import kotlin.concurrent.thread
 class ForegroundService : Service() {
 
     private var mediaPlayer: MediaPlayer? = null
+    private var vibrator: Vibrator? = null
 
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
+        vibrator = getSystemService("vibrator") as Vibrator
+    }
+
+    fun playWithPerry() {
+        mediaPlayer = MediaPlayer.create(this, R.raw.alarm)
+        mediaPlayer?.start()
+        mediaPlayer?.setOnCompletionListener {
+            vibrator?.cancel()
+        }
+        vibrator?.vibrate(
+            VibrationEffect.createWaveform(
+                longArrayOf(0, 500, 950), // Pattern: wait 0ms, vibrate 500ms, pause 1000ms
+                intArrayOf(0, 255, 0),
+                1 // Repeat indefinitely
+            )
+        )
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val notification = createNotification()
         startForeground(1, notification)
 
-        // Initialize and start playing sound
-
-        // Simulate a long-running task
         thread {
+            playWithPerry()
             while (Duration.between(LocalDateTime.now(), LocalDateTime.of(2025, 5, 3, 8, 0))
                     .toMinutes() > 0
             ) {
                 Thread.sleep(30 * 1000)
                 MainActivity.log.severe("I am running in the foreground")
             }
-            mediaPlayer = MediaPlayer.create(this, R.raw.alarm)
-            mediaPlayer?.start()
+            playWithPerry()
         }
         return START_STICKY
     }
