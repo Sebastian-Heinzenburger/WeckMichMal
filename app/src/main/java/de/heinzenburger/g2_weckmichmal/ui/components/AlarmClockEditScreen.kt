@@ -59,6 +59,7 @@ import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import de.heinzenburger.g2_weckmichmal.ui.components.AlarmClockEditScreen.Companion.alarmName
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
 import java.time.DayOfWeek
 import java.time.LocalTime
@@ -82,6 +83,8 @@ class AlarmClockEditScreen : ComponentActivity() {
         private var openTravelTimePickerDialog : MutableState<Boolean> = mutableStateOf(false)
         private var openStartBufferPickerDialog : MutableState<Boolean> = mutableStateOf(false)
         private var openEndBufferPickerDialog : MutableState<Boolean> = mutableStateOf(false)
+        private var openStartStationDialog : MutableState<Boolean> = mutableStateOf(false)
+        private var openEndStationDialog : MutableState<Boolean> = mutableStateOf(false)
 
         //These are static. They are storing all necessary information for an alarm configuration
         //Everytime an alarm is created, the reset function has to be called before calling this view so all configurations are set to default
@@ -347,53 +350,49 @@ class AlarmClockEditScreen : ComponentActivity() {
                                 )
                             }
                             Column{
-                                TextField(
-                                    shape = RoundedCornerShape(16.dp),
-                                    value = startStation.value,
-                                    onValueChange = {startStation.value = it},
-                                    textStyle = MaterialTheme.typography.bodyMedium,
-                                    enabled = rideSelectedOption == rideOptions[0],
-                                    colors =
-                                        if(rideSelectedOption == rideOptions[0]){
-                                            TextFieldDefaults.colors(
-                                                focusedContainerColor = MaterialTheme.colorScheme.primary,
-                                                unfocusedContainerColor = MaterialTheme.colorScheme.primary
-                                            )
-                                        }
-                                        else{
-                                            TextFieldDefaults.colors(
-                                                focusedContainerColor = MaterialTheme.colorScheme.error,
-                                                unfocusedContainerColor = MaterialTheme.colorScheme.error
-                                            )
-                                        },
 
+                                Button(
                                     modifier = Modifier
-                                        .padding(48.dp, 8.dp)
-                                        .align(alignment = Alignment.CenterHorizontally)
-                                )
-                                TextField(
-                                    shape = RoundedCornerShape(16.dp),
-                                    value = endStation.value,
-                                    onValueChange = {endStation.value = it},
-                                    textStyle = MaterialTheme.typography.bodyMedium,
-                                    enabled = rideSelectedOption == rideOptions[0],
-                                    colors =
-                                        if(rideSelectedOption == rideOptions[0]){
-                                            TextFieldDefaults.colors(
-                                                focusedContainerColor = MaterialTheme.colorScheme.primary,
-                                                unfocusedContainerColor = MaterialTheme.colorScheme.primary
-                                            )
-                                        }
-                                        else{
-                                            TextFieldDefaults.colors(
-                                                focusedContainerColor = MaterialTheme.colorScheme.error,
-                                                unfocusedContainerColor = MaterialTheme.colorScheme.error
-                                            )
-                                        },
+                                        .fillMaxWidth()
+                                        .padding(start = 48.dp),
+                                    onClick = {
+                                        openStartStationDialog.value = true
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary
+                                    ),
+                                    contentPadding = PaddingValues(0.dp)
+
+                                ) {
+                                    Text(
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        text = startStation.value,
+                                        textAlign = TextAlign.Center,
+                                        color = MaterialTheme.colorScheme.background,
+                                        modifier = Modifier.padding(0.dp)
+                                    )
+                                }
+                                Button(
                                     modifier = Modifier
-                                        .padding(48.dp, 8.dp)
-                                        .align(alignment = Alignment.CenterHorizontally)
-                                )
+                                        .fillMaxWidth()
+                                        .padding(start = 48.dp),
+                                    onClick = {
+                                        openEndStationDialog.value = true
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary
+                                    ),
+                                    contentPadding = PaddingValues(0.dp)
+
+                                ) {
+                                    Text(
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        text = endStation.value,
+                                        textAlign = TextAlign.Center,
+                                        color = MaterialTheme.colorScheme.background,
+                                        modifier = Modifier.padding(0.dp)
+                                    )
+                                }
                             }
 
                             Row(
@@ -643,6 +642,36 @@ class AlarmClockEditScreen : ComponentActivity() {
                     )
                 }
             }
+            when {
+                openStartStationDialog.value -> {
+                    StationPickerDialog(
+                        onConfirm =
+                            { station: String ->
+                                openStartStationDialog.value = false
+                                startStation.value = station
+                            },
+                        onDismiss = {
+                            openStartStationDialog.value = false
+                        },
+                        core
+                    )
+                }
+            }
+            when {
+                openEndStationDialog.value -> {
+                    StationPickerDialog(
+                        onConfirm =
+                            { station: String ->
+                                openEndStationDialog.value = false
+                                endStation.value = station
+                            },
+                        onDismiss = {
+                            openEndStationDialog.value = false
+                        },
+                        core
+                    )
+                }
+            }
             Column(
                 modifier = Modifier
                     .verticalScroll(rememberScrollState())
@@ -789,6 +818,80 @@ fun MinutePickerDialog(
                     }
                     TextButton(
                         onClick = { onConfirm((sliderPosition.floatValue).toInt()) },
+                        modifier = Modifier.padding(8.dp),
+                    ) {
+                        Text("Confirm", color = MaterialTheme.colorScheme.primary)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun StationPickerDialog(
+    onConfirm: (String) -> Unit,
+    onDismiss: () -> Unit,
+    core: I_Core
+) {
+    Dialog(onDismissRequest = { onDismiss() }) {
+        var station = remember { mutableStateOf("") }
+        var stationPrediction = remember { mutableStateOf("") }
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(375.dp)
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = "Stationsname:",
+                    modifier = Modifier.padding(16.dp),
+                )
+                Text(
+                    text = stationPrediction.value
+                )
+                TextField(
+                    shape = RoundedCornerShape(8.dp),
+                    value = station.value,
+                    onValueChange = {
+                        station.value = it
+                        thread{
+                            if(station.value.length > 2){
+                                stationPrediction.value = core.deriveStationName(it)[0]
+                            }
+                        } },
+                    textStyle = MaterialTheme.typography.bodyMedium,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.primary,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.primary
+                    ),
+                    modifier = Modifier
+                        .padding(24.dp, 8.dp)
+                        .align(alignment = Alignment.CenterHorizontally)
+                )
+
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    TextButton(
+                        onClick = { onDismiss() },
+                        modifier = Modifier.padding(8.dp),
+                    ) {
+                        Text("Dismiss", color = MaterialTheme.colorScheme.primary)
+                    }
+                    TextButton(
+                        onClick = { onConfirm(stationPrediction.value) },
                         modifier = Modifier.padding(8.dp),
                     ) {
                         Text("Confirm", color = MaterialTheme.colorScheme.primary)

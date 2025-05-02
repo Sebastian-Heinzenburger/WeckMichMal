@@ -9,6 +9,10 @@ import de.heinzenburger.g2_weckmichmal.specifications.I_Core
 //Most methods do nothing, only those that cause something in UI are relevant
 //For description of each method, see I_Core in specifications
 class MockupCore : I_Core {
+    override fun deriveStationName(input: String): List<String> {
+        return listOf("Europapapapa")
+    }
+
     companion object{
         val mockupConfigurations = listOf(ConfigurationEntity.emptyConfiguration)
         val mockupEvents = listOf(EventEntity.emptyEvent)

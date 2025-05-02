@@ -311,31 +311,31 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                                 }
                             }
                         }
+                        Button(
+                            onClick = {
+                                AlarmClockEditScreen.reset(null)
+                                core.setAlarmClockEditScreen()
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                contentColor = MaterialTheme.colorScheme.primary,
+                                containerColor = MaterialTheme.colorScheme.secondary,
+                            ),
+                            contentPadding = PaddingValues(0.dp),
+                            modifier = Modifier
+                                .size(69.dp)
+                                .border(2.dp, Color.Transparent,
+                                    RoundedCornerShape(50))
+
+                        ) {
+                            Text(text = "+", style = MaterialTheme.typography.bodyLarge)
+                        }
 
                         thread {
                             configurationAndEventEntities.value = core.getAllConfigurationAndEvent()!!
                         }
                     }
                 }
-                Button(
-                    onClick = {
-                        AlarmClockEditScreen.reset(null)
-                        core.setAlarmClockEditScreen()
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        contentColor = MaterialTheme.colorScheme.primary,
-                        containerColor = MaterialTheme.colorScheme.secondary,
-                    ),
-                    contentPadding = PaddingValues(0.dp),
-                    modifier = Modifier
-                        .size(69.dp)
-                        .align(BiasAlignment(0f, 0.6f))
-                        .border(2.dp, Color.Transparent,
-                            RoundedCornerShape(50))
 
-                ) {
-                    Text(text = "+", style = MaterialTheme.typography.bodyLarge)
-                }
             }
         }
     }

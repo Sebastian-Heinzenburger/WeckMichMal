@@ -11,6 +11,11 @@ interface I_Core{
     /**
      * Update all events depending on current train and rapla status
      */
+    fun deriveStationName(input: String) : List<String>
+
+    /**
+     * Update all events depending on current train and rapla status
+     */
     fun runUpdateLogic()
 
     /**

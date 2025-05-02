@@ -3,6 +3,7 @@ package de.heinzenburger.g2_weckmichmal.core
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import de.heinzenburger.g2_weckmichmal.api.db.RoutePlanner
 import de.heinzenburger.g2_weckmichmal.persistence.AlarmConfiguration
 import de.heinzenburger.g2_weckmichmal.persistence.ApplicationSettings
 import de.heinzenburger.g2_weckmichmal.persistence.Event
@@ -36,6 +37,10 @@ data class Core(
     val context: Context
 ) : I_Core {
     //For description of each method, see I_Core in specifications
+    override fun deriveStationName(input: String) : List<String>{
+        val routePlanner = RoutePlanner()
+        return routePlanner.deriveValidStationNames(input)
+    }
     override fun runUpdateLogic() {
     }
 
