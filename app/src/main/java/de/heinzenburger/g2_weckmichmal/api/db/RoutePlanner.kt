@@ -137,8 +137,6 @@ class RoutePlanner : I_RoutePlannerSpecification {
 
                 return RouteSection(trainName, startTime, startStation, endTime, endStation)
             }
-
         }
     }
-
 }

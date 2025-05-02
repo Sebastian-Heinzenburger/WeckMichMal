@@ -40,6 +40,9 @@ class MockupCore : I_Core {
         return result
     }
 
+    override fun isValidCourseURL(urlString : String) : Boolean {
+        return true
+    }
     override fun deleteAlarmConfiguration(uid: Long) {
     }
 
@@ -56,5 +59,8 @@ class MockupCore : I_Core {
     }
 
     override fun setAlarmClockEditScreen() {
+    }
+
+    override fun showError(message: String) {
     }
 }

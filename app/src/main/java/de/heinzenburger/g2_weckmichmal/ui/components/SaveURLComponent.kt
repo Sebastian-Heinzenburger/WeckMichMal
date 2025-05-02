@@ -1,0 +1,90 @@
+package de.heinzenburger.g2_weckmichmal.ui.components
+
+import android.widget.Toast
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import kotlin.concurrent.thread
+
+
+class SaveURLComponent {
+    companion object{
+        val innerSettingsComposable : @Composable (PaddingValues, I_Core, () -> Unit) -> Unit = { innerPadding, core, onSave ->
+            val url = remember { mutableStateOf("") }
+            Column(
+                Modifier
+                    .padding(innerPadding)
+                    .background(MaterialTheme.colorScheme.background)) {
+                Text(
+                    style = MaterialTheme.typography.bodyMedium,
+                    text = "Einstellungen",
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(16.dp)
+                )
+                Column(Modifier
+                    .background(MaterialTheme.colorScheme.background).fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ){
+                    TextField(
+                        shape = RoundedCornerShape(8.dp),
+                        value = url.value,
+                        onValueChange = {url.value = it},
+                        textStyle = MaterialTheme.typography.bodyMedium,
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = MaterialTheme.colorScheme.primary,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.primary
+                        ),
+                        modifier = Modifier.padding(16.dp)
+                    )
+                    Button(
+                        onClick = {
+                            thread {
+                                if (core.isValidCourseURL(url.value)) {
+                                    core.saveRaplaURL(url.value)
+                                    onSave()
+                                } else {
+                                    core.showError("Immer Schulfrei??? Da stimmt doch was mit der URL nicht...")
+                                }
+                            }
+                        },
+                        colors = ButtonColors(
+                            contentColor = MaterialTheme.colorScheme.primary,
+                            containerColor = MaterialTheme.colorScheme.onBackground,
+                            disabledContainerColor = MaterialTheme.colorScheme.error,
+                            disabledContentColor = MaterialTheme.colorScheme.error
+                        ),
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Vorlesungsplan speichern",
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(8.dp),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
+        }
+
+    }
+}

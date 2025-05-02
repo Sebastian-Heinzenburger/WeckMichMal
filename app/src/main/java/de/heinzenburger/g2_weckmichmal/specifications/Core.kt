@@ -1,5 +1,8 @@
 package de.heinzenburger.g2_weckmichmal.specifications
 
+import de.heinzenburger.g2_weckmichmal.api.rapla.CoursesFetcher
+import java.net.URL
+
 /**
  * Interface defining the core
  */
@@ -63,6 +66,11 @@ interface I_Core{
     fun deleteAlarmConfiguration(uid: Long)
 
     /**
+     * Is Valid Course URL
+     */
+    fun isValidCourseURL(urlString : String) : Boolean
+
+    /**
      * Set Welcome Screen
      */
     fun setWelcomeScreen()
@@ -86,4 +94,5 @@ interface I_Core{
      * Set AlarmClockEdit Screen
      */
     fun setAlarmClockEditScreen()
+    fun showError(message: String)
 }

@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import de.heinzenburger.g2_weckmichmal.MainActivity
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
@@ -65,34 +66,11 @@ class SettingsScreen : ComponentActivity() {
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ){
-                    TextField(
-                        shape = RoundedCornerShape(8.dp),
-                        value = url.value,
-                        onValueChange = {url.value = it},
-                        textStyle = MaterialTheme.typography.bodyMedium,
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.primary,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.primary
-                        ),
-                        modifier = Modifier.padding(16.dp)
-                    )
-                    Button(
-                        onClick = { core.saveRaplaURL(url.value) },
-                        colors = ButtonColors(
-                            contentColor = MaterialTheme.colorScheme.primary,
-                            containerColor = MaterialTheme.colorScheme.onBackground,
-                            disabledContainerColor = MaterialTheme.colorScheme.error,
-                            disabledContentColor = MaterialTheme.colorScheme.error
-                        ),
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Text(
-                            text = "Vorlesungsplan speichern",
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(8.dp),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
+                    SaveURLComponent.innerSettingsComposable(innerPadding, core,
+                        fun () {
+                            MainActivity.log.severe("asjkdhaskjdhkja")
+                        }
+                    );
                 }
             }
         }

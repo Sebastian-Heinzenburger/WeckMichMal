@@ -18,6 +18,7 @@ interface I_CoursesFetcherSpecification {
     @Throws(Exception::class)
     fun fetchCoursesBetween(period: Period): List<Course>
 
+    fun hasValidCourseURL(): Boolean
 
     fun batchFetchCoursesBetween(periods: List<BatchTuple<Period>>): List<BatchTuple<List<Course>>>
 }

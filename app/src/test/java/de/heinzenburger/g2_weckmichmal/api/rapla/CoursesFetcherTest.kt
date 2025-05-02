@@ -5,6 +5,7 @@ import de.heinzenburger.g2_weckmichmal.specifications.Period
 import org.junit.Test
 
 import org.junit.Assert.*
+import java.net.MalformedURLException
 import java.net.URL
 import java.time.LocalDateTime
 
@@ -24,7 +25,8 @@ class CoursesFetcherTest {
 
     @Test
     fun `test batchFetchCoursesBetween returns a list of courses`() {
-        val url = URL("https://rapla.dhbw-karlsruhe.de/rapla?page=ical&user=ritterbusch&file=TINF23BN2")
+        val url =
+            URL("https://rapla.dhbw-karlsruhe.de/rapla?page=ical&user=ritterbusch&file=TINF23BN2")
         val fetcher = CoursesFetcher(url)
         val start = LocalDateTime.of(2025, 4, 29, 13, 12);
         val end = start.plusDays(5)
@@ -40,7 +42,20 @@ class CoursesFetcherTest {
         assertEquals("Batch size should match the input size", periods.size, result.size)
         result.forEach { batch ->
             assertNotNull("Course list in each batch should not be null", batch.value)
-            assertTrue("Course list in each batch should not be empty", batch.value.isNotEmpty(), )
+            assertTrue("Course list in each batch should not be empty", batch.value.isNotEmpty(),)
         }
     }
+
+    @Test
+    fun `invalid RAPLA URL caught`() {
+        val url = URL("https://rapla.dhbw-karlsruhe.de/rapla?page=ical&user=ritterbusch&file=TINF23BN99")
+        assertFalse(CoursesFetcher(url).hasValidCourseURL())
+    }
+
+    @Test
+    fun `valid RAPLA URL`() {
+        val url = URL("https://rapla.dhbw-karlsruhe.de/rapla?page=ical&user=ritterbusch&file=TINF23BN2")
+        assertTrue(CoursesFetcher(url).hasValidCourseURL())
+    }
+
 }

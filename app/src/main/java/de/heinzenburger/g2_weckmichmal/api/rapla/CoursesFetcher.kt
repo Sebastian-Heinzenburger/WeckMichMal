@@ -1,5 +1,6 @@
 package de.heinzenburger.g2_weckmichmal.api.rapla
 
+import de.heinzenburger.g2_weckmichmal.MainActivity
 import de.heinzenburger.g2_weckmichmal.specifications.BatchTuple
 import de.heinzenburger.g2_weckmichmal.specifications.Course
 import de.heinzenburger.g2_weckmichmal.specifications.I_CoursesFetcherSpecification
@@ -21,7 +22,7 @@ import java.time.ZonedDateTime
 import kotlin.collections.map
 import kotlin.jvm.optionals.getOrNull
 
-class CoursesFetcher(private val raplaUrl: URL): I_CoursesFetcherSpecification {
+class CoursesFetcher(private val raplaUrl: URL): I_CoursesFetcherSpecification  {
 
     private val validCategories = setOf<String>("Prüfung", "Lehrveranstaltung");
 
@@ -38,6 +39,17 @@ class CoursesFetcher(private val raplaUrl: URL): I_CoursesFetcherSpecification {
             .map { c -> c.getOccurrences(period.toCalPeriod()) }
             .flatten().mapNotNull { c -> eventToCourse(c) }
             .toList()
+    }
+
+    override fun hasValidCourseURL(): Boolean {
+        // Exception driven architecture
+        // https://en.wikipedia.org/wiki/Coding_by_exception "This anti-pattern can quickly degrade software in performance and maintainability [and increase shareholder value]"
+        try {
+            fetchCoursesBetween(Period(LocalDateTime.now(), LocalDateTime.now().plusSeconds(1)))
+            return true
+        } catch (alsoIgnored: Exception) {
+            return false
+        }
     }
 
     override fun batchFetchCoursesBetween(periods: List<BatchTuple<Period>>): List<BatchTuple<List<Course>>> {

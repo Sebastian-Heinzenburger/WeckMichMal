@@ -2,8 +2,11 @@ package de.heinzenburger.g2_weckmichmal.core
 
 import android.content.Context
 import android.content.Intent
+import android.webkit.URLUtil
 import android.widget.Toast
+import de.heinzenburger.g2_weckmichmal.MainActivity
 import de.heinzenburger.g2_weckmichmal.api.db.RoutePlanner
+import de.heinzenburger.g2_weckmichmal.api.rapla.CoursesFetcher
 import de.heinzenburger.g2_weckmichmal.persistence.AlarmConfiguration
 import de.heinzenburger.g2_weckmichmal.persistence.ApplicationSettings
 import de.heinzenburger.g2_weckmichmal.persistence.Event
@@ -16,6 +19,7 @@ import de.heinzenburger.g2_weckmichmal.ui.components.AlarmClockOverviewScreen
 import de.heinzenburger.g2_weckmichmal.ui.components.InformationScreen
 import de.heinzenburger.g2_weckmichmal.ui.components.SettingsScreen
 import de.heinzenburger.g2_weckmichmal.ui.components.WelcomeScreen
+import java.net.URL
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalTime
@@ -74,13 +78,15 @@ data class Core(
         return alarmConfiguration.getAllConfigurationAndEvent()
     }
 
-    override fun saveRaplaURL(url : String){
+    override fun saveRaplaURL(urlString : String){
         val applicationSettings = ApplicationSettings(context)
         val settingsEntity = applicationSettings.getApplicationSettings()
-        settingsEntity.raplaURL = url
-        if(!applicationSettings.saveOrUpdateApplicationSettings(settingsEntity)){
-            Toast.makeText(context, "Etwas ist schiefgelaufen (saveRaplaURL)", Toast.LENGTH_LONG).show()
-        }
+        settingsEntity.raplaURL = urlString
+        applicationSettings.saveOrUpdateApplicationSettings(settingsEntity)
+    }
+
+    override fun isValidCourseURL(urlString : String) : Boolean{
+        return  URLUtil.isValidUrl(urlString) && CoursesFetcher(URL(urlString)).hasValidCourseURL()
     }
 
     override fun getRaplaURL(): String? {
@@ -134,6 +140,10 @@ data class Core(
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
         context.startActivity(intent)
+    }
+
+    override fun showError(message: String) {
+        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
     }
 }
 
