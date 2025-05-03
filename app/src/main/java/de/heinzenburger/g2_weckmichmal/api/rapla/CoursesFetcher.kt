@@ -6,10 +6,14 @@ import de.heinzenburger.g2_weckmichmal.specifications.I_CoursesFetcherSpecificat
 import de.heinzenburger.g2_weckmichmal.specifications.Period
 import biweekly.Biweekly
 import biweekly.component.VEvent
+import biweekly.util.Frequency
+import biweekly.util.ICalDate
 import java.io.InputStream
 import java.net.URL
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.time.temporal.ChronoUnit
+import java.util.Date
 
 
 class CoursesFetcher(private val raplaUrl: URL) : I_CoursesFetcherSpecification {
@@ -28,9 +32,10 @@ class CoursesFetcher(private val raplaUrl: URL) : I_CoursesFetcherSpecification 
     override fun fetchCoursesBetween(period: Period): List<Course> {
         val inputStreamRAPLA = fetchRapla() ?: throw Exception("Could not load RAPLA")
 
-        val ical = Biweekly.parse(inputStreamRAPLA).first()
+        val ical = Biweekly.parse(inputStreamRAPLA).first();
         return ical.events
             .filter { eventInCategory(it, validCategories) }
+            .map { expandOccurrences(it) }.flatten()
             .filter { eventInPeriod(it, period) }
             .mapNotNull { eventToCourse(it) }
     }
@@ -39,7 +44,7 @@ class CoursesFetcher(private val raplaUrl: URL) : I_CoursesFetcherSpecification 
         val inputStreamRAPLA = fetchRapla() ?: throw Exception("Could not load RAPLA")
 
         val ical = Biweekly.parse(inputStreamRAPLA).first()
-        val validEvents = ical.events.filter { eventInCategory(it, validCategories) }
+        val validEvents = ical.events.filter { eventInCategory(it, validCategories) }.map { expandOccurrences(it) }.flatten()
 
         return periods.map { batchEntry ->
             val courses = validEvents
@@ -87,6 +92,53 @@ class CoursesFetcher(private val raplaUrl: URL) : I_CoursesFetcherSpecification 
     fun eventInPeriod(event: VEvent, period: Period): Boolean {
         val timeRange = getTimeRange(event) ?: return false
         return timeRange.first.isBefore(period.end) && timeRange.second.isAfter(period.start)
+    }
+
+    fun expandOccurrences(event: VEvent): List<VEvent> {
+        val start = event.dateStart?.value?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalDateTime()
+            ?: return emptyList()
+        val end = event.dateEnd?.value?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalDateTime()
+            ?: return emptyList()
+        val duration = ChronoUnit.SECONDS.between(start, end)
+
+        val rrule = event.recurrenceRule
+        if (rrule == null) {
+            return listOf(event)
+        }
+
+        // EXDATEs in LocalDate umwandeln
+        val excludeDates = event.exceptionDates
+            .flatMap { it.values }
+            .map { it.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() }
+            .toSet()
+
+        val freq = rrule.value.frequency
+        val until = rrule.value.until?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalDateTime()
+            ?: start.plusYears(1) // fallback: max 1 Jahr
+
+        val occurrences = mutableListOf<VEvent>()
+        var current = start
+
+        while (current.isBefore(until)) {
+            val currentDate = current.toLocalDate()
+            if (!excludeDates.contains(currentDate)) {
+                val currentEnd = current.plusSeconds(duration)
+                val copy = event.copy()
+                copy.dateStart.value = ICalDate(Date.from(current.atZone(ZoneId.systemDefault()).toInstant()))
+                copy.dateEnd.value = ICalDate(Date.from(currentEnd.atZone(ZoneId.systemDefault()).toInstant()))
+                occurrences.add(copy)
+            }
+
+            current = when (freq) {
+                Frequency.DAILY -> current.plusDays(1)
+                Frequency.WEEKLY -> current.plusWeeks(1)
+                Frequency.MONTHLY -> current.plusMonths(1)
+                Frequency.YEARLY -> current.plusYears(1)
+                else -> break
+            }
+        }
+
+        return occurrences
     }
 
     fun fetchRapla(): InputStream? {
