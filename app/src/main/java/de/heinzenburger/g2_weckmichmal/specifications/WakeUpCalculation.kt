@@ -1,45 +1,42 @@
 package de.heinzenburger.g2_weckmichmal.specifications
 
-import java.time.DayOfWeek
-
 /**
- * Interface defining the behavior for the wake-up time calculation.
+ * Interface defining the behavior for calculating the next wake-up time based on configuration settings.
  */
-interface I_WakeUpCalculationSpecification {
+interface WakeUpCalculationSpecification {
 
     /**
-     * Computes an [EventEntity] for the next [DayOfWeek] based on the provided [ConfigurationEntity].
+     * Calculates the next wake-up event based on the provided configuration.
      *
-     * @param configuration The [ConfigurationEntity] that contains the settings for the alarm.
-     * This includes various time buffers, stations, and other parameters that determine the event's calculation.
-     * @return The calculated next [EventEntity] .
+     * This involves:
+     * - Selecting the next valid date according to the configured active days.
+     * - Identifying the arrival time at the destination (e.g., based on course schedules or a fixed time).
+     * - Calculating the required departure time, accounting for route and travel time.
+     * - Subtracting the configured wake-up buffer to determine the final wake-up time.
+     *
+     * @param configuration The [ConfigurationEntity] containing alarm settings, including buffers,
+     * travel preferences, station details, and active days.
+     * @return The calculated [EventEntity], which includes the wake-up time, event date,
+     * associated courses, and travel routes.
+     * @throws Exception if the calculation fails (e.g., due to missing course data or invalid configuration).
      */
     @Throws(Exception::class)
     fun calculateNextEvent(configuration: ConfigurationEntity): EventEntity
 
-//    /**
-//     * Computes an [EventEntity] for a specific [DayOfWeek] based on the provided [ConfigurationEntity].
-//     *
-//     * @param configuration The [ConfigurationEntity] that contains the settings for the alarm,
-//     * including time buffers, stations, and other parameters influencing the event's calculation.
-//     * @param day The [DayOfWeek] for which the event should be computed.
-//     * @return The calculated [EventEntity] for the specified day.
-//     * @throws Exception if the calculation fails due to invalid configuration or other issues.
-//     */
-//    @Throws(Exception::class)
-//    fun calculateEventForDay(configuration: ConfigurationEntity, day: DayOfWeek): EventEntity
-//
-//    /**
-//     * Computes an [EventEntity] for a specific calendar date based on the provided [ConfigurationEntity].
-//     *
-//     * @param configuration The [ConfigurationEntity] that contains the settings for the alarm,
-//     * including time buffers, stations, and other parameters influencing the event's calculation.
-//     * @param date The [LocalDate] for which the event should be computed.
-//     * @return The calculated [EventEntity] for the specified date.
-//     * @throws Exception if the calculation fails due to invalid configuration or other issues.
-//     */
-//    @Throws(Exception::class)
-//    fun calculateEventForDate(configuration: ConfigurationEntity, date: LocalDate): EventEntity
-
+    /**
+     * Calculates the next wake-up events for multiple configurations in batch.
+     *
+     * For each configuration:
+     * - Determines the next valid date based on active days.
+     * - Calculates arrival, departure, and wake-up times.
+     * - Groups relevant course and route information into the result.
+     *
+     * Batch processing can optimize shared operations, such as bulk course fetching or route calculations.
+     *
+     * @param configurations A list of [ConfigurationEntity] objects to process.
+     * @return A list of calculated [EventEntity]s, one for each configuration.
+     * @throws Exception if the calculation fails for any configuration.
+     */
+    @Throws(Exception::class)
     fun batchCalculateNextEvent(configurations: List<ConfigurationEntity>): List<EventEntity>
 }

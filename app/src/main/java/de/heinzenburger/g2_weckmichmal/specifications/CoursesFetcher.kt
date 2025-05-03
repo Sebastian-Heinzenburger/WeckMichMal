@@ -1,7 +1,6 @@
 package de.heinzenburger.g2_weckmichmal.specifications
 
 import de.heinzenburger.g2_weckmichmal.api.rapla.Batch
-import de.heinzenburger.g2_weckmichmal.api.rapla.BatchTuple
 import java.time.LocalDateTime
 
 /**
@@ -12,15 +11,21 @@ interface CourseFetcherSpecification {
     /**
      * Fetches all courses occurring within the specified period.
      *
+     * This method retrieves and parses all events from the configured course system (e.g., RAPLA),
+     * filters them by valid categories, expands recurring events, filters them by the provided period,
+     * and maps them into [Course] objects.
+     *
      * @param period The [Period] defining the start and end date/time of the time range.
      * @return A list of [Course] objects that fall within the specified time period.
-     * @throws Exception if the course data cannot be fetched (e.g., due to network issues).
+     * @throws Exception if the course data cannot be fetched or parsed (e.g., due to network issues or invalid data).
      */
     @Throws(Exception::class)
     fun fetchCoursesBetween(period: Period): List<Course>
 
     /**
-     * Checks whether the course data source (URL) is reachable and returns valid data.
+     * Checks whether the course data source (e.g., RAPLA URL) is reachable and returns valid data.
+     *
+     * This is typically done by performing a minimal fetch to verify connectivity and data format.
      *
      * @return true if the course data source is valid and reachable, false otherwise.
      */
@@ -29,10 +34,12 @@ interface CourseFetcherSpecification {
     /**
      * Fetches courses for multiple periods in batches.
      *
-     * @param periods A list of [BatchTuple]s, each containing an identifier and a [Period].
-     * @return A list of [BatchTuple]s where each contains the original identifier and the
-     *         list of [Course]s found in the corresponding period.
-     * @throws Exception if the course data cannot be fetched.
+     * This method retrieves all events once from the external system, expands recurring events,
+     * and partitions them into batches by matching them against the provided periods.
+     *
+     * @param periods A [Batch] of [Period]s, each associated with an identifier.
+     * @return A [Batch] of [List<Course>]s, each paired with the corresponding identifier.
+     * @throws Exception if the course data cannot be fetched or parsed.
      */
     @Throws(Exception::class)
     fun batchFetchCoursesBetween(periods: Batch<Period>): Batch<List<Course>>

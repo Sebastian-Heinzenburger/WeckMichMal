@@ -69,7 +69,7 @@ class CoursesFetcher(
 
         fun eventInCategory(event: VEvent, validCategories: Set<String>): Boolean {
             return try {
-                val eventCategories = event.categories.flatMap { it.values }.toSet();
+                val eventCategories = event.categories.flatMap { it.values }.toSet()
                 validCategories.intersect(eventCategories).isNotEmpty()
             } catch (_: Exception) {
                 false
@@ -102,14 +102,14 @@ class CoursesFetcher(
             if (count == null && untilDate == null) return listOf(event)
 
             while (true) {
-                if (untilDate != null && iterDate.isAfter(untilDate)) break;
-                if (count != null && count-- < 0) break;
+                if (untilDate != null && iterDate.isAfter(untilDate)) break
+                if (count != null && count-- < 0) break
                 // Check excluded
                 if (!excludedDates.contains(iterDate.toLocalDate())) {
                     val occurrence = event.copy()
                     occurrence.dateStart.value =
                         ICalDate(Date.from(iterDate.atZone(ZoneId.systemDefault()).toInstant()))
-                    val endDate = iterDate.plusSeconds(eventDuration);
+                    val endDate = iterDate.plusSeconds(eventDuration)
                     occurrence.dateEnd.value =
                         ICalDate(Date.from(endDate.atZone(ZoneId.systemDefault()).toInstant()))
 
