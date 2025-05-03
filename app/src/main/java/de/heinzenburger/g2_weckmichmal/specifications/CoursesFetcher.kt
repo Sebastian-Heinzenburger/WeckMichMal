@@ -37,9 +37,9 @@ data class Period (
     val start: LocalDateTime,
     val end: LocalDateTime
 ) {
-    fun toCalPeriod(): net.fortuna.ical4j.model.Period<Temporal> {
-        return net.fortuna.ical4j.model.Period(start, end)
-    }
+//    fun toCalPeriod(): net.fortuna.ical4j.model.Period<Temporal> {
+//        return net.fortuna.ical4j.model.Period(start, end)
+//    }
 }
 
 /**
