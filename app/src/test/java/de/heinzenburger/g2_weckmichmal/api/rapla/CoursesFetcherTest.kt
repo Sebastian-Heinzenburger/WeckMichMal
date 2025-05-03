@@ -5,85 +5,84 @@ import de.heinzenburger.g2_weckmichmal.specifications.Period
 import org.junit.Test
 
 import org.junit.Assert.*
-import java.net.MalformedURLException
 import java.net.URL
 import java.time.LocalDateTime
 
 class CoursesFetcherTest {
-    private val url = URL("https://rapla.dhbw-karlsruhe.de/rapla?page=ical&user=ritterbusch&file=TINF23BN2")
+
+    private val url =
+        URL("https://rapla.dhbw-karlsruhe.de/rapla?page=ical&user=ritterbusch&file=TINF23BN2")
+
     @Test
-    fun `test hasValidURL`(){
+    fun `test hasValidURL`() {
         val validFetcher = CoursesFetcher(url)
-        val start = LocalDateTime.of(2025, 4, 29, 13, 12);
-        val end = start.plusDays(5)
         assertEquals("Fetcher should be valid", true, validFetcher.hasValidCourseURL())
 
-        val invalidFetcher = CoursesFetcher(URL("foo"))
-        assertEquals("Fetcher should be invalid", false, validFetcher.hasValidCourseURL())
+        val invalidFetcher = CoursesFetcher(URL("https://foo"))
+        assertEquals("Fetcher should be invalid", false, invalidFetcher.hasValidCourseURL())
     }
 
     @Test
-    fun `test fetchCoursesBetween`(){
+    fun `test fetchCoursesBetween`() {
         val fetcher = CoursesFetcher(url)
         val start = LocalDateTime.of(2025, 4, 28, 0, 0, 0)
-        val end = LocalDateTime.of(2025, 5, 3, 0, 0, 0)
-        fetcher.fetchCoursesBetween(Period(start, end)).forEach { print(it) }
-
-
-
-    }
-
-
-
-
-
-
-
-    @Test
-    fun `test fetchCoursesBetween successfully returns courses`() {
-        val url = URL("https://rapla.dhbw-karlsruhe.de/rapla?page=ical&user=ritterbusch&file=TINF23BN2")
-        val fetcher = CoursesFetcher(url)
-        val start = LocalDateTime.of(2025, 4, 29, 13, 12);
-        val end = start.plusDays(5)
-
-        val courses = fetcher.fetchCoursesBetween(Period(start, end))
-
-        assertNotNull("Courses should not be null", courses)
-        assertTrue("Courses list should not be empty", courses.isNotEmpty())
-    }
-
-    @Test
-    fun `test batchFetchCoursesBetween returns a list of courses`() {
-        val url =
-            URL("https://rapla.dhbw-karlsruhe.de/rapla?page=ical&user=ritterbusch&file=TINF23BN2")
-        val fetcher = CoursesFetcher(url)
-        val start = LocalDateTime.of(2025, 4, 29, 13, 12);
-        val end = start.plusDays(5)
-
-        val periods = listOf(
-            BatchTuple(0L, Period(start, end)),
-            BatchTuple(1L, Period(start, end))
+        val end = start.plusDays(4)
+        val expCourseNames = listOf(
+            "Numerik",
+            "Compilerbau",
+            "Systemnahe Programmierung",
+            "Betriebssysteme",
+            "Software Engineering"
         )
 
-        val result = fetcher.batchFetchCoursesBetween(periods)
+        val courses = fetcher.fetchCoursesBetween(Period(start, end))
+        assertEquals(5, courses.size)
+        courses.forEach { assert(expCourseNames.contains(it.name)) }
+    }
 
-        assertNotNull("Result should not be null", result)
-        assertEquals("Batch size should match the input size", periods.size, result.size)
-        result.forEach { batch ->
-            assertNotNull("Course list in each batch should not be null", batch.value)
-            assertTrue("Course list in each batch should not be empty", batch.value.isNotEmpty(),)
-        }
+    @Test
+    fun `test batchFetchCoursesBetween`() {
+        val fetcher = CoursesFetcher(url)
+        val startA = LocalDateTime.of(2025, 4, 28, 0, 0, 0)
+        val startB = LocalDateTime.of(2025, 4, 30, 0, 0, 0)
+        val expCourseNamesA = listOf(
+            "Numerik",
+            "Compilerbau",
+            "Systemnahe Programmierung",
+            "Betriebssysteme",
+        )
+        val expCourseNamesB = listOf(
+            "Numerik",
+            "Compilerbau",
+            "Systemnahe Programmierung",
+            "Software Engineering"
+        )
+
+        val periods = listOf(
+            BatchTuple(0L, Period(startA, startA.plusDays(2))),
+            BatchTuple(1L, Period(startB, startB.plusDays(2)))
+        )
+
+        val batchCourses = fetcher.batchFetchCoursesBetween(periods)
+        val coursesA = batchCourses.find { it.id == 0L }?.value ?: return assert(false)
+        assertEquals(4, coursesA.size)
+        coursesA.forEach { assert(expCourseNamesA.contains(it.name)) }
+        val coursesB = batchCourses.find { it.id == 1L }?.value ?: return assert(false)
+        assertEquals(1, coursesB.size)
+        coursesB.forEach { assert(expCourseNamesB.contains(it.name)) }
     }
 
     @Test
     fun `invalid RAPLA URL caught`() {
-        val url = URL("https://rapla.dhbw-karlsruhe.de/rapla?page=ical&user=ritterbusch&file=TINF23BN99")
+        val url =
+            URL("https://rapla.dhbw-karlsruhe.de/rapla?page=ical&user=ritterbusch&file=TINF23BN99")
         assertFalse(CoursesFetcher(url).hasValidCourseURL())
     }
 
     @Test
     fun `valid RAPLA URL`() {
-        val url = URL("https://rapla.dhbw-karlsruhe.de/rapla?page=ical&user=ritterbusch&file=TINF23BN2")
+        val url =
+            URL("https://rapla.dhbw-karlsruhe.de/rapla?page=ical&user=ritterbusch&file=TINF23BN2")
         assertTrue(CoursesFetcher(url).hasValidCourseURL())
     }
 
