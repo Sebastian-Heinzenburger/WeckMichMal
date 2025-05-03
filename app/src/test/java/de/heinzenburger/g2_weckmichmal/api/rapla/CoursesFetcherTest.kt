@@ -10,6 +10,35 @@ import java.net.URL
 import java.time.LocalDateTime
 
 class CoursesFetcherTest {
+    private val url = URL("https://rapla.dhbw-karlsruhe.de/rapla?page=ical&user=ritterbusch&file=TINF23BN2")
+    @Test
+    fun `test hasValidURL`(){
+        val validFetcher = CoursesFetcher(url)
+        val start = LocalDateTime.of(2025, 4, 29, 13, 12);
+        val end = start.plusDays(5)
+        assertEquals("Fetcher should be valid", true, validFetcher.hasValidCourseURL())
+
+        val invalidFetcher = CoursesFetcher(URL("foo"))
+        assertEquals("Fetcher should be invalid", false, validFetcher.hasValidCourseURL())
+    }
+
+    @Test
+    fun `test fetchCoursesBetween`(){
+        val fetcher = CoursesFetcher(url)
+        val start = LocalDateTime.of(2025, 4, 28, 0, 0, 0)
+        val end = LocalDateTime.of(2025, 5, 3, 0, 0, 0)
+        fetcher.fetchCoursesBetween(Period(start, end)).forEach { print(it) }
+
+
+
+    }
+
+
+
+
+
+
+
     @Test
     fun `test fetchCoursesBetween successfully returns courses`() {
         val url = URL("https://rapla.dhbw-karlsruhe.de/rapla?page=ical&user=ritterbusch&file=TINF23BN2")
