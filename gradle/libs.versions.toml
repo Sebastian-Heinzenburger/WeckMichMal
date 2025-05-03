@@ -1,5 +1,6 @@
 [versions]
 agp = "8.9.2"
+biweekly = "0.6.8"
 ical4j = "4.1.1"
 junitJupiterApi = "5.10.0"
 junitJupiterEngine = "5.10.0"
@@ -27,6 +28,7 @@ androidx-material-icons-extended = { module = "androidx.compose.material:materia
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomKtx" }
 androidx-room-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomKtx" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomKtx" }
+biweekly = { module = "net.sf.biweekly:biweekly", version.ref = "biweekly" }
 ical4j = { module = "org.mnode.ical4j:ical4j", version.ref = "ical4j" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

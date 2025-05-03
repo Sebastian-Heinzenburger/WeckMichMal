@@ -66,7 +66,8 @@ dependencies {
     implementation(libs.material3)
 
     // ICS parsing lib
-    implementation(libs.ical4j)
+//    implementation(libs.ical4j)
+    implementation(libs.biweekly)
 
     testImplementation(libs.junit.jupiter.api)
     testImplementation(libs.junit.jupiter.engine)

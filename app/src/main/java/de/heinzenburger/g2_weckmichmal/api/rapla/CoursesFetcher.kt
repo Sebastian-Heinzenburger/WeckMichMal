@@ -1,128 +1,99 @@
 package de.heinzenburger.g2_weckmichmal.api.rapla
 
-import de.heinzenburger.g2_weckmichmal.MainActivity
 import de.heinzenburger.g2_weckmichmal.specifications.BatchTuple
 import de.heinzenburger.g2_weckmichmal.specifications.Course
 import de.heinzenburger.g2_weckmichmal.specifications.I_CoursesFetcherSpecification
 import de.heinzenburger.g2_weckmichmal.specifications.Period
-import net.fortuna.ical4j.data.CalendarBuilder
-import net.fortuna.ical4j.model.property.Attendee
-import net.fortuna.ical4j.model.component.VEvent
-import net.fortuna.ical4j.model.parameter.Cn
-import net.fortuna.ical4j.model.property.Categories
-import net.fortuna.ical4j.model.property.DtEnd
-import net.fortuna.ical4j.model.property.DtStart
-import net.fortuna.ical4j.model.property.Location
-import net.fortuna.ical4j.model.property.Summary
+import biweekly.Biweekly
+import biweekly.component.VEvent
 import java.io.InputStream
 import java.net.URL
 import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import java.time.ZonedDateTime
-import kotlin.collections.map
-import kotlin.jvm.optionals.getOrNull
+import java.time.ZoneId
 
-class CoursesFetcher(private val raplaUrl: URL): I_CoursesFetcherSpecification  {
 
-    private val validCategories = setOf<String>("Prüfung", "Lehrveranstaltung");
+class CoursesFetcher(private val raplaUrl: URL) : I_CoursesFetcherSpecification {
 
-    @Throws(Exception::class)
-    override fun fetchCoursesBetween(
-        period: Period
-    ): List<Course> {
-        val inputStreamRAPLA = fetchRapla()?: throw Exception("Could not load RAPLA");
-
-        return CalendarBuilder()
-            .build(inputStreamRAPLA)
-            .getComponents<VEvent>("VEVENT")
-            .filter { c -> eventInCategory(c, validCategories) }
-            .map { c -> c.getOccurrences(period.toCalPeriod()) }
-            .flatten().mapNotNull { c -> eventToCourse(c) }
-            .toList()
-    }
+    private val validCategories = setOf("Prüfung", "Lehrveranstaltung")
 
     override fun hasValidCourseURL(): Boolean {
-        // Exception driven architecture
-        // https://en.wikipedia.org/wiki/Coding_by_exception "This anti-pattern can quickly degrade software in performance and maintainability [and increase shareholder value]"
-        try {
+        return try {
             fetchCoursesBetween(Period(LocalDateTime.now(), LocalDateTime.now().plusSeconds(1)))
-            return true
-        } catch (alsoIgnored: Exception) {
-            return false
+            true
+        } catch (_: Exception) {
+            false
         }
     }
 
-    override fun batchFetchCoursesBetween(periods: List<BatchTuple<Period>>): List<BatchTuple<List<Course>>> {
-        val inputStreamRAPLA = fetchRapla()?: throw Exception("Could not load RAPLA");
+    override fun fetchCoursesBetween(period: Period): List<Course> {
+        val inputStreamRAPLA = fetchRapla() ?: throw Exception("Could not load RAPLA")
 
-        val validEvents = CalendarBuilder()
-            .build(inputStreamRAPLA)
-            .getComponents<VEvent>("VEVENT")
-            .filter { c -> eventInCategory(c, validCategories) }
-            .filterNotNull();
+        val ical = Biweekly.parse(inputStreamRAPLA).first()
+        return ical.events
+            .filter { eventInCategory(it, validCategories) }
+            .filter { eventInPeriod(it, period) }
+            .mapNotNull { eventToCourse(it) }
+    }
+
+    override fun batchFetchCoursesBetween(periods: List<BatchTuple<Period>>): List<BatchTuple<List<Course>>> {
+        val inputStreamRAPLA = fetchRapla() ?: throw Exception("Could not load RAPLA")
+
+        val ical = Biweekly.parse(inputStreamRAPLA).first()
+        val validEvents = ical.events.filter { eventInCategory(it, validCategories) }
 
         return periods.map { batchEntry ->
-            BatchTuple(
-                batchEntry.id,
-                validEvents
-                    .map { c -> c.getOccurrences(batchEntry.value.toCalPeriod()) }
-                    .flatten().mapNotNull { c -> eventToCourse(c) }
-                    .toList()
-            )
+            val courses = validEvents
+                .filter { eventInPeriod(it, batchEntry.value) }
+                .mapNotNull { eventToCourse(it) }
+            BatchTuple(batchEntry.id, courses)
         }
     }
 
     fun eventToCourse(e: VEvent): Course? {
         return try {
-            val name = e.getProperty<Summary>("SUMMARY").getOrNull()?.value;
-            val lecturer = e.getProperty<Attendee>("ATTENDEE")
-                .getOrNull()
-                ?.getParameter<Cn>("CN")
-                ?.getOrNull()?.value
-            val room = e.getProperty<Location>("LOCATION").getOrNull()?.value
-            val optRange = getTimeRange(e);
-            if (optRange == null) return null;
-            return Course (name, lecturer, room, optRange.first, optRange.second)
-        }catch (_: Exception) {
-            return null;
+            val name = e.summary?.value
+            val lecturer = e.attendees.firstOrNull()?.commonName
+            val room = e.location.toString()
+            val optRange = getTimeRange(e)
+            if (optRange == null) return null
+            Course(name, lecturer, room, optRange.first, optRange.second)
+        } catch (_: Exception) {
+            null
         }
     }
 
     fun getTimeRange(e: VEvent): Pair<LocalDateTime, LocalDateTime>? {
-        try {
-            val start = e.getProperty<DtStart<ZonedDateTime>>("DTSTART").getOrNull()?.date?.toLocalDateTime()
-            val end = e.getProperty<DtEnd<ZonedDateTime>>("DTEND").getOrNull()?.date?.toLocalDateTime()
-            if(start == null || end == null) return null;
-            return Pair (start, end)
-        }catch (_: Exception){}
-
-        try {
-            val start = e.getProperty<DtStart<OffsetDateTime>>("DTSTART").getOrNull()?.date?.toLocalDateTime()
-            val end = e.getProperty<DtEnd<OffsetDateTime>>("DTEND").getOrNull()?.date?.toLocalDateTime()
-            if(start == null || end == null) return null;
-            return Pair (start, end)
-        }catch (_: Exception){
-            return null;
+        return try {
+            val startDate = e.dateStart?.value
+            val endDate = e.dateEnd?.value
+            if (startDate == null || endDate == null) return null
+            val start = LocalDateTime.ofInstant(startDate.toInstant(), ZoneId.systemDefault())
+            val end = LocalDateTime.ofInstant(endDate.toInstant(), ZoneId.systemDefault())
+            Pair(start, end)
+        } catch (_: Exception) {
+            null
         }
     }
 
-
-    fun eventInCategory(vEvent: VEvent, validCategories: Set<String>): Boolean {
+    fun eventInCategory(event: VEvent, validCategories: Set<String>): Boolean {
         return try {
-            val optEventCategory = vEvent.getProperty<Categories>("CATEGORIES");
-            if(optEventCategory.isEmpty) return false
-            val eventCategories = optEventCategory.get().categories.texts.toSet()
-            return !validCategories.intersect(eventCategories).isEmpty()
-        }catch (_: Exception){
-            return false;
+            val eventCategories = event.categories.flatMap { it.values }.toSet()
+            validCategories.intersect(eventCategories).isNotEmpty()
+        } catch (_: Exception) {
+            false
         }
+    }
+
+    fun eventInPeriod(event: VEvent, period: Period): Boolean {
+        val timeRange = getTimeRange(event) ?: return false
+        return timeRange.first.isBefore(period.end) && timeRange.second.isAfter(period.start)
     }
 
     fun fetchRapla(): InputStream? {
-        return try{
-            raplaUrl.openConnection().inputStream
-        } catch (_: Error) {
-            return null;
+        return try {
+            raplaUrl.openConnection().getInputStream()
+        } catch (_: Exception) {
+            null
         }
     }
 }
