@@ -1,13 +1,8 @@
 package de.heinzenburger.g2_weckmichmal.calculation
 
-import de.heinzenburger.g2_weckmichmal.specifications.*
-import org.junit.Test
-import org.junit.Assert.*
-import org.mockito.kotlin.*
-import java.time.Clock
-import java.time.DayOfWeek
-import java.time.LocalDate
-import java.time.LocalDateTime
+import de.heinzenburger.g2_weckmichmal.specifications.CourseFetcherSpecification
+import de.heinzenburger.g2_weckmichmal.specifications.I_RoutePlannerSpecification
+import org.mockito.kotlin.mock
 
 class WakeUpCalculatorTest {
 
