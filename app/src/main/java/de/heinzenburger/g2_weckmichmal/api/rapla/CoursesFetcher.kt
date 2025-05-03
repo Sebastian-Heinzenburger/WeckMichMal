@@ -31,7 +31,7 @@ class CoursesFetcher(
             .mapNotNull { eventToCourse(it) }
     }
 
-    override fun batchFetchCoursesBetween(periods: List<BatchTuple<Period>>): List<BatchTuple<List<Course>>> {
+    override fun batchFetchCoursesBetween(periods: Batch<Period>): Batch<List<Course>> {
         val icalStream: InputStream =
             fetchInputStream(raplaUrl) ?: throw Exception("Could not load RAPLA")
 

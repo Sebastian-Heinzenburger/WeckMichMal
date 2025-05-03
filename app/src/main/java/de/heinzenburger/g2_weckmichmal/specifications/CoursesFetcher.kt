@@ -1,5 +1,6 @@
 package de.heinzenburger.g2_weckmichmal.specifications
 
+import de.heinzenburger.g2_weckmichmal.api.rapla.Batch
 import de.heinzenburger.g2_weckmichmal.api.rapla.BatchTuple
 import java.time.LocalDateTime
 
@@ -34,7 +35,7 @@ interface CourseFetcherSpecification {
      * @throws Exception if the course data cannot be fetched.
      */
     @Throws(Exception::class)
-    fun batchFetchCoursesBetween(periods: List<BatchTuple<Period>>): List<BatchTuple<List<Course>>>
+    fun batchFetchCoursesBetween(periods: Batch<Period>): Batch<List<Course>>
 }
 
 /**

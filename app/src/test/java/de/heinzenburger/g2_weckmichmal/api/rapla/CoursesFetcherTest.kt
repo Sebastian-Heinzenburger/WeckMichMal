@@ -1,6 +1,5 @@
 package de.heinzenburger.g2_weckmichmal.api.rapla
 
-import de.heinzenburger.g2_weckmichmal.specifications.BatchTuple
 import de.heinzenburger.g2_weckmichmal.specifications.Period
 import org.junit.Test
 
@@ -58,16 +57,17 @@ class CoursesFetcherTest {
             "Software Engineering"
         )
 
-        val periods = listOf(
-            BatchTuple(0L, Period(startA, startA.plusDays(2))),
-            BatchTuple(1L, Period(startB, startB.plusDays(2)))
-        )
+        val bPeriods = batchFrom(listOf(
+            Period(startA, startA.plusDays(2)),
+            Period(startB, startB.plusDays(2))
+        ))
 
-        val batchCourses = fetcher.batchFetchCoursesBetween(periods)
-        val coursesA = batchCourses.find { it.id == 0L }?.value ?: return assert(false)
+        val batchCourses = fetcher.batchFetchCoursesBetween(bPeriods)
+
+        val coursesA = batchCourses.find { it.id == 0 }?.value ?: return assert(false)
         assertEquals(4, coursesA.size)
         coursesA.forEach { assert(expCourseNamesA.contains(it.name)) }
-        val coursesB = batchCourses.find { it.id == 1L }?.value ?: return assert(false)
+        val coursesB = batchCourses.find { it.id == 1 }?.value ?: return assert(false)
         assertEquals(1, coursesB.size)
         coursesB.forEach { assert(expCourseNamesB.contains(it.name)) }
     }
