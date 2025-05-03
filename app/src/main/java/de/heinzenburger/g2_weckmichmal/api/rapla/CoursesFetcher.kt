@@ -58,7 +58,7 @@ class CoursesFetcher(
         }
     }
 
-    companion object {
+    private companion object {
         fun fetchInputStream(url: URL): InputStream? {
             return try {
                 url.openConnection().inputStream
