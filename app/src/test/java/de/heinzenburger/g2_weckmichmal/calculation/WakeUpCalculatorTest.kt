@@ -12,7 +12,7 @@ import java.time.LocalDateTime
 class WakeUpCalculatorTest {
 
     private val routePlannerMock: I_RoutePlannerSpecification = mock()
-    private val courseFetcherMock: I_CoursesFetcherSpecification = mock()
+    private val courseFetcherMock: CourseFetcherSpecification = mock()
     private val wakeUpCalculator = WakeUpCalculator(routePlannerMock, courseFetcherMock)
 
     @Test

@@ -1,5 +1,6 @@
 package de.heinzenburger.g2_weckmichmal.calculation
 
+import de.heinzenburger.g2_weckmichmal.api.rapla.BatchTuple
 import de.heinzenburger.g2_weckmichmal.specifications.*
 import java.time.Clock
 import java.time.DayOfWeek
@@ -8,7 +9,7 @@ import java.time.LocalDateTime
 
 class WakeUpCalculator(
     private val routePlanner: I_RoutePlannerSpecification,
-    private val courseFetcher: I_CoursesFetcherSpecification
+    private val courseFetcher: CourseFetcherSpecification
 ) : I_WakeUpCalculationSpecification {
 
     var clock = Clock.systemDefaultZone()

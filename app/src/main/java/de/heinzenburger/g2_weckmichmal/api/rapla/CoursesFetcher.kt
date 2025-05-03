@@ -1,8 +1,7 @@
 package de.heinzenburger.g2_weckmichmal.api.rapla
 
-import de.heinzenburger.g2_weckmichmal.specifications.BatchTuple
 import de.heinzenburger.g2_weckmichmal.specifications.Course
-import de.heinzenburger.g2_weckmichmal.specifications.I_CoursesFetcherSpecification
+import de.heinzenburger.g2_weckmichmal.specifications.CourseFetcherSpecification
 import de.heinzenburger.g2_weckmichmal.specifications.Period
 import biweekly.Biweekly
 import biweekly.component.VEvent
@@ -18,7 +17,7 @@ import java.util.Date
 class CoursesFetcher(
     private val raplaUrl: URL,
     private val validCourseCategories: Set<String> = setOf("Prüfung", "Lehrveranstaltung")
-) : I_CoursesFetcherSpecification {
+) : CourseFetcherSpecification {
 
     override fun fetchCoursesBetween(period: Period): List<Course> {
         val icalStream: InputStream =
