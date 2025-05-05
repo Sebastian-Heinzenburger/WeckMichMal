@@ -47,10 +47,8 @@ class ForegroundService : Service() {
 
         thread {
             playWithPerry()
-            while (Duration.between(LocalDateTime.now(), LocalDateTime.of(2025, 5, 3, 8, 0))
-                    .toMinutes() > 0
-            ) {
-                Thread.sleep(30 * 1000)
+            while (true) {
+                Thread.sleep(3 * 1000)
                 MainActivity.log.severe("I am running in the foreground")
             }
             playWithPerry()

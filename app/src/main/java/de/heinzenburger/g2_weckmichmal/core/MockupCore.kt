@@ -61,6 +61,6 @@ class MockupCore : I_Core {
     override fun setAlarmClockEditScreen() {
     }
 
-    override fun showError(message: String) {
+    override fun showToast(message: String) {
     }
 }

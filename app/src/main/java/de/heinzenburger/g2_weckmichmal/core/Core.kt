@@ -4,15 +4,15 @@ import android.content.Context
 import android.content.Intent
 import android.webkit.URLUtil
 import android.widget.Toast
-import de.heinzenburger.g2_weckmichmal.MainActivity
+import androidx.core.content.ContextCompat
 import de.heinzenburger.g2_weckmichmal.api.db.RoutePlanner
 import de.heinzenburger.g2_weckmichmal.api.rapla.CoursesFetcher
+import de.heinzenburger.g2_weckmichmal.calculation.WakeUpCalculator
 import de.heinzenburger.g2_weckmichmal.persistence.AlarmConfiguration
 import de.heinzenburger.g2_weckmichmal.persistence.ApplicationSettings
 import de.heinzenburger.g2_weckmichmal.persistence.Event
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationAndEventEntity
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
-import de.heinzenburger.g2_weckmichmal.specifications.EventEntity
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
 import de.heinzenburger.g2_weckmichmal.ui.components.AlarmClockEditScreen
 import de.heinzenburger.g2_weckmichmal.ui.components.AlarmClockOverviewScreen
@@ -20,9 +20,6 @@ import de.heinzenburger.g2_weckmichmal.ui.components.InformationScreen
 import de.heinzenburger.g2_weckmichmal.ui.components.SettingsScreen
 import de.heinzenburger.g2_weckmichmal.ui.components.WelcomeScreen
 import java.net.URL
-import java.time.DayOfWeek
-import java.time.LocalDate
-import java.time.LocalTime
 
 /*
 Schön wäre es gewesen, wenn man einmalig irgendwo den Core instanziiert und dann dauernd mit dieser Instanz arbeitet, aber
@@ -58,19 +55,15 @@ data class Core(
         val alarmConfiguration = AlarmConfiguration(context)
         val event = Event(context)
         alarmConfiguration.saveOrUpdate(configurationEntity)
-        /*event.saveOrUpdate(WakeUpCalculator(
-            routePlanner = I_RoutePlannerSpecification,
+        val eventEntity = WakeUpCalculator(
+            routePlanner = RoutePlanner(),
             courseFetcher = CoursesFetcher(URL(getRaplaURL()))
-        ).calculateNextEvent(configurationEntity))*/
-        var eventEntity = EventEntity(
-            configID = configurationEntity.uid,
-            wakeUpTime = LocalTime.NOON,
-            days = setOf(DayOfWeek.MONDAY, DayOfWeek.THURSDAY),
-            date = LocalDate.now(),
-            courses = null,
-            routes = null
+        ).calculateNextEvent(configurationEntity)
+        event.saveOrUpdate(eventEntity
         )
-        event.saveOrUpdate(eventEntity)
+
+        configurationEntity.log()
+        eventEntity.log()
     }
 
     override fun getAllConfigurationAndEvent(): List<ConfigurationAndEventEntity>? {
@@ -142,8 +135,12 @@ data class Core(
         context.startActivity(intent)
     }
 
-    override fun showError(message: String) {
-        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+    override fun showToast(message: String) {
+
+        ContextCompat.getMainExecutor(context).execute( { ->
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+        }
+        )
     }
 }
 

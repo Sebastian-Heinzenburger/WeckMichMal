@@ -111,9 +111,9 @@ class DataConverter {
             for (i in 0 until array.length()) {
                 val jsonObject = array.getJSONObject(i)
                 result.add(Course(
-                    name = jsonObject.getString("name"),
-                    lecturer = jsonObject.getString("lecturer"),
-                    room = jsonObject.getString("room"),
+                    name = jsonObject.optString("name"),
+                    lecturer = jsonObject.optString("lecturer"),
+                    room = jsonObject.optString("room"),
                     startDate = LocalDateTime.parse(jsonObject.getString("startDate"), formatter),
                     endDate = LocalDateTime.parse(jsonObject.getString("endDate"), formatter),
                 ))
@@ -129,11 +129,11 @@ class DataConverter {
         if(routes != null){
             var result = JSONArray()
             routes.forEach {
-                var course = JSONObject()
-                course.put("startStation",it.startStation)
-                course.put("endStation",it.endStation)
-                course.put("startTime",it.startTime)
-                course.put("endTime",it.endTime)
+                var route = JSONObject()
+                route.put("startStation",it.startStation)
+                route.put("endStation",it.endStation)
+                route.put("startTime",it.startTime)
+                route.put("endTime",it.endTime)
                 var sections = JSONArray()
                 it.sections.forEach {
                     var section = JSONObject()
@@ -144,8 +144,8 @@ class DataConverter {
                     section.put("endStation",it.endStation)
                     sections.put(section)
                 }
-                course.put("sections",sections)
-                result.put(course)
+                route.put("sections",sections)
+                result.put(route)
             }
             return result.toString()
         }

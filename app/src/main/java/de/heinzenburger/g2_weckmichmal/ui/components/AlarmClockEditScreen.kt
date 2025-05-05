@@ -59,7 +59,6 @@ import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
-import de.heinzenburger.g2_weckmichmal.ui.components.AlarmClockEditScreen.Companion.alarmName
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
 import java.time.DayOfWeek
 import java.time.LocalTime

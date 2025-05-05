@@ -1,8 +1,5 @@
 package de.heinzenburger.g2_weckmichmal.specifications
 
-import de.heinzenburger.g2_weckmichmal.api.rapla.CoursesFetcher
-import java.net.URL
-
 /**
  * Interface defining the core
  */
@@ -94,5 +91,9 @@ interface I_Core{
      * Set AlarmClockEdit Screen
      */
     fun setAlarmClockEditScreen()
-    fun showError(message: String)
+
+    /**
+     * Show a Toast message
+     */
+    fun showToast(message: String)
 }

@@ -1,6 +1,5 @@
 package de.heinzenburger.g2_weckmichmal.ui.components
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -28,7 +27,8 @@ import kotlin.concurrent.thread
 class SaveURLComponent {
     companion object{
         val innerSettingsComposable : @Composable (PaddingValues, I_Core, () -> Unit) -> Unit = { innerPadding, core, onSave ->
-            val url = remember { mutableStateOf("") }
+            var tempURL = core.getRaplaURL()
+            var url = remember { mutableStateOf(tempURL ?: "") }
             Column(
                 Modifier
                     .padding(innerPadding)
@@ -41,7 +41,8 @@ class SaveURLComponent {
                     modifier = Modifier.padding(16.dp)
                 )
                 Column(Modifier
-                    .background(MaterialTheme.colorScheme.background).fillMaxSize(),
+                    .background(MaterialTheme.colorScheme.background)
+                    .fillMaxSize(),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ){
@@ -62,8 +63,10 @@ class SaveURLComponent {
                                 if (core.isValidCourseURL(url.value)) {
                                     core.saveRaplaURL(url.value)
                                     onSave()
+                                    core.showToast("Passt")
+
                                 } else {
-                                    core.showError("Immer Schulfrei??? Da stimmt doch was mit der URL nicht...")
+                                    core.showToast("Immer Schulfrei??? Da stimmt doch was mit der URL nicht...")
                                 }
                             }
                         },

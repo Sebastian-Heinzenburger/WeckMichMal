@@ -1,6 +1,5 @@
 package de.heinzenburger.g2_weckmichmal
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import de.heinzenburger.g2_weckmichmal.core.Core
@@ -12,8 +11,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val core = Core(context = applicationContext)
 
-        val serviceIntent = Intent(this, ForegroundService::class.java)
-        startService(serviceIntent)
+        // val serviceIntent = Intent(this, ForegroundService::class.java)
+        // startService(serviceIntent)
 
         if (core.isApplicationOpenedFirstTime()) {
             core.setWelcomeScreen()
