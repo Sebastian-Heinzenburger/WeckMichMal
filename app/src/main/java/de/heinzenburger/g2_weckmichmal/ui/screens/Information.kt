@@ -1,4 +1,4 @@
-package de.heinzenburger.g2_weckmichmal.ui.components
+package de.heinzenburger.g2_weckmichmal.ui.screens
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import de.heinzenburger.g2_weckmichmal.ui.components.NavBar
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
 
 class InformationScreen : ComponentActivity() {
@@ -56,7 +57,7 @@ class InformationScreen : ComponentActivity() {
 
 @Composable
 fun InformationComposable(modifier: Modifier, core: I_Core) {
-    NavBar.NavigationBar(modifier, core, InformationScreen.innerInformationComposable, caller = InformationScreen::class)
+    NavBar.Companion.NavigationBar(modifier, core, InformationScreen.innerInformationComposable, caller = InformationScreen::class)
 }
 
 @Preview(showBackground = true)

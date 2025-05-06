@@ -1,4 +1,4 @@
-package de.heinzenburger.g2_weckmichmal.ui.components
+package de.heinzenburger.g2_weckmichmal.ui.screens
 
 import android.os.Bundle
 import android.util.Range
@@ -11,39 +11,23 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
-import androidx.compose.material3.Slider
-import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TimePicker
-import androidx.compose.material3.TimePickerDefaults
 import androidx.compose.material3.TimePickerState
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,16 +39,21 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurButtonInEditAlarm
+import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
+import de.heinzenburger.g2_weckmichmal.ui.components.NavBar
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
+import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurTextField
+import de.heinzenburger.g2_weckmichmal.ui.components.PickerDialogs.Companion.TimePickerDialogContainer
+import de.heinzenburger.g2_weckmichmal.ui.components.PickerDialogs.Companion.MinutePickerDialog
+import de.heinzenburger.g2_weckmichmal.ui.components.PickerDialogs.Companion.StationPickerDialog
 import java.time.DayOfWeek
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-import java.util.Calendar
 import kotlin.concurrent.thread
 
 class AlarmClockEditScreen : ComponentActivity() {
@@ -181,6 +170,66 @@ class AlarmClockEditScreen : ComponentActivity() {
             }
         }
 
+        fun saveConfiguration(core: I_Core){
+            thread{
+                var validation = true
+                //Name of Alarm
+                if(alarmName.value == ""){
+                    validation = false
+                    core.showToast("Wecker Name fehlt")
+                }
+                else{
+                    configurationEntity.name = alarmName.value
+                }
+                //fixed arrival time if selected, else null
+                if(isManualArrivalTime.value){
+                    configurationEntity.fixedArrivalTime = manuallySetArrivalTime.value
+                }
+                else if(core.getRaplaURL() == "" || core.getRaplaURL() == null){
+                    validation = false
+                }
+                //fixed travel time if selected, else null
+                if(isManualTravelTime.value){
+                    configurationEntity.fixedTravelBuffer = manuallySetTravelTime.intValue
+                }
+                //stations needed, else null
+                else{
+                    if(startStation.value == "Startbahnhof"){
+                        validation = false
+                        core.showToast("Startbahnhof setzen")
+                    }
+                    else if(endStation.value == "Endbahnhof"){
+                        validation = false
+                        core.showToast("Endbahnhof setzen")
+                    }
+                    else{
+                        configurationEntity.startStation = startStation.value
+                        configurationEntity.endStation = endStation.value
+                    }
+                }
+                //set required start and endbuffer
+                configurationEntity.startBuffer = setStartBufferTime.intValue
+                configurationEntity.endBuffer = setEndBufferTime.intValue
+
+                //Setting days parameter
+                var days = mutableSetOf<DayOfWeek>()
+                selectedDays.value.forEachIndexed { index, active ->
+                    if(active) days.add(DayOfWeek.entries[index])
+                }
+                if(days.isEmpty()){
+                    validation = false
+                    core.showToast("Mindestens einen Tag auswählen")
+                }
+                else{
+                    configurationEntity.days = days
+                }
+                if(validation){
+                    core.generateOrUpdateAlarmConfiguration(configurationEntity)
+                    core.setAlarmClockOverviewScreen()
+                }
+            }
+        }
+
         //All components are stored as variables so they can be used as callbacks if needed
         private val innerDatengrundlageComposable : @Composable (PaddingValues, I_Core) -> Unit =
         { innerPadding: PaddingValues, core: I_Core ->
@@ -195,11 +244,8 @@ class AlarmClockEditScreen : ComponentActivity() {
                 }
             }
 
-            Text(
-                style = MaterialTheme.typography.bodyMedium,
+            OurText(
                 text = "Datengrundlage",
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(top = 24.dp, start = 24.dp)
             )
             Row{
@@ -215,7 +261,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                                 onClick = {
                                     onArrivalOptionSelected(arrivalOptions[0])
                                     isManualArrivalTime.value = true
-                                          },
+                                },
                                 role = Role.RadioButton
                             )
                             .padding(horizontal = 16.dp),
@@ -229,13 +275,11 @@ class AlarmClockEditScreen : ComponentActivity() {
                             ),
                             modifier = Modifier.padding(top = 8.dp)
                         )
-                        Text(
+                        OurText(
                             text = arrivalOptions[0],
-                            color = MaterialTheme.colorScheme.primary,
-                            style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.padding(start = 8.dp, top = 8.dp)
                         )
-                        TextButton(
+                        OurButtonInEditAlarm(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(start = 12.dp),
@@ -243,23 +287,13 @@ class AlarmClockEditScreen : ComponentActivity() {
                             onClick = {
                                 openArrivalTimePickerDialog.value = true
                             },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary
+                            text = manuallySetArrivalTime.value.format(
+                                DateTimeFormatter.ofPattern(
+                                    "HH:mm"
+                                )
                             ),
-                            contentPadding = PaddingValues(0.dp)
-                        ) {
-                            Text(
-                                style = MaterialTheme.typography.bodyMedium,
-                                text = manuallySetArrivalTime.value.format(
-                                    DateTimeFormatter.ofPattern(
-                                        "HH:mm"
-                                    )
-                                ),
-                                textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.background,
-                                modifier = Modifier.padding(0.dp)
-                            )
-                        }
+                        )
+
                     }
                     Row(
                         Modifier
@@ -268,7 +302,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                                 onClick = {
                                     onArrivalOptionSelected(arrivalOptions[1])
                                     isManualArrivalTime.value = false
-                                          },
+                                },
                                 role = Role.RadioButton
                             )
                             .padding(horizontal = 16.dp, vertical = 4.dp),
@@ -282,10 +316,8 @@ class AlarmClockEditScreen : ComponentActivity() {
                             ),
                             modifier = Modifier.padding(top = 8.dp)
                         )
-                        Text(
+                        OurText(
                             text = arrivalOptions[1],
-                            color = MaterialTheme.colorScheme.primary,
-                            style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.padding(start = 8.dp, top = 8.dp)
                         )
                     }
@@ -308,11 +340,8 @@ class AlarmClockEditScreen : ComponentActivity() {
                 Column (
                     modifier = Modifier.selectableGroup()
                 ){
-                    Text(
-                        style = MaterialTheme.typography.bodyMedium,
+                    OurText(
                         text = "Fahrtweg",
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(top = 24.dp, start = 24.dp)
                     )
                     Row{
@@ -328,7 +357,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                                         onClick = {
                                             onRideOptionSelected(rideOptions[0])
                                             isManualTravelTime.value = false
-                                                  },
+                                        },
                                         role = Role.RadioButton
                                     )
                                     .padding(horizontal = 16.dp),
@@ -342,57 +371,32 @@ class AlarmClockEditScreen : ComponentActivity() {
                                     ),
                                     modifier = Modifier.padding(top = 8.dp)
                                 )
-                                Text(
+                                OurText(
                                     text = rideOptions[0],
-                                    color = MaterialTheme.colorScheme.primary,
-                                    style = MaterialTheme.typography.bodyMedium,
                                     modifier = Modifier.padding(start = 8.dp, top = 8.dp)
                                 )
                             }
                             Column{
-
-                                Button(
+                                OurButtonInEditAlarm(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(48.dp,0.dp),
+                                        .padding(48.dp, 0.dp),
                                     onClick = {
                                         openStartStationDialog.value = true
                                     },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colorScheme.primary
-                                    ),
-                                    contentPadding = PaddingValues(0.dp)
-
-                                ) {
-                                    Text(
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        text = startStation.value,
-                                        textAlign = TextAlign.Center,
-                                        color = MaterialTheme.colorScheme.background,
-                                        modifier = Modifier.padding(0.dp)
-                                    )
-                                }
-                                Button(
+                                    text = startStation.value,
+                                    enabled = rideSelectedOption == rideOptions[0]
+                                )
+                                OurButtonInEditAlarm(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(48.dp, 0.dp),
                                     onClick = {
                                         openEndStationDialog.value = true
                                     },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colorScheme.primary
-                                    ),
-                                    contentPadding = PaddingValues(0.dp)
-
-                                ) {
-                                    Text(
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        text = endStation.value,
-                                        textAlign = TextAlign.Center,
-                                        color = MaterialTheme.colorScheme.background,
-                                        modifier = Modifier.padding(0.dp)
-                                    )
-                                }
+                                    text = endStation.value,
+                                    enabled = rideSelectedOption == rideOptions[0]
+                                )
                             }
 
                             Row(
@@ -402,7 +406,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                                         onClick = {
                                             onRideOptionSelected(rideOptions[1])
                                             isManualTravelTime.value = true
-                                                  },
+                                        },
                                         role = Role.RadioButton
                                     )
                                     .padding(horizontal = 16.dp, vertical = 4.dp),
@@ -416,13 +420,11 @@ class AlarmClockEditScreen : ComponentActivity() {
                                     ),
                                     modifier = Modifier.padding(top = 8.dp)
                                 )
-                                Text(
+                                OurText(
                                     text = rideOptions[1],
-                                    color = MaterialTheme.colorScheme.primary,
-                                    style = MaterialTheme.typography.bodyMedium,
                                     modifier = Modifier.padding(start = 8.dp, top = 8.dp)
                                 )
-                                Button(
+                                OurButtonInEditAlarm(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(start = 48.dp),
@@ -430,18 +432,8 @@ class AlarmClockEditScreen : ComponentActivity() {
                                         openTravelTimePickerDialog.value = true
                                     },
                                     enabled = rideSelectedOption == rideOptions[1],
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colorScheme.primary
-                                    )
-                                ) {
-                                    Text(
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        text = manuallySetTravelTime.intValue.toString() + "min",
-                                        textAlign = TextAlign.Center,
-                                        color = MaterialTheme.colorScheme.background,
-                                        modifier = Modifier.padding(0.dp)
-                                    )
-                                }
+                                    text = manuallySetTravelTime.intValue.toString() + "min",
+                                )
                             }
                         }
                     }
@@ -449,86 +441,50 @@ class AlarmClockEditScreen : ComponentActivity() {
             }
         private val innerZeitaufwandComposable : @Composable (PaddingValues, I_Core) -> Unit =
             { innerPadding: PaddingValues, core: I_Core ->
-                Text(
-                    style = MaterialTheme.typography.bodyMedium,
+                OurText(
                     text = "Zeitaufwand",
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(top = 24.dp, start = 24.dp)
                 )
                 Row(
                     modifier = Modifier.padding(horizontal = 16.dp)
                 ) {
-                    Text(
-                        style = MaterialTheme.typography.bodyMedium,
+                    OurText(
                         text = "Puffer vor Fahrt",
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(top = 24.dp, start = 24.dp)
                     )
-                    Button(
+                    OurButtonInEditAlarm(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(start = 48.dp),
                         onClick = {
                             openStartBufferPickerDialog.value = true
                         },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        ),
-                        contentPadding = PaddingValues(0.dp)
-
-                    ) {
-                        Text(
-                            style = MaterialTheme.typography.bodyMedium,
-                            text = setStartBufferTime.intValue.toString() + "min",
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.background,
-                            modifier = Modifier.padding(0.dp)
-                        )
-                    }
-
+                        text = setStartBufferTime.intValue.toString() + "min",
+                    )
                 }
                 Row(
                     modifier = Modifier.padding(horizontal = 16.dp)
 
                 ){
-                    Text(
-                        style = MaterialTheme.typography.bodyMedium,
+                    OurText(
                         text = "Puffer nach Ankunft",
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(top = 24.dp, start = 24.dp)
                     )
-                    Button(
+                    OurButtonInEditAlarm(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(start = 48.dp),
                         onClick = {
                             openEndBufferPickerDialog.value = true
                         },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        ),
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
-                        Text(
-                            style = MaterialTheme.typography.bodyMedium,
-                            text = setEndBufferTime.intValue.toString() + "min",
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.background,
-                            modifier = Modifier.padding(0.dp)
-                        )
-                    }
+                        text = setEndBufferTime.intValue.toString() + "min"
+                    )
                 }
             }
         private val innerGueltigkeitComposable : @Composable (PaddingValues, I_Core) -> Unit =
             { innerPadding: PaddingValues, core: I_Core ->
-                Text(
-                    style = MaterialTheme.typography.bodyMedium,
+                OurText(
                     text = "Gültig für",
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(top = 24.dp, start = 24.dp)
                 )
                 Box(
@@ -558,10 +514,8 @@ class AlarmClockEditScreen : ComponentActivity() {
                             )
                         ) {
                             val day = DayOfWeek.entries[index].name
-                            Text(
-                                style = MaterialTheme.typography.bodyMedium,
+                            OurText(
                                 text = day[0]+day[1].lowercase(),
-                                textAlign = TextAlign.Center,
                                 color = if(active){
                                     MaterialTheme.colorScheme.secondary
                                 } else{
@@ -581,7 +535,7 @@ class AlarmClockEditScreen : ComponentActivity() {
             //Open time picker dialogs when corresponding boolean set to true
             when {
                 openArrivalTimePickerDialog.value -> {
-                    DialWithDialogExample(
+                    TimePickerDialogContainer(
                         onConfirm =
                         { timePickerState: TimePickerState ->
                             openArrivalTimePickerDialog.value = false
@@ -683,70 +637,14 @@ class AlarmClockEditScreen : ComponentActivity() {
                     modifier = Modifier.fillMaxWidth()
                 )
                 {
-                    Text(
-                        style = MaterialTheme.typography.bodyMedium,
+                    OurText(
                         text = "Wecker bearbeiten",
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(16.dp)
                     )
-                    Button(
+                    TextButton(
                         //Save to database when clicked
                         onClick = {
-                            thread{
-                                var validation = true
-                                //Name of Alarm
-                                if(alarmName.value == ""){
-                                    validation = false
-                                    core.showToast("Wecker Name fehlt")
-                                }
-                                else{
-                                    configurationEntity.name = alarmName.value
-                                }
-                                //fixed arrival time if selected, else null
-                                if(isManualArrivalTime.value){
-                                    configurationEntity.fixedArrivalTime = manuallySetArrivalTime.value
-                                }
-                                //fixed travel time if selected, else null
-                                if(isManualTravelTime.value){
-                                    configurationEntity.fixedTravelBuffer = manuallySetTravelTime.intValue
-                                }
-                                //stations needed, else null
-                                else{
-                                    if(startStation.value == "Startbahnhof"){
-                                        validation = false
-                                        core.showToast("Startbahnhof setzen")
-                                    }
-                                    else if(endStation.value == "Endbahnhof"){
-                                        validation = false
-                                        core.showToast("Endbahnhof setzen")
-                                    }
-                                    else{
-                                        configurationEntity.startStation = startStation.value
-                                        configurationEntity.endStation = endStation.value
-                                    }
-                                }
-                                //set required start and endbuffer
-                                configurationEntity.startBuffer = setStartBufferTime.intValue
-                                configurationEntity.endBuffer = setEndBufferTime.intValue
-
-                                //Setting days parameter
-                                var days = mutableSetOf<DayOfWeek>()
-                                selectedDays.value.forEachIndexed { index, active ->
-                                    if(active) days.add(DayOfWeek.entries[index])
-                                }
-                                if(days.isEmpty()){
-                                    validation = false
-                                    core.showToast("Mindestens einen Tag auswählen")
-                                }
-                                else{
-                                    configurationEntity.days = days
-                                }
-                                if(validation){
-                                    core.generateOrUpdateAlarmConfiguration(configurationEntity)
-                                    core.setAlarmClockOverviewScreen()
-                                }
-                            }
+                            saveConfiguration(core)
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.Transparent
@@ -754,8 +652,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                         contentPadding = PaddingValues(0.dp),
 
                     ) {
-                        Text(
-                            style = MaterialTheme.typography.bodyMedium,
+                        OurText(
                             text = "Speichern",
                             textAlign = TextAlign.Right,
                             color = MaterialTheme.colorScheme.secondary,
@@ -763,37 +660,15 @@ class AlarmClockEditScreen : ComponentActivity() {
                         )
                     }
                 }
-                TextField(
-                    shape = RoundedCornerShape(8.dp),
+                OurTextField(
                     value = alarmName.value,
                     onValueChange = {alarmName.value = it},
-                    textStyle = MaterialTheme.typography.bodyMedium,
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.primary,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.primary,
-                        focusedTextColor = MaterialTheme.colorScheme.background,
-                        unfocusedTextColor = MaterialTheme.colorScheme.background,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        disabledIndicatorColor = Color.Transparent,
-                        cursorColor = MaterialTheme.colorScheme.secondary,
-                        selectionColors = TextSelectionColors(
-                            handleColor = MaterialTheme.colorScheme.secondary,
-                            backgroundColor = MaterialTheme.colorScheme.onBackground
-                        ),
-                        focusedTrailingIconColor = MaterialTheme.colorScheme.onBackground
-                    ),
-                    placeholder = {
-                        Text(
-                            text = "Wecker Name",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                    },
                     modifier = Modifier
                         .padding(24.dp, 8.dp)
-                        .align(alignment = Alignment.CenterHorizontally)
+                        .align(alignment = Alignment.CenterHorizontally),
+                    placeholderText = "Wecker Name",
                 )
+
                 innerDatengrundlageComposable(innerPadding,core)
                 innerFahrtwegComposable(innerPadding,core)
                 innerZeitaufwandComposable(innerPadding,core)
@@ -805,202 +680,7 @@ class AlarmClockEditScreen : ComponentActivity() {
 
 @Composable
 fun EditComposable(modifier: Modifier, core: I_Core) {
-    NavBar.NavigationBar(modifier, core, AlarmClockEditScreen.innerEditComposable, caller = AlarmClockEditScreen::class)
-}
-
-//Dialogs for Picking LocalTime and Minutes
-//Are stored outside of Class because they are public and independent components
-@Composable
-fun MinutePickerDialog(
-    onConfirm: (Int) -> Unit,
-    onDismiss: () -> Unit,
-    range: Range<Int>,
-    default: Int
-) {
-    Dialog(onDismissRequest = { onDismiss() }) {
-        Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(375.dp)
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    text = "Zeit in Minuten:",
-                    modifier = Modifier.padding(16.dp),
-                )
-
-                var sliderPosition = remember { mutableFloatStateOf(default.toFloat()) }
-                Column {
-                    Slider(
-                        valueRange = range.lower.toFloat() .. range.upper.toFloat(),
-                        value = sliderPosition.floatValue,
-                        onValueChange = { sliderPosition.floatValue = it }
-                    )
-                    Text(text = sliderPosition.floatValue.toInt().toString())
-                }
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                ) {
-                    TextButton(
-                        onClick = { onDismiss() },
-                        modifier = Modifier.padding(8.dp),
-                    ) {
-                        Text("Dismiss", color = MaterialTheme.colorScheme.primary)
-                    }
-                    TextButton(
-                        onClick = { onConfirm((sliderPosition.floatValue).toInt()) },
-                        modifier = Modifier.padding(8.dp),
-                    ) {
-                        Text("Confirm", color = MaterialTheme.colorScheme.primary)
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun StationPickerDialog(
-    onConfirm: (String) -> Unit,
-    onDismiss: () -> Unit,
-    core: I_Core
-) {
-    Dialog(onDismissRequest = { onDismiss() }) {
-        var station = remember { mutableStateOf("") }
-        var stationPrediction = remember { mutableStateOf("") }
-        Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(375.dp)
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    text = "Stationsname:",
-                    modifier = Modifier.padding(16.dp),
-                )
-                Text(
-                    text = stationPrediction.value
-                )
-                TextField(
-                    shape = RoundedCornerShape(8.dp),
-                    value = station.value,
-                    onValueChange = {
-                        station.value = it
-                        thread{
-                            if(station.value.length > 2){
-                                stationPrediction.value = core.deriveStationName(it)[0]
-                            }
-                        } },
-                    textStyle = MaterialTheme.typography.bodyMedium,
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.primary,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.primary
-                    ),
-                    modifier = Modifier
-                        .padding(24.dp, 8.dp)
-                        .align(alignment = Alignment.CenterHorizontally)
-                )
-
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                ) {
-                    TextButton(
-                        onClick = { onDismiss() },
-                        modifier = Modifier.padding(8.dp),
-                    ) {
-                        Text("Dismiss", color = MaterialTheme.colorScheme.primary)
-                    }
-                    TextButton(
-                        onClick = { onConfirm(stationPrediction.value) },
-                        modifier = Modifier.padding(8.dp),
-                    ) {
-                        Text("Confirm", color = MaterialTheme.colorScheme.primary)
-                    }
-                }
-            }
-        }
-    }
-}
-
-//I dont know why both functions are needed to display the time picker dialog, but thats okay
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DialWithDialogExample(
-    onConfirm: (TimePickerState) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    val currentTime = Calendar.getInstance()
-
-    val timePickerState = rememberTimePickerState(
-        initialHour = currentTime.get(Calendar.HOUR_OF_DAY),
-        initialMinute = currentTime.get(Calendar.MINUTE),
-        is24Hour = true,
-    )
-
-    TimePickerDialog(
-        onDismiss = { onDismiss() },
-        onConfirm = { onConfirm(timePickerState) }
-    ) {
-        TimePicker(
-            state = timePickerState,
-            colors = TimePickerDefaults.colors(
-                clockDialColor = MaterialTheme.colorScheme.onBackground,
-                selectorColor = MaterialTheme.colorScheme.secondary,
-                clockDialUnselectedContentColor = MaterialTheme.colorScheme.primary,
-                clockDialSelectedContentColor = MaterialTheme.colorScheme.primary,
-                timeSelectorSelectedContainerColor = MaterialTheme.colorScheme.onBackground,
-                timeSelectorUnselectedContainerColor = MaterialTheme.colorScheme.onBackground,
-                timeSelectorSelectedContentColor = MaterialTheme.colorScheme.primary,
-                timeSelectorUnselectedContentColor = MaterialTheme.colorScheme.primary,
-                ),
-            )
-    }
-}
-@Composable
-fun TimePickerDialog(
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit,
-    content: @Composable () -> Unit
-) {
-    AlertDialog(
-        containerColor = MaterialTheme.colorScheme.background,
-        onDismissRequest = onDismiss,
-        dismissButton = {
-            TextButton(
-                onClick = { onDismiss() }
-            ) {
-                Text("Abbrechen", color = MaterialTheme.colorScheme.secondary)
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = { onConfirm() }) {
-                Text("Bestätigen", color = MaterialTheme.colorScheme.secondary)
-            }
-        },
-        text = { content() }
-    )
+    NavBar.Companion.NavigationBar(modifier, core, AlarmClockEditScreen.innerEditComposable, caller = AlarmClockEditScreen::class)
 }
 
 

@@ -13,6 +13,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.unit.dp
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import de.heinzenburger.g2_weckmichmal.ui.screens.AlarmClockEditScreen
+import de.heinzenburger.g2_weckmichmal.ui.screens.AlarmClockOverviewScreen
+import de.heinzenburger.g2_weckmichmal.ui.screens.InformationScreen
+import de.heinzenburger.g2_weckmichmal.ui.screens.SettingsScreen
 
 class NavBar : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

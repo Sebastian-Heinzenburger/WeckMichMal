@@ -1,4 +1,4 @@
-package de.heinzenburger.g2_weckmichmal.ui.components
+package de.heinzenburger.g2_weckmichmal.ui.screens
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -10,18 +10,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -30,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
+import de.heinzenburger.g2_weckmichmal.ui.components.SaveURL
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
 
 class WelcomeScreen : ComponentActivity() {
@@ -68,7 +63,7 @@ fun Greeting(modifier: Modifier, core: I_Core) {
             color = MaterialTheme.colorScheme.error,
             modifier = modifier.padding(16.dp)
         )
-        SaveURLComponent.innerSettingsComposable(
+        SaveURL.innerSettingsComposable(
             PaddingValues(0.dp), core,
             fun () {
                 core.setAlarmClockOverviewScreen()
@@ -87,11 +82,9 @@ fun Greeting(modifier: Modifier, core: I_Core) {
             ),
             modifier = modifier.padding(16.dp)
         ) {
-            Text(
+            OurText(
                 text = "Ohne Vorlesungsplan fortfahren",
-                textAlign = TextAlign.Center,
                 modifier = modifier.padding(8.dp),
-                style = MaterialTheme.typography.bodyMedium
             )
         }
     }

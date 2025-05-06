@@ -149,7 +149,7 @@ data class ConfigurationEntity(
     companion object{
         val emptyConfiguration = ConfigurationEntity(
             uid = 0,
-            name = "",
+            name = "Wecker",
             days = setOf(DayOfWeek.MONDAY),
             fixedArrivalTime = null,
             fixedTravelBuffer = null,

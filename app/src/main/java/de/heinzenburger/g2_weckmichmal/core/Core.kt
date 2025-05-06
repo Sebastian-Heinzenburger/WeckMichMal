@@ -14,11 +14,11 @@ import de.heinzenburger.g2_weckmichmal.persistence.Event
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationAndEventEntity
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
-import de.heinzenburger.g2_weckmichmal.ui.components.AlarmClockEditScreen
-import de.heinzenburger.g2_weckmichmal.ui.components.AlarmClockOverviewScreen
-import de.heinzenburger.g2_weckmichmal.ui.components.InformationScreen
-import de.heinzenburger.g2_weckmichmal.ui.components.SettingsScreen
-import de.heinzenburger.g2_weckmichmal.ui.components.WelcomeScreen
+import de.heinzenburger.g2_weckmichmal.ui.screens.AlarmClockEditScreen
+import de.heinzenburger.g2_weckmichmal.ui.screens.AlarmClockOverviewScreen
+import de.heinzenburger.g2_weckmichmal.ui.screens.InformationScreen
+import de.heinzenburger.g2_weckmichmal.ui.screens.SettingsScreen
+import de.heinzenburger.g2_weckmichmal.ui.screens.WelcomeScreen
 import java.net.URL
 
 /*
@@ -76,10 +76,15 @@ data class Core(
     }
 
     override fun saveRaplaURL(urlString : String){
-        val applicationSettings = ApplicationSettings(context)
-        val settingsEntity = applicationSettings.getApplicationSettings()
-        settingsEntity.raplaURL = urlString
-        applicationSettings.saveOrUpdateApplicationSettings(settingsEntity)
+        if(isValidCourseURL(urlString)){
+            val applicationSettings = ApplicationSettings(context)
+            val settingsEntity = applicationSettings.getApplicationSettings()
+            settingsEntity.raplaURL = urlString
+            applicationSettings.saveOrUpdateApplicationSettings(settingsEntity)
+        }
+        else{
+            showToast("Invalid URL")
+        }
     }
 
     override fun isValidCourseURL(urlString : String) : Boolean{

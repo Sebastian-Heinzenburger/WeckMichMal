@@ -27,27 +27,27 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ui.components.WelcomeScreen"
+            android:name=".ui.screens.WelcomeScreen"
             android:exported="true"
             android:theme="@style/Theme.G2_WeckMichMal">
         </activity>
         <activity
-            android:name=".ui.components.InformationScreen"
+            android:name=".ui.screens.InformationScreen"
             android:exported="true"
             android:theme="@style/Theme.G2_WeckMichMal">
         </activity>
         <activity
-            android:name=".ui.components.SettingsScreen"
+            android:name=".ui.screens.SettingsScreen"
             android:exported="true"
             android:theme="@style/Theme.G2_WeckMichMal">
         </activity>
         <activity
-            android:name=".ui.components.AlarmClockOverviewScreen"
+            android:name=".ui.screens.AlarmClockOverviewScreen"
             android:exported="true"
             android:theme="@style/Theme.G2_WeckMichMal">
         </activity>
         <activity
-            android:name=".ui.components.AlarmClockEditScreen"
+            android:name=".ui.screens.AlarmClockEditScreen"
             android:exported="true"
             android:theme="@style/Theme.G2_WeckMichMal">
         </activity>

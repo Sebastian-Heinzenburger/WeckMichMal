@@ -1,4 +1,4 @@
-package de.heinzenburger.g2_weckmichmal.ui.components
+package de.heinzenburger.g2_weckmichmal.ui.screens
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -11,17 +11,18 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
+import de.heinzenburger.g2_weckmichmal.ui.components.NavBar
+import de.heinzenburger.g2_weckmichmal.ui.components.SaveURL
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
 
 class SettingsScreen : ComponentActivity() {
@@ -48,11 +49,8 @@ class SettingsScreen : ComponentActivity() {
                 Modifier
                     .padding(innerPadding)
                     .background(MaterialTheme.colorScheme.background)) {
-                Text(
-                    style = MaterialTheme.typography.bodyMedium,
+                OurText(
                     text = "Einstellungen",
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(16.dp)
                 )
                 Column(Modifier
@@ -60,7 +58,7 @@ class SettingsScreen : ComponentActivity() {
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ){
-                    SaveURLComponent.innerSettingsComposable(innerPadding, core,
+                    SaveURL.innerSettingsComposable(innerPadding, core,
                         fun () {
                             core.setAlarmClockOverviewScreen()
                         }
@@ -73,7 +71,7 @@ class SettingsScreen : ComponentActivity() {
 
 @Composable
 fun SettingsComposable(modifier: Modifier, uiActions: I_Core) {
-    NavBar.NavigationBar(modifier, uiActions, SettingsScreen.innerSettingsComposable, SettingsScreen::class)
+    NavBar.Companion.NavigationBar(modifier, uiActions, SettingsScreen.innerSettingsComposable, SettingsScreen::class)
 }
 
 @Preview(showBackground = true)
