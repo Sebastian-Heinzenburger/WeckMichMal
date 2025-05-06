@@ -15,6 +15,7 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
 
+// Detailled description under https://gitlab.com/dhbw-se/se-tinf23b2/G2-WeckMichMal/g2-weckmichmal/-/wikis/home/Implementierung/WakeUpCalculation
 class WakeUpCalculator(
     private val routePlanner: I_RoutePlannerSpecification,
     private val courseFetcher: CourseFetcherSpecification
