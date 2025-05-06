@@ -43,6 +43,12 @@ class MockupCore : I_Core {
     override fun isValidCourseURL(urlString : String) : Boolean {
         return true
     }
+
+
+    override fun validateConfigurationEntity(configurationEntity: ConfigurationEntity): Boolean {
+        return true
+    }
+
     override fun deleteAlarmConfiguration(uid: Long) {
     }
 

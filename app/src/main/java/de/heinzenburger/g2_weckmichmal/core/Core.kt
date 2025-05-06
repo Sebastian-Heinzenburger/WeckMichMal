@@ -53,17 +53,21 @@ data class Core(
 
     override fun generateOrUpdateAlarmConfiguration(configurationEntity: ConfigurationEntity) {
         val alarmConfiguration = AlarmConfiguration(context)
-        val event = Event(context)
-        alarmConfiguration.saveOrUpdate(configurationEntity)
-        val eventEntity = WakeUpCalculator(
-            routePlanner = RoutePlanner(),
-            courseFetcher = CoursesFetcher(URL(getRaplaURL()))
-        ).calculateNextEvent(configurationEntity)
-        event.saveOrUpdate(eventEntity
-        )
+        if (validateConfigurationEntity(configurationEntity)){
+            val event = Event(context)
+            alarmConfiguration.saveOrUpdate(configurationEntity)
+            val eventEntity = WakeUpCalculator(
+                routePlanner = RoutePlanner(),
+                courseFetcher = CoursesFetcher(URL(getRaplaURL()))
+            ).calculateNextEvent(configurationEntity)
+            event.saveOrUpdate(eventEntity)
 
-        configurationEntity.log()
-        eventEntity.log()
+            configurationEntity.log()
+            eventEntity.log()
+        }
+        else{
+            showToast("Configuration is not valid")
+        }
     }
 
     override fun getAllConfigurationAndEvent(): List<ConfigurationAndEventEntity>? {
@@ -80,6 +84,30 @@ data class Core(
 
     override fun isValidCourseURL(urlString : String) : Boolean{
         return  URLUtil.isValidUrl(urlString) && CoursesFetcher(URL(urlString)).hasValidCourseURL()
+    }
+
+    override fun validateConfigurationEntity(configurationEntity: ConfigurationEntity): Boolean {
+        var validation = true
+        // Should contain a name
+        if(configurationEntity.name == ""){
+            validation = false
+        }
+        // Days should not be empty
+        else if(configurationEntity.days.isEmpty()){
+            validation = false
+        }
+        if(configurationEntity.startStation != null || configurationEntity.endStation != null){
+            // If one station is set but one is null, error
+            if(configurationEntity.startStation == null || configurationEntity.endStation == null){
+                validation = false
+            }
+            // Station exists if can be found in List of DB similar station names
+            else if (!RoutePlanner().deriveValidStationNames(configurationEntity.startStation!!).contains(configurationEntity.startStation!!)
+                || !RoutePlanner().deriveValidStationNames(configurationEntity.endStation!!).contains(configurationEntity.endStation!!)){
+                validation = false
+            }
+        }
+        return validation
     }
 
     override fun getRaplaURL(): String? {

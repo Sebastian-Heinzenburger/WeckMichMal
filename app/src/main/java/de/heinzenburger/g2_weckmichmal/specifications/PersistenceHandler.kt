@@ -145,6 +145,7 @@ data class ConfigurationEntity(
     fun log(){
         MainActivity.log.info("Logging Alarm configuration with id $uid:\n$name\n$days\n$fixedArrivalTime\n$fixedTravelBuffer\n$startBuffer\n$endBuffer\n$startStation\n$endStation\n$isActive")
     }
+
     companion object{
         val emptyConfiguration = ConfigurationEntity(
             uid = 0,

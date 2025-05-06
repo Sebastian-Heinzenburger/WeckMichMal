@@ -354,7 +354,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                                 Button(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(start = 48.dp),
+                                        .padding(48.dp,0.dp),
                                     onClick = {
                                         openStartStationDialog.value = true
                                     },
@@ -375,7 +375,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                                 Button(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(start = 48.dp),
+                                        .padding(48.dp, 0.dp),
                                     onClick = {
                                         openEndStationDialog.value = true
                                     },
@@ -694,8 +694,15 @@ class AlarmClockEditScreen : ComponentActivity() {
                         //Save to database when clicked
                         onClick = {
                             thread{
+                                var validation = true
                                 //Name of Alarm
-                                configurationEntity.name = alarmName.value
+                                if(alarmName.value == ""){
+                                    validation = false
+                                    core.showToast("Wecker Name fehlt")
+                                }
+                                else{
+                                    configurationEntity.name = alarmName.value
+                                }
                                 //fixed arrival time if selected, else null
                                 if(isManualArrivalTime.value){
                                     configurationEntity.fixedArrivalTime = manuallySetArrivalTime.value
@@ -706,8 +713,18 @@ class AlarmClockEditScreen : ComponentActivity() {
                                 }
                                 //stations needed, else null
                                 else{
-                                    configurationEntity.startStation = startStation.value
-                                    configurationEntity.endStation = endStation.value
+                                    if(startStation.value == "Startbahnhof"){
+                                        validation = false
+                                        core.showToast("Startbahnhof setzen")
+                                    }
+                                    else if(endStation.value == "Endbahnhof"){
+                                        validation = false
+                                        core.showToast("Endbahnhof setzen")
+                                    }
+                                    else{
+                                        configurationEntity.startStation = startStation.value
+                                        configurationEntity.endStation = endStation.value
+                                    }
                                 }
                                 //set required start and endbuffer
                                 configurationEntity.startBuffer = setStartBufferTime.intValue
@@ -718,10 +735,17 @@ class AlarmClockEditScreen : ComponentActivity() {
                                 selectedDays.value.forEachIndexed { index, active ->
                                     if(active) days.add(DayOfWeek.entries[index])
                                 }
-                                configurationEntity.days = days
-
-                                core.generateOrUpdateAlarmConfiguration(configurationEntity)
-                                core.setAlarmClockOverviewScreen()
+                                if(days.isEmpty()){
+                                    validation = false
+                                    core.showToast("Mindestens einen Tag auswählen")
+                                }
+                                else{
+                                    configurationEntity.days = days
+                                }
+                                if(validation){
+                                    core.generateOrUpdateAlarmConfiguration(configurationEntity)
+                                    core.setAlarmClockOverviewScreen()
+                                }
                             }
                         },
                         colors = ButtonDefaults.buttonColors(

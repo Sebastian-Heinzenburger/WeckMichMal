@@ -68,6 +68,11 @@ interface I_Core{
     fun isValidCourseURL(urlString : String) : Boolean
 
     /**
+     * If configuration entity contains only valid attributes
+     */
+    fun validateConfigurationEntity(configurationEntity: ConfigurationEntity) : Boolean
+
+    /**
      * Set Welcome Screen
      */
     fun setWelcomeScreen()
