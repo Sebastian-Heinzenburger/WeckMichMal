@@ -59,21 +59,6 @@ class MockupCore : I_Core {
     override fun deleteAlarmConfiguration(uid: Long) {
     }
 
-    override fun setWelcomeScreen() {
-    }
-
-    override fun setSettingsScreen() {
-    }
-
-    override fun setAlarmClockOverviewScreen() {
-    }
-
-    override fun setInformationScreen() {
-    }
-
-    override fun setAlarmClockEditScreen() {
-    }
-
     override fun showToast(message: String) {
     }
 }

@@ -1,7 +1,10 @@
 package de.heinzenburger.g2_weckmichmal.ui.screens
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
@@ -37,14 +40,17 @@ import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.core.app.ActivityCompat.finishAffinity
 import de.heinzenburger.g2_weckmichmal.MainActivity
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationAndEventEntity
+import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.components.NavBar
@@ -63,17 +69,38 @@ class AlarmClockOverviewScreen : ComponentActivity(){
         }
         setContent {
             G2_WeckMichMalTheme {
+                val context = LocalContext.current
+                BackHandler {
+                    //Finish all and close the app
+                    finishAffinity(context as ComponentActivity)
+                }
                 AlarmClockOverviewComposable(modifier = Modifier, core)
             }
         }
     }
 
     companion object{
-        private fun deleteConfiguration(core: I_Core, properties: ConfigurationAndEventEntity){
+        private fun deleteConfiguration(
+            core: I_Core,
+            properties: ConfigurationAndEventEntity,
+            context: Context
+        ){
             thread {
                 core.deleteAlarmConfiguration(properties.configurationEntity.uid)
-                core.setAlarmClockOverviewScreen()
+
+                val intent = Intent(context, AlarmClockOverviewScreen::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                context.startActivity(intent)
+                (context as ComponentActivity).finish()
             }
+        }
+
+        private fun setEditScreen(context: Context, configurationEntity: ConfigurationEntity?){
+            AlarmClockEditScreen.reset(configurationEntity)
+            val intent = Intent(context, AlarmClockEditScreen::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+            context.startActivity(intent)
+            (context as ComponentActivity).finish()
         }
 
         var aPlatypus = false //Static variable to set Platypus mode
@@ -153,13 +180,14 @@ class AlarmClockOverviewScreen : ComponentActivity(){
         private val SingleAlarmConfiguration :
                 @Composable (PaddingValues, I_Core, ConfigurationAndEventEntity)
                 -> Unit = { innerPadding: PaddingValues, core: I_Core, properties: ConfigurationAndEventEntity ->
+            val context = LocalContext.current
             Box(
                 contentAlignment = Alignment.TopEnd
             ){
                 innerSingleAlarmConfiguration(innerPadding, core, properties)
                 Button(
                     onClick = {
-                        deleteConfiguration(core, properties)
+                        deleteConfiguration(core, properties, context)
                     },
                     colors = ButtonDefaults.buttonColors(
                         contentColor = MaterialTheme.colorScheme.background,
@@ -185,6 +213,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
         //UI Arrangement for Components when Platypus mode is activated
         private val APlatypus : @Composable (PaddingValues, I_Core, ConfigurationAndEventEntity)
                 -> Unit = { innerPadding: PaddingValues, core: I_Core, properties: ConfigurationAndEventEntity ->
+            val context = LocalContext.current
             Column(
                 verticalArrangement = Arrangement.spacedBy((-18).dp),
             ){
@@ -211,7 +240,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                 ){
                     Button(
                         onClick = {
-                            deleteConfiguration(core, properties)
+                            deleteConfiguration(core, properties, context)
                         },
                         colors = ButtonDefaults.buttonColors(
                             contentColor = MaterialTheme.colorScheme.background,
@@ -236,7 +265,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
 
                     Button(
                         onClick = {
-                            core.setInformationScreen()
+                            core.showToast("Perry the Platypus!?")
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(150,100,0),
@@ -277,6 +306,8 @@ class AlarmClockOverviewScreen : ComponentActivity(){
 
         //Main Component, is passed to Navbar. Contains all configuration components and plus icon
         val innerAlarmClockOverviewComposable : @Composable (PaddingValues, I_Core) -> Unit = { innerPadding: PaddingValues, core: I_Core ->
+            val context = LocalContext.current
+
             Box {
                 Column(
                     Modifier
@@ -298,9 +329,8 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                         configurationAndEventEntities.value.forEach {
                             Button(
                                 onClick = {
-                                    AlarmClockEditScreen.reset(it.configurationEntity)
-                                    core.setAlarmClockEditScreen()
-                                          },
+                                    setEditScreen(context, it.configurationEntity)
+                                },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Color.Transparent
                                 ),
@@ -319,9 +349,9 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                             }
                         }
                         Button(
+
                             onClick = {
-                                AlarmClockEditScreen.reset(null)
-                                core.setAlarmClockEditScreen()
+                                setEditScreen(context, null)
                             },
                             colors = ButtonDefaults.buttonColors(
                                 contentColor = MaterialTheme.colorScheme.primary,

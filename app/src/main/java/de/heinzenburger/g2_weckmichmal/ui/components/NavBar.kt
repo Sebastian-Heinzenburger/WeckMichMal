@@ -1,5 +1,6 @@
 package de.heinzenburger.g2_weckmichmal.ui.components
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
@@ -11,6 +12,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
 import de.heinzenburger.g2_weckmichmal.ui.screens.AlarmClockEditScreen
@@ -32,6 +34,8 @@ class NavBar : ComponentActivity() {
             val iconSize = 35.dp
             val iconColor = MaterialTheme.colorScheme.primary
             val iconSelectedColor = MaterialTheme.colorScheme.secondary
+            val context = LocalContext.current
+
             Scaffold(
                 bottomBar = {
                     BottomAppBar(containerColor = MaterialTheme.colorScheme.onPrimary) {
@@ -39,14 +43,23 @@ class NavBar : ComponentActivity() {
                             modifier = Modifier.fillMaxSize(),
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
-                            IconButton(onClick = { core.setSettingsScreen() }, modifier.size(90.dp)) {
+                            IconButton(onClick = {
+                                val intent = Intent(context, SettingsScreen::class.java)
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                                context.startActivity(intent)
+                            }
+                                , modifier.size(90.dp)) {
                                 Icon(Icons.Filled.Settings,
                                     contentDescription = "Localized description",
                                     modifier.size(iconSize),
                                     tint = if(caller == SettingsScreen::class){iconSelectedColor}else{iconColor},
                                     )
                             }
-                            IconButton(onClick = { core.setAlarmClockOverviewScreen() }, modifier.size(90.dp)) {
+                            IconButton(onClick = {
+                                val intent = Intent(context, AlarmClockOverviewScreen::class.java)
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                                context.startActivity(intent)
+                            }, modifier.size(90.dp)) {
                                 Icon(
                                     Icons.Filled.AccessAlarm,
                                     contentDescription = "Localized description",
@@ -54,7 +67,11 @@ class NavBar : ComponentActivity() {
                                     tint = if(caller == AlarmClockOverviewScreen::class || caller == AlarmClockEditScreen::class){iconSelectedColor}else{iconColor},
                                     )
                             }
-                            IconButton(onClick = { core.setInformationScreen() }, modifier.size(90.dp)) {
+                            IconButton(onClick = {
+                                val intent = Intent(context, InformationScreen::class.java)
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                                context.startActivity(intent)
+                            }, modifier.size(90.dp)) {
                                 Icon(
                                     Icons.Filled.Info,
                                     contentDescription = "Localized description",

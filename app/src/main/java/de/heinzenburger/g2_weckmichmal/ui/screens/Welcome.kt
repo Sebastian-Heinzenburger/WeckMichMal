@@ -1,7 +1,9 @@
 package de.heinzenburger.g2_weckmichmal.ui.screens
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
@@ -17,9 +19,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
@@ -33,6 +37,11 @@ class WelcomeScreen : ComponentActivity() {
         enableEdgeToEdge()
         val core = Core(context = applicationContext)
         setContent {
+            val context = LocalContext.current
+            BackHandler {
+                //Finish all and close the app
+                ActivityCompat.finishAffinity(context as ComponentActivity)
+            }
             G2_WeckMichMalTheme {
                 Greeting(modifier = Modifier, core)
             }
@@ -42,7 +51,7 @@ class WelcomeScreen : ComponentActivity() {
 //Is only called when json settings file is not found on android device
 @Composable
 fun Greeting(modifier: Modifier, core: I_Core) {
-
+    val context = LocalContext.current
     Column(modifier
         .background(MaterialTheme.colorScheme.background)
         .fillMaxSize(),
@@ -66,13 +75,19 @@ fun Greeting(modifier: Modifier, core: I_Core) {
         SaveURL.innerSettingsComposable(
             PaddingValues(0.dp), core,
             fun () {
-                core.setAlarmClockOverviewScreen()
+                val intent = Intent(context, AlarmClockOverviewScreen::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                context.startActivity(intent)
+                (context as ComponentActivity).finish()
             }
         )
         Button(
             onClick = {
                 core.saveRaplaURL("")
-                core.setAlarmClockOverviewScreen()
+                val intent = Intent(context, AlarmClockOverviewScreen::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                context.startActivity(intent)
+                (context as ComponentActivity).finish()
             },
             colors = ButtonColors(
                 contentColor = MaterialTheme.colorScheme.primary,

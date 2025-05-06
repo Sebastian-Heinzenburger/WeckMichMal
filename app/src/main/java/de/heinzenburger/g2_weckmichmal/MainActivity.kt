@@ -1,9 +1,12 @@
 package de.heinzenburger.g2_weckmichmal
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.persistence.AlarmConfiguration
+import de.heinzenburger.g2_weckmichmal.ui.screens.AlarmClockOverviewScreen
+import de.heinzenburger.g2_weckmichmal.ui.screens.WelcomeScreen
 import java.util.logging.Logger
 
 class MainActivity : ComponentActivity() {
@@ -14,10 +17,18 @@ class MainActivity : ComponentActivity() {
         // val serviceIntent = Intent(this, ForegroundService::class.java)
         // startService(serviceIntent)
 
+
+
         if (core.isApplicationOpenedFirstTime()) {
-            core.setWelcomeScreen()
+            val intent = Intent(applicationContext, WelcomeScreen::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            applicationContext.startActivity(intent)
         } else {
-            core.setAlarmClockOverviewScreen()
+            val intent = Intent(applicationContext, AlarmClockOverviewScreen::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+            applicationContext.startActivity(intent)
         }
     }
 

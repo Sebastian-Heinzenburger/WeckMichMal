@@ -1,8 +1,11 @@
 package de.heinzenburger.g2_weckmichmal.ui.screens
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Range
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
@@ -35,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -63,6 +67,14 @@ class AlarmClockEditScreen : ComponentActivity() {
         val core = Core(context = applicationContext)
         setContent {
             G2_WeckMichMalTheme {
+                val context = LocalContext.current
+                BackHandler {
+                    //Go to Overview Screen without animation
+                    val intent = Intent(context, AlarmClockOverviewScreen::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                    context.startActivity(intent)
+                    (context as ComponentActivity).finish()
+                }
                 EditComposable(modifier = Modifier, core)
             }
         }
@@ -170,7 +182,7 @@ class AlarmClockEditScreen : ComponentActivity() {
             }
         }
 
-        fun saveConfiguration(core: I_Core){
+        fun saveConfiguration(core: I_Core, context: Context){
             thread{
                 var validation = true
                 //Name of Alarm
@@ -225,7 +237,11 @@ class AlarmClockEditScreen : ComponentActivity() {
                 }
                 if(validation){
                     core.generateOrUpdateAlarmConfiguration(configurationEntity)
-                    core.setAlarmClockOverviewScreen()
+
+                    val intent = Intent(context, AlarmClockOverviewScreen::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                    context.startActivity(intent)
+                    (context as ComponentActivity).finish()
                 }
             }
         }
@@ -532,6 +548,7 @@ class AlarmClockEditScreen : ComponentActivity() {
         @OptIn(ExperimentalMaterial3Api::class) //Needed because Time Picker is yet experimental
         val innerEditComposable : @Composable (PaddingValues, I_Core) -> Unit =
         { innerPadding: PaddingValues, core: I_Core ->
+            val context = LocalContext.current
             //Open time picker dialogs when corresponding boolean set to true
             when {
                 openArrivalTimePickerDialog.value -> {
@@ -644,7 +661,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                     TextButton(
                         //Save to database when clicked
                         onClick = {
-                            saveConfiguration(core)
+                            saveConfiguration(core, context)
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.Transparent

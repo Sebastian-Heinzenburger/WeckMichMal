@@ -1,7 +1,9 @@
 package de.heinzenburger.g2_weckmichmal.ui.screens
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
@@ -15,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.heinzenburger.g2_weckmichmal.core.Core
@@ -35,6 +38,14 @@ class SettingsScreen : ComponentActivity() {
             url.value = locUrl
         }
         setContent {
+            val context = LocalContext.current
+            BackHandler {
+                //Go to Overview Screen without animation
+                val intent = Intent(context, AlarmClockOverviewScreen::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                context.startActivity(intent)
+                (context as ComponentActivity).finish()
+            }
             G2_WeckMichMalTheme {
                 SettingsComposable(modifier = Modifier, core)
             }
@@ -45,6 +56,7 @@ class SettingsScreen : ComponentActivity() {
 
         //Main component
         val innerSettingsComposable : @Composable (PaddingValues, I_Core) -> Unit = { innerPadding: PaddingValues, core: I_Core ->
+            val context = LocalContext.current
             Column(
                 Modifier
                     .padding(innerPadding)
@@ -60,7 +72,10 @@ class SettingsScreen : ComponentActivity() {
                 ){
                     SaveURL.innerSettingsComposable(innerPadding, core,
                         fun () {
-                            core.setAlarmClockOverviewScreen()
+                            val intent = Intent(context, AlarmClockOverviewScreen::class.java)
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                            context.startActivity(intent)
+                            (context as ComponentActivity).finish()
                         }
                     )
                 }

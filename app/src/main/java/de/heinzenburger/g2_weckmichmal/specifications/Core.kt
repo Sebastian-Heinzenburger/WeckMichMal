@@ -79,31 +79,6 @@ interface I_Core{
     fun validateConfigurationEntity(configurationEntity: ConfigurationEntity) : Boolean
 
     /**
-     * Set Welcome Screen
-     */
-    fun setWelcomeScreen()
-
-    /**
-     * Set Settings Screen
-     */
-    fun setSettingsScreen()
-
-    /**
-     * Set AlarmClockOverview Screen
-     */
-    fun setAlarmClockOverviewScreen()
-
-    /**
-     * Set Information Screen
-     */
-    fun setInformationScreen()
-
-    /**
-     * Set AlarmClockEdit Screen
-     */
-    fun setAlarmClockEditScreen()
-
-    /**
      * Show a Toast message
      */
     fun showToast(message: String)

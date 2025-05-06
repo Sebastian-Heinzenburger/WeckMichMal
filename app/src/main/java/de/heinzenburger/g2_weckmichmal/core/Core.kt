@@ -1,7 +1,6 @@
 package de.heinzenburger.g2_weckmichmal.core
 
 import android.content.Context
-import android.content.Intent
 import android.webkit.URLUtil
 import android.widget.Toast
 import androidx.core.content.ContextCompat
@@ -14,11 +13,6 @@ import de.heinzenburger.g2_weckmichmal.persistence.Event
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationAndEventEntity
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
-import de.heinzenburger.g2_weckmichmal.ui.screens.AlarmClockEditScreen
-import de.heinzenburger.g2_weckmichmal.ui.screens.AlarmClockOverviewScreen
-import de.heinzenburger.g2_weckmichmal.ui.screens.InformationScreen
-import de.heinzenburger.g2_weckmichmal.ui.screens.SettingsScreen
-import de.heinzenburger.g2_weckmichmal.ui.screens.WelcomeScreen
 import java.net.URL
 
 /*
@@ -139,41 +133,6 @@ data class Core(
     override fun isApplicationOpenedFirstTime(): Boolean {
         val settings = ApplicationSettings(context)
         return settings.isApplicationOpenedFirstTime()
-    }
-
-    override fun setWelcomeScreen() {
-        val intent = Intent(context, WelcomeScreen::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-        context.startActivity(intent)
-    }
-
-    override fun setSettingsScreen() {
-        val intent = Intent(context, SettingsScreen::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-        context.startActivity(intent)
-    }
-
-    override fun setAlarmClockOverviewScreen() {
-        val intent = Intent(context, AlarmClockOverviewScreen::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-        context.startActivity(intent)
-    }
-
-    override fun setInformationScreen() {
-        val intent = Intent(context, InformationScreen::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-        context.startActivity(intent)
-    }
-
-    override fun setAlarmClockEditScreen() {
-        val intent = Intent(context, AlarmClockEditScreen::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-        context.startActivity(intent)
     }
 
     override fun showToast(message: String) {
