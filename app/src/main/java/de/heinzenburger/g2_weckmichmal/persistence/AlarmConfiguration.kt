@@ -22,6 +22,9 @@ data class AlarmConfiguration(
         @Query("SELECT * FROM configurationentity WHERE uid = :uid")
         fun getById(uid: Long) : ConfigurationEntity
 
+        @Query("UPDATE configurationentity SET isActive = :isActive WHERE uid = :uid")
+        fun updateActiveById(uid: Long, isActive: Boolean)
+
         @Query("DELETE FROM configurationentity WHERE uid = :uid")
         fun deleteById(uid: Long)
 
@@ -47,6 +50,19 @@ data class AlarmConfiguration(
             //Updating means deleting and inserting again
             database.alarmConfigurationDao().deleteById(config.uid)
             database.alarmConfigurationDao().insert(config)
+            return true
+        }
+        catch (e: Exception){
+            MainActivity.log.severe(e.message)
+            e.printStackTrace()
+            return false
+        }
+    }
+
+    override fun updateConfigurationActive(isActive: Boolean, uid: Long): Boolean {
+        try {
+            //Updating means deleting and inserting again
+            database.alarmConfigurationDao().updateActiveById(uid, isActive)
             return true
         }
         catch (e: Exception){

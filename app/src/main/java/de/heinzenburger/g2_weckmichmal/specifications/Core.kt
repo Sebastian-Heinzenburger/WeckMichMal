@@ -40,6 +40,12 @@ interface I_Core{
     fun getRaplaURL(): String?
 
     /**
+     * Update attribute active in a [ConfigurationEntity]
+     * @param isActive stores whether the configuration should be active
+     * @param configurationEntity the [ConfigurationEntity] to be updated
+     */
+    fun updateConfigurationActive(isActive: Boolean, configurationEntity: ConfigurationEntity)
+    /**
      * @return Returns true if application is opened for the first time since installation
      */
     fun isApplicationOpenedFirstTime() : Boolean?

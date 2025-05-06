@@ -29,6 +29,13 @@ class MockupCore : I_Core {
         return ""
     }
 
+    override fun updateConfigurationActive(
+        isActive: Boolean,
+        configurationEntity: ConfigurationEntity
+    ) {
+
+    }
+
     override fun getAllConfigurationAndEvent(): List<ConfigurationAndEventEntity>? {
         var result = mutableListOf<ConfigurationAndEventEntity>()
         mockupConfigurations.forEach {

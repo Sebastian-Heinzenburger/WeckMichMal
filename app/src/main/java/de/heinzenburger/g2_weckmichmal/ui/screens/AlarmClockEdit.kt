@@ -165,7 +165,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                     endBuffer = 10,
                     startStation = null,
                     endStation = null,
-                    isActive = true
+                    isActive = true //Even if the alarm was initially inactive, it will be set as active again
                 )
             }
         }

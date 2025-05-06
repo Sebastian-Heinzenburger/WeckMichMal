@@ -102,7 +102,13 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                 ) {
                     Switch(
                         checked = userActivated,
-                        onCheckedChange = { userActivated = it },
+                        //Configuration will always be reset to active when edited in AlarmClockEdit
+                        onCheckedChange = {
+                            userActivated = it
+                            thread {
+                                core.updateConfigurationActive(userActivated, properties.configurationEntity)
+                            }
+                        },
                         enabled = true,
                         colors = SwitchDefaults.colors(
                             checkedBorderColor = MaterialTheme.colorScheme.background,

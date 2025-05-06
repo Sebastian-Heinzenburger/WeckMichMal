@@ -120,6 +120,14 @@ data class Core(
         return applicationSettings.getApplicationSettings().raplaURL
     }
 
+    override fun updateConfigurationActive(
+        isActive: Boolean,
+        configurationEntity: ConfigurationEntity
+    ) {
+        val alarmConfiguration = AlarmConfiguration(context)
+        alarmConfiguration.updateConfigurationActive(isActive, configurationEntity.uid)
+    }
+
     override fun deleteAlarmConfiguration(uid: Long) {
         val event = Event(context)
         val alarmConfiguration = AlarmConfiguration(context)

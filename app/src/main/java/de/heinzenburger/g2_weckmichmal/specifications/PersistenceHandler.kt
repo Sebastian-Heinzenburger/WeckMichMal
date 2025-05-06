@@ -22,6 +22,14 @@ interface I_AlarmConfiguration{
      * @param config The [ConfigurationEntity] object that contains the data to be saved or updated.
      */
     fun saveOrUpdate(config: ConfigurationEntity): Boolean
+
+    /**
+     * Update attribute active in a [ConfigurationEntity]
+     * @param isActive stores whether the configuration should be active
+     * @param uid of the [ConfigurationEntity] to be updated
+     */
+    fun updateConfigurationActive(isActive: Boolean, uid: Long) : Boolean
+
     /**
      * Returns the alarm configuration from the persistence layer.
      *
