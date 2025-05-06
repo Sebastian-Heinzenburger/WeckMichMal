@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -43,12 +44,9 @@ class WelcomeScreen : ComponentActivity() {
         }
     }
 }
-//Very similar to settings screen... maybe worth merging.
-//This one does not contain navbar and has additional welcome text
 //Is only called when json settings file is not found on android device
 @Composable
 fun Greeting(modifier: Modifier, core: I_Core) {
-    var text by remember { mutableStateOf("https://") }
 
     Column(modifier
         .background(MaterialTheme.colorScheme.background)
@@ -70,37 +68,12 @@ fun Greeting(modifier: Modifier, core: I_Core) {
             color = MaterialTheme.colorScheme.error,
             modifier = modifier.padding(16.dp)
         )
-        TextField(
-            shape = RoundedCornerShape(8.dp),
-            value = text,
-            onValueChange = {text = it},
-            textStyle = MaterialTheme.typography.bodyMedium,
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.primary,
-                unfocusedContainerColor = MaterialTheme.colorScheme.primary
-            ),
-            modifier = modifier.padding(16.dp)
-        )
-        Button(
-            onClick = {
-                core.saveRaplaURL(text)
+        SaveURLComponent.innerSettingsComposable(
+            PaddingValues(0.dp), core,
+            fun () {
                 core.setAlarmClockOverviewScreen()
-            },
-            colors = ButtonColors(
-                contentColor = MaterialTheme.colorScheme.primary,
-                containerColor = MaterialTheme.colorScheme.onBackground,
-                disabledContainerColor = MaterialTheme.colorScheme.error,
-                disabledContentColor = MaterialTheme.colorScheme.error
-            ),
-            modifier = modifier.padding(16.dp)
-        ) {
-            Text(
-                text = "Vorlesungsplan speichern",
-                textAlign = TextAlign.Center,
-                modifier = modifier.padding(8.dp),
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
+            }
+        )
         Button(
             onClick = {
                 core.saveRaplaURL("")

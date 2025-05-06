@@ -20,6 +20,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -103,7 +104,7 @@ class AlarmClockEditScreen : ComponentActivity() {
         fun reset(configurationEntity: ConfigurationEntity?){
             if(configurationEntity == null){
                 //All default values
-                alarmName = mutableStateOf("Wecker 1")
+                alarmName = mutableStateOf("")
                 manuallySetArrivalTime = mutableStateOf(LocalTime.NOON)
                 manuallySetTravelTime = mutableIntStateOf(15)
                 setStartBufferTime = mutableIntStateOf(30)
@@ -114,7 +115,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                 isManualArrivalTime = mutableStateOf(false)
                 isManualTravelTime = mutableStateOf(false)
                 AlarmClockEditScreen.configurationEntity = ConfigurationEntity(
-                    name = "Wecker 1",
+                    name = "Wecker",
                     days = setOf(),
                     fixedArrivalTime = null,
                     fixedTravelBuffer = null,
@@ -167,7 +168,7 @@ class AlarmClockEditScreen : ComponentActivity() {
 
                 AlarmClockEditScreen.configurationEntity = ConfigurationEntity(
                     uid = configurationEntity.uid, //Use the same uid as the configuration that is changed
-                    name = "Wecker 1",
+                    name = "Wecker",
                     days = setOf(),
                     fixedArrivalTime = null,
                     fixedTravelBuffer = null,
@@ -745,8 +746,26 @@ class AlarmClockEditScreen : ComponentActivity() {
                     textStyle = MaterialTheme.typography.bodyMedium,
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = MaterialTheme.colorScheme.primary,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.primary
+                        unfocusedContainerColor = MaterialTheme.colorScheme.primary,
+                        focusedTextColor = MaterialTheme.colorScheme.background,
+                        unfocusedTextColor = MaterialTheme.colorScheme.background,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                        cursorColor = MaterialTheme.colorScheme.secondary,
+                        selectionColors = TextSelectionColors(
+                            handleColor = MaterialTheme.colorScheme.secondary,
+                            backgroundColor = MaterialTheme.colorScheme.onBackground
+                        ),
+                        focusedTrailingIconColor = MaterialTheme.colorScheme.onBackground
                     ),
+                    placeholder = {
+                        Text(
+                            text = "Wecker Name",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    },
                     modifier = Modifier
                         .padding(24.dp, 8.dp)
                         .align(alignment = Alignment.CenterHorizontally)

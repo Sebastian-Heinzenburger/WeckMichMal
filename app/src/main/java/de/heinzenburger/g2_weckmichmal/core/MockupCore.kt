@@ -26,7 +26,7 @@ class MockupCore : I_Core {
     override fun generateOrUpdateAlarmConfiguration(configurationEntity: ConfigurationEntity) {}
 
     override fun getRaplaURL(): String? {
-        return "https://" //For settings and welcome screen
+        return ""
     }
 
     override fun getAllConfigurationAndEvent(): List<ConfigurationAndEventEntity>? {
