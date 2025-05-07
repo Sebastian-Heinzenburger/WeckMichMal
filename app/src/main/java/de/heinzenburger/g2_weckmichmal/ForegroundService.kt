@@ -55,7 +55,11 @@ class ForegroundService : Service() {
             //playWithPerry()
             while (!wakeUp) {
                 Thread.sleep(sleepDuration.toLong())
-                val configs = core.getAllConfigurationAndEvent()
+                var configs = core.getAllConfigurationAndEvent()
+                configs?.forEach {
+                    core.generateOrUpdateAlarmConfiguration(it.configurationEntity)
+                }
+                configs = core.getAllConfigurationAndEvent()
                 var earliestEventDate = LocalDateTime.of(8000,1,1,0,0)
                 configs?.forEach{
                     val eventDateTime = it.eventEntity!!.date.atTime(it.eventEntity.wakeUpTime)
@@ -63,12 +67,12 @@ class ForegroundService : Service() {
                         earliestEventDate = eventDateTime
                     }
                 }
-                if(Duration.between(LocalDateTime.now(), earliestEventDate).seconds > 3600){
-                    sleepDuration = 3000000
+                sleepDuration = if(Duration.between(LocalDateTime.now(), earliestEventDate).seconds > 3600){
+                    3000000
                 }else if(Duration.between(LocalDateTime.now(), earliestEventDate).seconds > 600){
-                    sleepDuration = 240000
-                }else if(Duration.between(LocalDateTime.now(), earliestEventDate).seconds > 600){
-                    sleepDuration = 10000
+                    240000
+                }else{
+                    10000
                 }
                 MainActivity.log.severe("Going to sleep for $sleepDuration ms")
             }
