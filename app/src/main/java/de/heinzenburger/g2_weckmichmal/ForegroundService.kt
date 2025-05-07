@@ -48,35 +48,45 @@ class ForegroundService : Service() {
         val core = Core(
             context = applicationContext
         )
-
         thread {
-            val wakeUp = false
-            var sleepDuration = 1000
-            //playWithPerry()
-            while (!wakeUp) {
-                Thread.sleep(sleepDuration.toLong())
-                var configs = core.getAllConfigurationAndEvent()
-                configs?.forEach {
-                    core.generateOrUpdateAlarmConfiguration(it.configurationEntity)
-                }
-                configs = core.getAllConfigurationAndEvent()
-                var earliestEventDate = LocalDateTime.of(8000,1,1,0,0)
-                configs?.forEach{
-                    val eventDateTime = it.eventEntity!!.date.atTime(it.eventEntity.wakeUpTime)
-                    if(eventDateTime > LocalDateTime.now() && eventDateTime < earliestEventDate){
-                        earliestEventDate = eventDateTime
+            while (true) {
+                var wakeUp = false
+                var sleepDuration = 1000
+                //playWithPerry()
+                while (!wakeUp) {
+                    Thread.sleep(sleepDuration.toLong())
+                    var configs = core.getAllConfigurationAndEvent()
+                    configs?.forEach {
+                        core.generateOrUpdateAlarmConfiguration(it.configurationEntity)
                     }
+                    configs = core.getAllConfigurationAndEvent()
+                    var earliestEventDate = LocalDateTime.of(8000, 1, 1, 0, 0)
+                    configs?.forEach {
+                        val eventDateTime = it.eventEntity!!.date.atTime(it.eventEntity.wakeUpTime)
+                        if (eventDateTime > LocalDateTime.now() && eventDateTime < earliestEventDate) {
+                            earliestEventDate = eventDateTime
+                        }
+                    }
+                    sleepDuration = if (Duration.between(
+                            LocalDateTime.now(),
+                            earliestEventDate
+                        ).seconds > 3600
+                    ) {
+                        3000000
+                    } else if (Duration.between(
+                            LocalDateTime.now(),
+                            earliestEventDate
+                        ).seconds > 600
+                    ) {
+                        240000
+                    } else {
+                        10000
+                    }
+                    wakeUp = earliestEventDate < LocalDateTime.now()
+                    MainActivity.log.severe("Going to sleep for $sleepDuration ms")
                 }
-                sleepDuration = if(Duration.between(LocalDateTime.now(), earliestEventDate).seconds > 3600){
-                    3000000
-                }else if(Duration.between(LocalDateTime.now(), earliestEventDate).seconds > 600){
-                    240000
-                }else{
-                    10000
-                }
-                MainActivity.log.severe("Going to sleep for $sleepDuration ms")
+                playWithPerry()
             }
-            playWithPerry()
         }
         return START_STICKY
     }
