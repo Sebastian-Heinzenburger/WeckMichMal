@@ -14,8 +14,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val core = Core(context = applicationContext)
 
-        // val serviceIntent = Intent(this, ForegroundService::class.java)
-        // startService(serviceIntent)
+        val serviceIntent = Intent(this, ForegroundService::class.java)
+        startService(serviceIntent)
 
 
 

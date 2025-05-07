@@ -606,7 +606,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                                 setEndBufferTime.intValue = minutes
                             },
                         onDismiss = {
-                            openTravelTimePickerDialog.value = false
+                            openEndBufferPickerDialog.value = false
                         },
                         range = Range(-120,60),
                         default = setEndBufferTime.intValue

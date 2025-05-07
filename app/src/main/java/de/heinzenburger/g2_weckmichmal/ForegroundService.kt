@@ -5,12 +5,12 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
-import android.content.Context
 import android.media.MediaPlayer
 import android.os.IBinder
 import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.core.app.NotificationCompat
+import de.heinzenburger.g2_weckmichmal.core.Core
 import java.time.Duration
 import java.time.LocalDateTime
 import kotlin.concurrent.thread
@@ -45,11 +45,32 @@ class ForegroundService : Service() {
         val notification = createNotification()
         startForeground(1, notification)
 
+        val core = Core(
+            context = applicationContext
+        )
+
         thread {
-            playWithPerry()
-            while (true) {
-                Thread.sleep(3 * 1000)
-                MainActivity.log.severe("I am running in the foreground")
+            val wakeUp = false
+            var sleepDuration = 1000
+            //playWithPerry()
+            while (!wakeUp) {
+                Thread.sleep(sleepDuration.toLong())
+                val configs = core.getAllConfigurationAndEvent()
+                var earliestEventDate = LocalDateTime.of(8000,1,1,0,0)
+                configs?.forEach{
+                    val eventDateTime = it.eventEntity!!.date.atTime(it.eventEntity.wakeUpTime)
+                    if(eventDateTime > LocalDateTime.now() && eventDateTime < earliestEventDate){
+                        earliestEventDate = eventDateTime
+                    }
+                }
+                if(Duration.between(LocalDateTime.now(), earliestEventDate).seconds > 3600){
+                    sleepDuration = 3000000
+                }else if(Duration.between(LocalDateTime.now(), earliestEventDate).seconds > 600){
+                    sleepDuration = 240000
+                }else if(Duration.between(LocalDateTime.now(), earliestEventDate).seconds > 600){
+                    sleepDuration = 10000
+                }
+                MainActivity.log.severe("Going to sleep for $sleepDuration ms")
             }
             playWithPerry()
         }
