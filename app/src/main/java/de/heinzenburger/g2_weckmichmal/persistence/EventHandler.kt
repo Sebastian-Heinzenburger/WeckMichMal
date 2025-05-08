@@ -5,38 +5,38 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
-import de.heinzenburger.g2_weckmichmal.specifications.EventEntity
-import de.heinzenburger.g2_weckmichmal.specifications.I_Event
+import de.heinzenburger.g2_weckmichmal.specifications.Event
+import de.heinzenburger.g2_weckmichmal.specifications.InterfaceEventHandler
 import java.time.DayOfWeek
 
-data class Event(
+data class EventHandler(
     val context: Context
-): I_Event {
+): InterfaceEventHandler {
     val logger = Logger(context)
     @Dao
     interface ConfigurationDao{
-        @Query("SELECT * FROM evententity")
-        fun getAll() : List<EventEntity>
+        @Query("SELECT * FROM event")
+        fun getAll() : List<Event>
 
-        @Query("SELECT * FROM evententity WHERE configID = :configID AND days = :days")
-        fun getByIdAndDays(configID: Long, days: String) : EventEntity
+        @Query("SELECT * FROM event WHERE configID = :configID AND days = :days")
+        fun getByIdAndDays(configID: Long, days: String) : Event
 
-        @Query("DELETE FROM evententity WHERE configID = :configID AND days = :days")
+        @Query("DELETE FROM event WHERE configID = :configID AND days = :days")
         fun deleteByIdAndDays(configID: Long, days: String)
 
-        @Query("DELETE FROM evententity WHERE configID = :configID")
+        @Query("DELETE FROM event WHERE configID = :configID")
         fun deleteById(configID: Long)
 
         @Insert
-        fun insert(configuration: EventEntity)
+        fun insert(configuration: Event)
 
         @Delete
-        fun delete(configuration: EventEntity)
+        fun delete(configuration: Event)
     }
 
     private var database: AppDatabase = AppDatabase.getDatabase(context)
 
-    override fun saveOrUpdate(event: EventEntity): Boolean {
+    override fun saveOrUpdate(event: Event): Boolean {
         try {
             database.eventConfigurationDao().deleteByIdAndDays(event.configID,
                 DataConverter().fromSetOfDays(event.days).toString()
@@ -51,7 +51,7 @@ data class Event(
         }
     }
 
-    override fun getAllEvents(): List<EventEntity>? {
+    override fun getAllEvents(): List<Event>? {
         try {
             val result = database.eventConfigurationDao().getAll()
             return result
@@ -88,7 +88,7 @@ data class Event(
         }
     }
 
-    override fun getEvent(id: Long, days: Set<DayOfWeek>): EventEntity? {
+    override fun getEvent(id: Long, days: Set<DayOfWeek>): Event? {
         try {
             return database.eventConfigurationDao().getByIdAndDays(id, DataConverter().fromSetOfDays(days).toString())
         }

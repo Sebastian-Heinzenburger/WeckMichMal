@@ -52,11 +52,11 @@ interface I_Core{
     fun getLog() : String
 
     /**
-     * Update attribute active in a [ConfigurationEntity]
+     * Update attribute active in a [Configuration]
      * @param isActive stores whether the configuration should be active
-     * @param configurationEntity the [ConfigurationEntity] to be updated
+     * @param configuration the [Configuration] to be updated
      */
-    fun updateConfigurationActive(isActive: Boolean, configurationEntity: ConfigurationEntity)
+    fun updateConfigurationActive(isActive: Boolean, configuration: Configuration)
     /**
      * @return Returns true if application is opened for the first time since installation
      */
@@ -64,15 +64,15 @@ interface I_Core{
 
     /**
      *  Generates the next Event for this configuration and saves both into the databas
-     *  @param configurationEntity Configuration to be stored into the database
+     *  @param configuration Configuration to be stored into the database
      */
-    fun generateOrUpdateAlarmConfiguration(configurationEntity: ConfigurationEntity)
+    fun generateOrUpdateAlarmConfiguration(configuration: Configuration)
 
     /**
      * Get all configurations and their corresponding event
-     * @return returns a List of [ConfigurationAndEventEntity] which contain a configurationEntity and an eventEntity
+     * @return returns a List of [ConfigurationWithEvent] which contain a configurationEntity and an eventEntity
      */
-    fun getAllConfigurationAndEvent() : List<ConfigurationAndEventEntity>?
+    fun getAllConfigurationAndEvent() : List<ConfigurationWithEvent>?
 
     /**
      * Delete an alarm configuration and its associated event
@@ -88,7 +88,7 @@ interface I_Core{
     /**
      * If configuration entity contains only valid attributes
      */
-    fun validateConfigurationEntity(configurationEntity: ConfigurationEntity) : Boolean
+    fun validateConfigurationEntity(configuration: Configuration) : Boolean
 
     /**
      * Show a Toast message

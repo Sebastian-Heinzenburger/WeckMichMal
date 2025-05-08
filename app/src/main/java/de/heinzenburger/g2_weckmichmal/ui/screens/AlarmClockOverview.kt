@@ -48,8 +48,8 @@ import androidx.compose.ui.zIndex
 import androidx.core.app.ActivityCompat.finishAffinity
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
-import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationAndEventEntity
-import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
+import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationWithEvent
+import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.components.NavBar
@@ -80,11 +80,11 @@ class AlarmClockOverviewScreen : ComponentActivity(){
     companion object{
         private fun deleteConfiguration(
             core: I_Core,
-            properties: ConfigurationAndEventEntity,
+            properties: ConfigurationWithEvent,
             context: Context
         ){
             thread {
-                core.deleteAlarmConfiguration(properties.configurationEntity.uid)
+                core.deleteAlarmConfiguration(properties.configuration.uid)
 
                 val intent = Intent(context, AlarmClockOverviewScreen::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
@@ -93,8 +93,8 @@ class AlarmClockOverviewScreen : ComponentActivity(){
             }
         }
 
-        private fun setEditScreen(context: Context, configurationEntity: ConfigurationEntity?){
-            AlarmClockEditScreen.reset(configurationEntity)
+        private fun setEditScreen(context: Context, configuration: Configuration?){
+            AlarmClockEditScreen.reset(configuration)
             val intent = Intent(context, AlarmClockEditScreen::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
             context.startActivity(intent)
@@ -104,13 +104,13 @@ class AlarmClockOverviewScreen : ComponentActivity(){
         var aPlatypus = false //Static variable to set Platypus mode
 
         //List of all configurationAndEvent Entities existant in database
-        internal var configurationAndEventEntities = mutableStateOf(emptyList<ConfigurationAndEventEntity>())
+        internal var configurationAndEventEntities = mutableStateOf(emptyList<ConfigurationWithEvent>())
 
         //Elements in Configuration Component that stay the same, regardless of Platypus
         private val innerSingleAlarmConfiguration:
-                @Composable (PaddingValues, I_Core, ConfigurationAndEventEntity)
-                -> Unit = { innerPadding: PaddingValues, core: I_Core, properties: ConfigurationAndEventEntity ->
-            var userActivated by remember { mutableStateOf(properties.configurationEntity.isActive) }
+                @Composable (PaddingValues, I_Core, ConfigurationWithEvent)
+                -> Unit = { innerPadding: PaddingValues, core: I_Core, properties: ConfigurationWithEvent ->
+            var userActivated by remember { mutableStateOf(properties.configuration.isActive) }
 
             Column(
                 Modifier
@@ -131,7 +131,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                         onCheckedChange = {
                             userActivated = it
                             thread {
-                                core.updateConfigurationActive(userActivated, properties.configurationEntity)
+                                core.updateConfigurationActive(userActivated, properties.configuration)
                             }
                         },
                         enabled = true,
@@ -144,7 +144,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                         modifier = Modifier.padding(10.dp, 10.dp, 0.dp, 0.dp)
                     )
                     OurText(
-                        text = properties.configurationEntity.name,
+                        text = properties.configuration.name,
                         modifier = Modifier.padding(16.dp, 24.dp, 0.dp, 0.dp)
                     )
                 }
@@ -156,7 +156,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                     Row(
                         modifier = Modifier.padding(2.dp, 0.dp),
                     ){
-                        properties.configurationEntity.days.forEach {
+                        properties.configuration.days.forEach {
                             OurText(
                                 text = it.name[0] +""+ it.name[1].lowercase(),
                                 color = MaterialTheme.colorScheme.secondary,
@@ -166,7 +166,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                     }
 
                     OurText(
-                        text = "Geplant um: ${properties.eventEntity?.wakeUpTime}",
+                        text = "Geplant um: ${properties.event?.wakeUpTime}",
                         textAlign = TextAlign.Right,
                         modifier = Modifier.padding(16.dp, 0.dp, 16.dp, 3.dp).fillMaxWidth(1f)
                     )
@@ -176,8 +176,8 @@ class AlarmClockOverviewScreen : ComponentActivity(){
 
         //UI Arrangement for Components when Platypus mode is off
         private val SingleAlarmConfiguration :
-                @Composable (PaddingValues, I_Core, ConfigurationAndEventEntity)
-                -> Unit = { innerPadding: PaddingValues, core: I_Core, properties: ConfigurationAndEventEntity ->
+                @Composable (PaddingValues, I_Core, ConfigurationWithEvent)
+                -> Unit = { innerPadding: PaddingValues, core: I_Core, properties: ConfigurationWithEvent ->
             val context = LocalContext.current
             Box(
                 contentAlignment = Alignment.TopEnd
@@ -209,8 +209,8 @@ class AlarmClockOverviewScreen : ComponentActivity(){
         }
 
         //UI Arrangement for Components when Platypus mode is activated
-        private val APlatypus : @Composable (PaddingValues, I_Core, ConfigurationAndEventEntity)
-                -> Unit = { innerPadding: PaddingValues, core: I_Core, properties: ConfigurationAndEventEntity ->
+        private val APlatypus : @Composable (PaddingValues, I_Core, ConfigurationWithEvent)
+                -> Unit = { innerPadding: PaddingValues, core: I_Core, properties: ConfigurationWithEvent ->
             val context = LocalContext.current
             Column(
                 verticalArrangement = Arrangement.spacedBy((-18).dp),
@@ -327,7 +327,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                         configurationAndEventEntities.value.forEach {
                             Button(
                                 onClick = {
-                                    setEditScreen(context, it.configurationEntity)
+                                    setEditScreen(context, it.configuration)
                                 },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Color.Transparent

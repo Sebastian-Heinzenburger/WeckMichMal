@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import de.heinzenburger.g2_weckmichmal.core.Core
+import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import de.heinzenburger.g2_weckmichmal.ui.screens.AlarmClockOverviewScreen
 import de.heinzenburger.g2_weckmichmal.ui.screens.WelcomeScreen
 
@@ -11,6 +12,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val core = Core(context = applicationContext)
+        core.log(Logger.Level.INFO, "Starting Application")
 
         val serviceIntent = Intent(this, ForegroundService::class.java)
         startService(serviceIntent)

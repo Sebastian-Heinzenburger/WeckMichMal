@@ -14,9 +14,9 @@ data class Logger(
     enum class Level(
     ) { INFO(), WARNING(), SEVERE() }
 
-    val logger: java.util.logging.Logger = java.util.logging.Logger.getLogger(AlarmConfiguration::class.java.name)
+    val logger: java.util.logging.Logger = java.util.logging.Logger.getLogger(ConfigurationHandler::class.java.name)
     fun log(level: Level, text: String) {
-        val formatter = DateTimeFormatter.ofPattern("MM-dd HH:mm")
+        val formatter = DateTimeFormatter.ofPattern("MM-dd HH:mm:ss")
         var modifiedText = LocalDateTime.now().format(formatter) + " " + text
         if (level == Level.INFO){
             logger.info(text)

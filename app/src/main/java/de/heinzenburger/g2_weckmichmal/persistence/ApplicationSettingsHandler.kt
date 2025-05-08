@@ -1,14 +1,14 @@
 package de.heinzenburger.g2_weckmichmal.persistence
 
 import android.content.Context
-import de.heinzenburger.g2_weckmichmal.specifications.I_ApplicationSettings
+import de.heinzenburger.g2_weckmichmal.specifications.InterfaceApplicationSettings
 import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity
 import org.json.JSONObject
 import java.io.File
 
-data class ApplicationSettings (
+data class ApplicationSettingsHandler (
     val context: Context
-) : I_ApplicationSettings{
+) : InterfaceApplicationSettings{
     val logger = Logger(context)
     private fun toJson(settingsEntity: SettingsEntity) : JSONObject{
         var json = JSONObject()

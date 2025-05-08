@@ -3,10 +3,10 @@ package de.heinzenburger.g2_weckmichmal.calculation
 import de.heinzenburger.g2_weckmichmal.api.rapla.Batch
 import de.heinzenburger.g2_weckmichmal.api.rapla.batchFrom
 import de.heinzenburger.g2_weckmichmal.api.rapla.innerJoinBranches
-import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
+import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.Course
 import de.heinzenburger.g2_weckmichmal.specifications.CourseFetcherSpecification
-import de.heinzenburger.g2_weckmichmal.specifications.EventEntity
+import de.heinzenburger.g2_weckmichmal.specifications.Event
 import de.heinzenburger.g2_weckmichmal.specifications.I_RoutePlannerSpecification
 import de.heinzenburger.g2_weckmichmal.specifications.WakeUpCalculationSpecification
 import de.heinzenburger.g2_weckmichmal.specifications.Period
@@ -21,21 +21,21 @@ class WakeUpCalculator(
     private val courseFetcher: CourseFetcherSpecification
 ) : WakeUpCalculationSpecification {
 
-    override fun calculateNextEvent(configuration: ConfigurationEntity): EventEntity {
+    override fun calculateNextEvent(configuration: Configuration): Event {
         val eventDate = deriveNextValidDate(configuration.days)
         return calculateEventForDate(configuration, eventDate)
     }
 
     private fun calculateEventForDate(
-        configuration: ConfigurationEntity,
+        configuration: Configuration,
         date: LocalDate
-    ): EventEntity {
+    ): Event {
         val (atPlaceTime, courses) = deriveAtPlaceTime(courseFetcher, configuration, date)
         val arrivalTime = atPlaceTime.minusMinutes(configuration.endBuffer.toLong())
         val (departureTime, routes) = deriveDepartureTime(routePlanner, configuration, arrivalTime)
         val wakeUpTime = departureTime.minusMinutes(configuration.startBuffer.toLong())
 
-        return EventEntity(
+        return Event(
             configID = configuration.uid,
             wakeUpTime = wakeUpTime.toLocalTime(),
             date = date,
@@ -46,14 +46,14 @@ class WakeUpCalculator(
     }
 
 
-    override fun batchCalculateNextEvent(configurations: List<ConfigurationEntity>): List<EventEntity> {
+    override fun batchCalculateNextEvent(configurations: List<Configuration>): List<Event> {
         val configsWithDates = configurations.map { it to deriveNextValidDate(it.days) }
         return batchCalculateEventForDates(configsWithDates)
     }
 
     private fun batchCalculateEventForDates(
-        configsWithDates: List<Pair<ConfigurationEntity, LocalDate>>
-    ): List<EventEntity> {
+        configsWithDates: List<Pair<Configuration, LocalDate>>
+    ): List<Event> {
         val batchedConfigs = batchFrom(configsWithDates)
 
         val batchedAtPlaceTimes = batchDeriveAtPlaceTimes(courseFetcher, batchedConfigs)
@@ -72,7 +72,7 @@ class WakeUpCalculator(
                 )
                 val wakeUpTime = departureTime.minusMinutes(configuration.startBuffer.toLong())
 
-                EventEntity(
+                Event(
                     configID = configuration.uid,
                     wakeUpTime = wakeUpTime.toLocalTime(),
                     date = date,
@@ -94,7 +94,7 @@ class WakeUpCalculator(
 
         fun deriveAtPlaceTime(
             courseFetcher: CourseFetcherSpecification,
-            config: ConfigurationEntity,
+            config: Configuration,
             eventDate: LocalDate
         ): Pair<LocalDateTime, List<Course>?> {
             return config.fixedArrivalTime?.let {
@@ -110,7 +110,7 @@ class WakeUpCalculator(
 
         fun batchDeriveAtPlaceTimes(
             courseFetcher: CourseFetcherSpecification,
-            configs: Batch<Pair<ConfigurationEntity, LocalDate>>
+            configs: Batch<Pair<Configuration, LocalDate>>
         ): Batch<Pair<LocalDateTime, List<Course>>> {
             val (withFixed, withoutFixed) = configs.partition { it.value.first.fixedArrivalTime != null }
 
@@ -140,7 +140,7 @@ class WakeUpCalculator(
 
         fun deriveDepartureTime(
             routePlanner: I_RoutePlannerSpecification,
-            config: ConfigurationEntity,
+            config: Configuration,
             arrivalTime: LocalDateTime
         ): Pair<LocalDateTime, List<Route>?> {
             return when {

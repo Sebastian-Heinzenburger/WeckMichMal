@@ -6,9 +6,9 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
-import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
+import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.Course
-import de.heinzenburger.g2_weckmichmal.specifications.EventEntity
+import de.heinzenburger.g2_weckmichmal.specifications.Event
 import de.heinzenburger.g2_weckmichmal.specifications.Route
 import de.heinzenburger.g2_weckmichmal.specifications.RouteSection
 import org.json.JSONArray
@@ -192,11 +192,11 @@ class DataConverter {
 //Definition of the database. It consists of ConfigurationEntity Table and EventEntity Table
 //eportSchema doesn't work... I don't know why but I want to keep it anyways, hoping the schema will be randomly exported to the project directory anytime soon
 //Version needs to be updated everytime something changes in the table structure. This will destroy all data because of fallbackToDestructiveMigration
-@Database(entities = [ConfigurationEntity::class, EventEntity::class], version = 16,exportSchema = true)
+@Database(entities = [Configuration::class, Event::class], version = 17,exportSchema = true)
 @TypeConverters(DataConverter::class)
 abstract class AppDatabase : RoomDatabase() {
-    abstract fun alarmConfigurationDao(): AlarmConfiguration.ConfigurationDao
-    abstract fun eventConfigurationDao(): Event.ConfigurationDao
+    abstract fun alarmConfigurationDao(): ConfigurationHandler.ConfigurationDao
+    abstract fun eventConfigurationDao(): EventHandler.ConfigurationDao
 
     companion object{
         @Volatile

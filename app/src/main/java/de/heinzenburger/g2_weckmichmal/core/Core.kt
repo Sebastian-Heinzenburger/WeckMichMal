@@ -7,12 +7,12 @@ import androidx.core.content.ContextCompat
 import de.heinzenburger.g2_weckmichmal.api.db.RoutePlanner
 import de.heinzenburger.g2_weckmichmal.api.rapla.CoursesFetcher
 import de.heinzenburger.g2_weckmichmal.calculation.WakeUpCalculator
-import de.heinzenburger.g2_weckmichmal.persistence.AlarmConfiguration
-import de.heinzenburger.g2_weckmichmal.persistence.ApplicationSettings
-import de.heinzenburger.g2_weckmichmal.persistence.Event
+import de.heinzenburger.g2_weckmichmal.persistence.ConfigurationHandler
+import de.heinzenburger.g2_weckmichmal.persistence.ApplicationSettingsHandler
+import de.heinzenburger.g2_weckmichmal.persistence.EventHandler
 import de.heinzenburger.g2_weckmichmal.persistence.Logger
-import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationAndEventEntity
-import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
+import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationWithEvent
+import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
 import java.net.URL
 
@@ -48,18 +48,18 @@ data class Core(
     override fun startUpdateScheduler() {
     }
 
-    override fun generateOrUpdateAlarmConfiguration(configurationEntity: ConfigurationEntity) {
-        val alarmConfiguration = AlarmConfiguration(context)
-        if (validateConfigurationEntity(configurationEntity)){
-            val event = Event(context)
-            alarmConfiguration.saveOrUpdate(configurationEntity)
+    override fun generateOrUpdateAlarmConfiguration(configuration: Configuration) {
+        val configurationHandler = ConfigurationHandler(context)
+        if (validateConfigurationEntity(configuration)){
+            val eventHandler = EventHandler(context)
+            configurationHandler.saveOrUpdate(configuration)
             val eventEntity = WakeUpCalculator(
                 routePlanner = RoutePlanner(),
                 courseFetcher = CoursesFetcher(URL(getRaplaURL()))
-            ).calculateNextEvent(configurationEntity)
-            event.saveOrUpdate(eventEntity)
+            ).calculateNextEvent(configuration)
+            eventHandler.saveOrUpdate(eventEntity)
 
-            configurationEntity.log()
+            configuration.log()
             eventEntity.log()
         }
         else{
@@ -67,17 +67,17 @@ data class Core(
         }
     }
 
-    override fun getAllConfigurationAndEvent(): List<ConfigurationAndEventEntity>? {
-        val alarmConfiguration = AlarmConfiguration(context)
-        return alarmConfiguration.getAllConfigurationAndEvent()
+    override fun getAllConfigurationAndEvent(): List<ConfigurationWithEvent>? {
+        val configurationHandler = ConfigurationHandler(context)
+        return configurationHandler.getAllConfigurationAndEvent()
     }
 
     override fun saveRaplaURL(urlString : String){
         if(isValidCourseURL(urlString)){
-            val applicationSettings = ApplicationSettings(context)
-            val settingsEntity = applicationSettings.getApplicationSettings()
+            val applicationSettingsHandler = ApplicationSettingsHandler(context)
+            val settingsEntity = applicationSettingsHandler.getApplicationSettings()
             settingsEntity.raplaURL = urlString
-            applicationSettings.saveOrUpdateApplicationSettings(settingsEntity)
+            applicationSettingsHandler.saveOrUpdateApplicationSettings(settingsEntity)
         }
         else{
             showToast("Invalid URL")
@@ -88,24 +88,24 @@ data class Core(
         return  URLUtil.isValidUrl(urlString) && CoursesFetcher(URL(urlString)).hasValidCourseURL()
     }
 
-    override fun validateConfigurationEntity(configurationEntity: ConfigurationEntity): Boolean {
+    override fun validateConfigurationEntity(configuration: Configuration): Boolean {
         var validation = true
         // Should contain a name
-        if(configurationEntity.name == ""){
+        if(configuration.name == ""){
             validation = false
         }
         // Days should not be empty
-        else if(configurationEntity.days.isEmpty()){
+        else if(configuration.days.isEmpty()){
             validation = false
         }
-        if(configurationEntity.startStation != null || configurationEntity.endStation != null){
+        if(configuration.startStation != null || configuration.endStation != null){
             // If one station is set but one is null, error
-            if(configurationEntity.startStation == null || configurationEntity.endStation == null){
+            if(configuration.startStation == null || configuration.endStation == null){
                 validation = false
             }
             // Station exists if can be found in List of DB similar station names
-            else if (!RoutePlanner().deriveValidStationNames(configurationEntity.startStation!!).contains(configurationEntity.startStation!!)
-                || !RoutePlanner().deriveValidStationNames(configurationEntity.endStation!!).contains(configurationEntity.endStation!!)){
+            else if (!RoutePlanner().deriveValidStationNames(configuration.startStation!!).contains(configuration.startStation!!)
+                || !RoutePlanner().deriveValidStationNames(configuration.endStation!!).contains(configuration.endStation!!)){
                 validation = false
             }
         }
@@ -113,8 +113,8 @@ data class Core(
     }
 
     override fun getRaplaURL(): String? {
-        val applicationSettings = ApplicationSettings(context)
-        return applicationSettings.getApplicationSettings().raplaURL
+        val applicationSettingsHandler = ApplicationSettingsHandler(context)
+        return applicationSettingsHandler.getApplicationSettings().raplaURL
     }
 
     override fun log(
@@ -130,22 +130,22 @@ data class Core(
 
     override fun updateConfigurationActive(
         isActive: Boolean,
-        configurationEntity: ConfigurationEntity
+        configuration: Configuration
     ) {
-        val alarmConfiguration = AlarmConfiguration(context)
-        alarmConfiguration.updateConfigurationActive(isActive, configurationEntity.uid)
+        val configurationHandler = ConfigurationHandler(context)
+        configurationHandler.updateConfigurationActive(isActive, configuration.uid)
     }
 
     override fun deleteAlarmConfiguration(uid: Long) {
-        val event = Event(context)
-        val alarmConfiguration = AlarmConfiguration(context)
+        val eventHandler = EventHandler(context)
+        val configurationHandler = ConfigurationHandler(context)
         //Always remove all associated events when removing an alarm configuration
-        event.removeEvent(uid)
-        alarmConfiguration.removeAlarmConfiguration(uid)
+        eventHandler.removeEvent(uid)
+        configurationHandler.removeAlarmConfiguration(uid)
     }
 
     override fun isApplicationOpenedFirstTime(): Boolean {
-        val settings = ApplicationSettings(context)
+        val settings = ApplicationSettingsHandler(context)
         return settings.isApplicationOpenedFirstTime()
     }
 

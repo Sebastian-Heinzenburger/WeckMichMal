@@ -14,14 +14,14 @@ interface WakeUpCalculationSpecification {
      * - Calculating the required departure time, accounting for route and travel time.
      * - Subtracting the configured wake-up buffer to determine the final wake-up time.
      *
-     * @param configuration The [ConfigurationEntity] containing alarm settings, including buffers,
+     * @param configuration The [Configuration] containing alarm settings, including buffers,
      * travel preferences, station details, and active days.
-     * @return The calculated [EventEntity], which includes the wake-up time, event date,
+     * @return The calculated [Event], which includes the wake-up time, event date,
      * associated courses, and travel routes.
      * @throws Exception if the calculation fails (e.g., due to missing course data or invalid configuration).
      */
     @Throws(Exception::class)
-    fun calculateNextEvent(configuration: ConfigurationEntity): EventEntity
+    fun calculateNextEvent(configuration: Configuration): Event
 
     /**
      * Calculates the next wake-up events for multiple configurations in batch.
@@ -33,10 +33,10 @@ interface WakeUpCalculationSpecification {
      *
      * Batch processing can optimize shared operations, such as bulk course fetching or route calculations.
      *
-     * @param configurations A list of [ConfigurationEntity] objects to process.
-     * @return A list of calculated [EventEntity]s, one for each configuration.
+     * @param configurations A list of [Configuration] objects to process.
+     * @return A list of calculated [Event]s, one for each configuration.
      * @throws Exception if the calculation fails for any configuration.
      */
     @Throws(Exception::class)
-    fun batchCalculateNextEvent(configurations: List<ConfigurationEntity>): List<EventEntity>
+    fun batchCalculateNextEvent(configurations: List<Configuration>): List<Event>
 }

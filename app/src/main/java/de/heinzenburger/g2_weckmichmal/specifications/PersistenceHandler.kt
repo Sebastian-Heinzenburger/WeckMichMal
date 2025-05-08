@@ -15,18 +15,18 @@ import java.time.LocalTime
 /**
  * Interface defining the behavior for the persistence layer.
  */
-interface I_AlarmConfiguration{
+interface InterfaceConfigurationHandler{
     /**
      * Saves or updates the alarm configuration in the persistence layer.
      *
-     * @param config The [ConfigurationEntity] object that contains the data to be saved or updated.
+     * @param config The [Configuration] object that contains the data to be saved or updated.
      */
-    fun saveOrUpdate(config: ConfigurationEntity): Boolean
+    fun saveOrUpdate(config: Configuration): Boolean
 
     /**
-     * Update attribute active in a [ConfigurationEntity]
+     * Update attribute active in a [Configuration]
      * @param isActive stores whether the configuration should be active
-     * @param uid of the [ConfigurationEntity] to be updated
+     * @param uid of the [Configuration] to be updated
      */
     fun updateConfigurationActive(isActive: Boolean, uid: Long) : Boolean
 
@@ -35,65 +35,65 @@ interface I_AlarmConfiguration{
      *
      * @return A ConfigurationEntity object representing the saved alarm configuration.
      */
-    fun getAlarmConfiguration(id: Long): ConfigurationEntity?
+    fun getAlarmConfiguration(id: Long): Configuration?
     /**
      * Returns all alarm configurations listed in the persistence layer.
      *
-     * @return A list of [ConfigurationEntity] objects representing all the saved alarm configurations.
+     * @return A list of [Configuration] objects representing all the saved alarm configurations.
      */
-    fun getAllAlarmConfigurations(): List<ConfigurationEntity>?
+    fun getAllAlarmConfigurations(): List<Configuration>?
     /**
      * Removes the alarm configuration from the persistence layer.
      *
-     * @param id The id of the [ConfigurationEntity] object to be removed from the persistence layer.
+     * @param id The id of the [Configuration] object to be removed from the persistence layer.
      */
     fun removeAlarmConfiguration(id: Long): Boolean
     /**
-     * Returns a [ConfigurationEntity] with corresponding [EventEntity]
+     * Returns a [Configuration] with corresponding [Event]
      *
-     * @param id The id of the [ConfigurationEntity] object.
+     * @param id The id of the [Configuration] object.
      */
-    fun getConfigurationAndEvent(id: Long): ConfigurationAndEventEntity?
+    fun getConfigurationAndEvent(id: Long): ConfigurationWithEvent?
     /**
-     * Returns a list of all [ConfigurationEntity] with corresponding [EventEntity]
+     * Returns a list of all [Configuration] with corresponding [Event]
      */
-    fun getAllConfigurationAndEvent(): List<ConfigurationAndEventEntity>?
+    fun getAllConfigurationAndEvent(): List<ConfigurationWithEvent>?
 
 }
-interface I_Event{
+interface InterfaceEventHandler {
     /**
      * Saves or updates an event in the persistence layer.
      *
-     * @param event The [EventEntity] object that contains the data to be saved or updated.
+     * @param event The [Event] object that contains the data to be saved or updated.
      */
-    fun saveOrUpdate(event: EventEntity): Boolean
+    fun saveOrUpdate(event: Event): Boolean
     /**
      * Returns all events listed in the persistence layer.
      *
-     * @return A list of [EventEntity] objects representing all the saved events.
+     * @return A list of [Event] objects representing all the saved events.
      */
-    fun getAllEvents(): List<EventEntity>?
+    fun getAllEvents(): List<Event>?
     /**
      * Returns the alarm configuration from the persistence layer.
      *
      * @return A ConfigurationEntity object representing the saved alarm configuration.
      */
-    fun getEvent(id: Long, days : Set<DayOfWeek>): EventEntity?
+    fun getEvent(id: Long, days : Set<DayOfWeek>): Event?
     /**
      * Removes an event from the persistence layer.
      *
-     * @param configID The id of the [ConfigurationEntity] object corresponding to the Event.
-     * @param days The days of the [ConfigurationEntity] object corresponding to the Event.
+     * @param configID The id of the [Configuration] object corresponding to the Event.
+     * @param days The days of the [Configuration] object corresponding to the Event.
      */
     fun removeEvent(configID: Long, days: Set<DayOfWeek>): Boolean
     /**
      * Removes an event from the persistence layer.
      *
-     * @param configID The id of the [ConfigurationEntity] object corresponding to the Event.
+     * @param configID The id of the [Configuration] object corresponding to the Event.
      */
     fun removeEvent(configID: Long): Boolean
 }
-interface I_ApplicationSettings {
+interface InterfaceApplicationSettings {
     /**
      * Overrides the application settings in the persistence layer with the given parameter.
      */
@@ -126,8 +126,8 @@ interface I_ApplicationSettings {
  * @property endStation The DB Navigator conform name of the end station for the journey.
  * @property isActive Whether the User enabled the Alarm
  */
-@Entity(tableName = "configurationentity")
-data class ConfigurationEntity(
+@Entity(tableName = "configuration")
+data class Configuration(
     /** A unique identifier to uniquely identify this configuration. */
     @PrimaryKey val uid: Long = System.currentTimeMillis(),
     /** The name specified by the user for the configuration. */
@@ -151,11 +151,11 @@ data class ConfigurationEntity(
 ){
     @Suppress("unused")
     fun log(){
-        Logger(null).log(Logger.Level.INFO,"Logging Alarm configuration with id $uid:\n$name\n$days\n$fixedArrivalTime\n$fixedTravelBuffer\n$startBuffer\n$endBuffer\n$startStation\n$endStation\n$isActive")
+        Logger(null).log(Logger.Level.INFO,"Logging configuration with id $uid:\n$name\n$days\n$fixedArrivalTime\n$fixedTravelBuffer\n$startBuffer\n$endBuffer\n$startStation\n$endStation\n$isActive")
     }
 
     companion object{
-        val emptyConfiguration = ConfigurationEntity(
+        val emptyConfiguration = Configuration(
             uid = 0,
             name = "Wecker",
             days = setOf(DayOfWeek.MONDAY),
@@ -179,8 +179,8 @@ data class ConfigurationEntity(
  * @property courses The courses following this day.
  * @property routes The specific date this event references.
  */
-@Entity(tableName = "evententity")
-data class EventEntity(
+@Entity(tableName = "event")
+data class Event(
     /** The unique identifier of the corresponding alarm configuration. */
     @PrimaryKey val configID: Long,
     /** The time to ring the alarm, calculated based on the alarm configuration. */
@@ -200,7 +200,7 @@ data class EventEntity(
             DataConverter().fromListOfRoutes(routes)}")
     }
     companion object{
-        val emptyEvent = EventEntity(
+        val emptyEvent = Event(
             configID = 0,
             wakeUpTime = LocalTime.NOON,
             days = emptySet(),
@@ -228,13 +228,13 @@ data class EventEntity(
         )
     }
 }
-data class ConfigurationAndEventEntity(
-    @Embedded val configurationEntity: ConfigurationEntity,
+data class ConfigurationWithEvent(
+    @Embedded val configuration: Configuration,
     @Relation(
         parentColumn = "uid",
         entityColumn = "configID"
     )
-    val eventEntity: EventEntity?
+    val event: Event?
 )
 
 /**

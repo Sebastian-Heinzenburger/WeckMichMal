@@ -1,9 +1,9 @@
 package de.heinzenburger.g2_weckmichmal.core
 
 import de.heinzenburger.g2_weckmichmal.persistence.Logger
-import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationAndEventEntity
-import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
-import de.heinzenburger.g2_weckmichmal.specifications.EventEntity
+import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationWithEvent
+import de.heinzenburger.g2_weckmichmal.specifications.Configuration
+import de.heinzenburger.g2_weckmichmal.specifications.Event
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
 
 //Is a mockup version of real core, in order to keep UI preview functionality
@@ -15,8 +15,8 @@ class MockupCore : I_Core {
     }
 
     companion object{
-        val mockupConfigurations = listOf(ConfigurationEntity.emptyConfiguration)
-        val mockupEvents = listOf(EventEntity.emptyEvent)
+        val mockupConfigurations = listOf(Configuration.emptyConfiguration)
+        val mockupEvents = listOf(Event.emptyEvent)
     }
 
     override fun runUpdateLogic() {}
@@ -24,7 +24,7 @@ class MockupCore : I_Core {
     override fun startUpdateScheduler() {}
     override fun saveRaplaURL(url : String){}
     override fun isApplicationOpenedFirstTime(): Boolean? {return null}
-    override fun generateOrUpdateAlarmConfiguration(configurationEntity: ConfigurationEntity) {}
+    override fun generateOrUpdateAlarmConfiguration(configuration: Configuration) {}
 
     override fun getRaplaURL(): String? {
         return ""
@@ -48,18 +48,18 @@ class MockupCore : I_Core {
 
     override fun updateConfigurationActive(
         isActive: Boolean,
-        configurationEntity: ConfigurationEntity
+        configuration: Configuration
     ) {
 
     }
 
-    override fun getAllConfigurationAndEvent(): List<ConfigurationAndEventEntity>? {
-        var result = mutableListOf<ConfigurationAndEventEntity>()
+    override fun getAllConfigurationAndEvent(): List<ConfigurationWithEvent>? {
+        var result = mutableListOf<ConfigurationWithEvent>()
         mockupConfigurations.forEach {
             val configurationEntity = it
-            var eventEntity : EventEntity? = null
-            mockupEvents.forEach { if(it.configID == configurationEntity.uid){ eventEntity = it } }
-            result.add(ConfigurationAndEventEntity(configurationEntity,eventEntity))
+            var event : Event? = null
+            mockupEvents.forEach { if(it.configID == configurationEntity.uid){ event = it } }
+            result.add(ConfigurationWithEvent(configurationEntity,event))
         }
         return result
     }
@@ -69,7 +69,7 @@ class MockupCore : I_Core {
     }
 
 
-    override fun validateConfigurationEntity(configurationEntity: ConfigurationEntity): Boolean {
+    override fun validateConfigurationEntity(configuration: Configuration): Boolean {
         return true
     }
 
