@@ -5,7 +5,6 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
-import de.heinzenburger.g2_weckmichmal.MainActivity
 import de.heinzenburger.g2_weckmichmal.specifications.EventEntity
 import de.heinzenburger.g2_weckmichmal.specifications.I_Event
 import java.time.DayOfWeek
@@ -13,6 +12,7 @@ import java.time.DayOfWeek
 data class Event(
     val context: Context
 ): I_Event {
+    val logger = Logger(context)
     @Dao
     interface ConfigurationDao{
         @Query("SELECT * FROM evententity")
@@ -45,7 +45,7 @@ data class Event(
             return true
         }
         catch (e: Exception){
-            MainActivity.log.warning(e.message)
+            logger.log(Logger.Level.SEVERE, e.message.toString())
             e.printStackTrace()
             return false
         }
@@ -57,7 +57,7 @@ data class Event(
             return result
         }
         catch (e: Exception){
-            MainActivity.log.warning(e.message)
+            logger.log(Logger.Level.SEVERE, e.message.toString())
             e.printStackTrace()
             return null
         }
@@ -71,7 +71,7 @@ data class Event(
             return true
         }
         catch (e: Exception){
-            MainActivity.log.warning(e.message)
+            logger.log(Logger.Level.SEVERE, e.message.toString())
             e.printStackTrace()
             return false
         }
@@ -82,7 +82,7 @@ data class Event(
             return true
         }
         catch (e: Exception){
-            MainActivity.log.warning(e.message)
+            logger.log(Logger.Level.SEVERE, e.message.toString())
             e.printStackTrace()
             return false
         }
@@ -93,7 +93,7 @@ data class Event(
             return database.eventConfigurationDao().getByIdAndDays(id, DataConverter().fromSetOfDays(days).toString())
         }
         catch (e: Exception){
-            MainActivity.log.severe(e.message)
+            logger.log(Logger.Level.SEVERE, e.message.toString())
             e.printStackTrace()
             return null
         }

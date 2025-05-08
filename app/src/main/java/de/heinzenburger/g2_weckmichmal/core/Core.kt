@@ -10,6 +10,7 @@ import de.heinzenburger.g2_weckmichmal.calculation.WakeUpCalculator
 import de.heinzenburger.g2_weckmichmal.persistence.AlarmConfiguration
 import de.heinzenburger.g2_weckmichmal.persistence.ApplicationSettings
 import de.heinzenburger.g2_weckmichmal.persistence.Event
+import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationAndEventEntity
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
@@ -29,8 +30,10 @@ ist das auch besser so
  */
 
 data class Core(
-    val context: Context
+    val context: Context,
 ) : I_Core {
+    val logger = Logger(context)
+
     //For description of each method, see I_Core in specifications
     override fun deriveStationName(input: String) : List<String>{
         val routePlanner = RoutePlanner()
@@ -112,6 +115,17 @@ data class Core(
     override fun getRaplaURL(): String? {
         val applicationSettings = ApplicationSettings(context)
         return applicationSettings.getApplicationSettings().raplaURL
+    }
+
+    override fun log(
+        level: Logger.Level,
+        text: String
+    ) {
+        logger.log(level, text)
+    }
+
+    override fun getLog(): String {
+        return logger.getLogs()
     }
 
     override fun updateConfigurationActive(

@@ -1,7 +1,6 @@
 package de.heinzenburger.g2_weckmichmal.persistence
 
 import android.content.Context
-import de.heinzenburger.g2_weckmichmal.MainActivity
 import de.heinzenburger.g2_weckmichmal.specifications.I_ApplicationSettings
 import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity
 import org.json.JSONObject
@@ -10,6 +9,7 @@ import java.io.File
 data class ApplicationSettings (
     val context: Context
 ) : I_ApplicationSettings{
+    val logger = Logger(context)
     private fun toJson(settingsEntity: SettingsEntity) : JSONObject{
         var json = JSONObject()
         json.put("rapla", settingsEntity.raplaURL) //Only configuration so far
@@ -29,7 +29,7 @@ data class ApplicationSettings (
             return true
         }
         catch (e : Exception){
-            MainActivity.log.severe(e.toString())
+            logger.log(Logger.Level.SEVERE, e.message.toString())
             return false
         }
     }

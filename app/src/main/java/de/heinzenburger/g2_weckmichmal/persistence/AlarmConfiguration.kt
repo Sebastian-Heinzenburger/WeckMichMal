@@ -6,7 +6,6 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
-import de.heinzenburger.g2_weckmichmal.MainActivity
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationAndEventEntity
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
 import de.heinzenburger.g2_weckmichmal.specifications.I_AlarmConfiguration
@@ -14,6 +13,7 @@ import de.heinzenburger.g2_weckmichmal.specifications.I_AlarmConfiguration
 data class AlarmConfiguration(
     val context: Context,
 ): I_AlarmConfiguration {
+    val logger = Logger(context)
     @Dao
     interface ConfigurationDao{
         @Query("SELECT * FROM configurationentity")
@@ -53,7 +53,7 @@ data class AlarmConfiguration(
             return true
         }
         catch (e: Exception){
-            MainActivity.log.severe(e.message)
+            logger.log(Logger.Level.SEVERE, e.message.toString())
             e.printStackTrace()
             return false
         }
@@ -66,7 +66,7 @@ data class AlarmConfiguration(
             return true
         }
         catch (e: Exception){
-            MainActivity.log.severe(e.message)
+            logger.log(Logger.Level.SEVERE, e.message.toString())
             e.printStackTrace()
             return false
         }
@@ -78,7 +78,7 @@ data class AlarmConfiguration(
             return result
         }
         catch (e: Exception){
-            MainActivity.log.severe(e.message)
+            logger.log(Logger.Level.SEVERE, e.message.toString())
             e.printStackTrace()
             return null
         }
@@ -90,7 +90,7 @@ data class AlarmConfiguration(
             return result
         }
         catch (e: Exception){
-            MainActivity.log.severe(e.message)
+            logger.log(Logger.Level.SEVERE, e.message.toString())
             e.printStackTrace()
             return null
         }
@@ -102,7 +102,7 @@ data class AlarmConfiguration(
             return true
         }
         catch (e: Exception){
-            MainActivity.log.severe(e.message)
+            logger.log(Logger.Level.SEVERE, e.message.toString())
             e.printStackTrace()
             return false
         }
@@ -114,7 +114,7 @@ data class AlarmConfiguration(
             return result
         }
         catch (e: Exception){
-            MainActivity.log.severe(e.message)
+            logger.log(Logger.Level.SEVERE, e.message.toString())
             e.printStackTrace()
             return null
         }
@@ -126,7 +126,7 @@ data class AlarmConfiguration(
             return result
         }
         catch (e: Exception){
-            MainActivity.log.severe(e.message)
+            logger.log(Logger.Level.SEVERE, e.message.toString())
             e.printStackTrace()
             return null
         }

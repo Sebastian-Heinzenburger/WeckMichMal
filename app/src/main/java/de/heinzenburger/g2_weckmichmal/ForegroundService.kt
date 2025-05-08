@@ -11,6 +11,7 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.core.app.NotificationCompat
 import de.heinzenburger.g2_weckmichmal.core.Core
+import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import java.time.Duration
 import java.time.LocalDateTime
 import kotlin.concurrent.thread
@@ -52,7 +53,6 @@ class ForegroundService : Service() {
             while (true) {
                 var wakeUp = false
                 var sleepDuration = 1000
-                //playWithPerry()
                 while (!wakeUp) {
                     Thread.sleep(sleepDuration.toLong())
                     var configs = core.getAllConfigurationAndEvent()
@@ -70,6 +70,13 @@ class ForegroundService : Service() {
                     sleepDuration = if (Duration.between(
                             LocalDateTime.now(),
                             earliestEventDate
+                        ).seconds > 14400
+                    ) {
+                        14000000
+                    }
+                    else if (Duration.between(
+                            LocalDateTime.now(),
+                            earliestEventDate
                         ).seconds > 3600
                     ) {
                         3000000
@@ -82,8 +89,10 @@ class ForegroundService : Service() {
                     } else {
                         10000
                     }
-                    wakeUp = earliestEventDate < LocalDateTime.now()
-                    MainActivity.log.severe("Going to sleep for $sleepDuration ms")
+                    wakeUp = Duration.between(LocalDateTime.now(),earliestEventDate).seconds < 10
+                    core.log(Logger.Level.SEVERE, "Going to sleep for $sleepDuration ms")
+                    core.log(Logger.Level.SEVERE, "Alarm at $earliestEventDate")
+                    core.log(Logger.Level.SEVERE, "Time between ${Duration.between(LocalDateTime.now(),earliestEventDate).seconds}")
                 }
                 playWithPerry()
             }

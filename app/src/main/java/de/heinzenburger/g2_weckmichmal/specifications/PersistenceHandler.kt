@@ -5,8 +5,8 @@ import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.Relation
-import de.heinzenburger.g2_weckmichmal.MainActivity
 import de.heinzenburger.g2_weckmichmal.persistence.DataConverter
+import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -151,7 +151,7 @@ data class ConfigurationEntity(
 ){
     @Suppress("unused")
     fun log(){
-        MainActivity.log.info("Logging Alarm configuration with id $uid:\n$name\n$days\n$fixedArrivalTime\n$fixedTravelBuffer\n$startBuffer\n$endBuffer\n$startStation\n$endStation\n$isActive")
+        Logger(null).log(Logger.Level.INFO,"Logging Alarm configuration with id $uid:\n$name\n$days\n$fixedArrivalTime\n$fixedTravelBuffer\n$startBuffer\n$endBuffer\n$startStation\n$endStation\n$isActive")
     }
 
     companion object{
@@ -196,7 +196,7 @@ data class EventEntity(
 ){
     @Suppress("unused")
     fun log(){
-        MainActivity.log.info("Logging Event with id $configID:\n$wakeUpTime\n$days\n$date\n${DataConverter().fromListOfCourses(courses)}\n${
+        Logger(null).log(Logger.Level.INFO,"Logging Event with id $configID:\n$wakeUpTime\n$days\n$date\n${DataConverter().fromListOfCourses(courses)}\n${
             DataConverter().fromListOfRoutes(routes)}")
     }
     companion object{
@@ -246,7 +246,7 @@ data class SettingsEntity(
 ){
     @Suppress("unused")
     fun log(){
-        MainActivity.log.info("Logging SettingsEntity:\n$raplaURL")
+        Logger(null).log(Logger.Level.INFO,"Logging SettingsEntity:\n$raplaURL")
     }
 }
 

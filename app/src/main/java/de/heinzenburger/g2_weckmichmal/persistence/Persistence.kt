@@ -6,7 +6,6 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
-import de.heinzenburger.g2_weckmichmal.MainActivity
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
 import de.heinzenburger.g2_weckmichmal.specifications.Course
 import de.heinzenburger.g2_weckmichmal.specifications.EventEntity
@@ -219,13 +218,13 @@ abstract class AppDatabase : RoomDatabase() {
             val tableCursor = db.query("SELECT name FROM sqlite_master WHERE type='table'", null)
             while (tableCursor.moveToNext()) {
                 val tableName = tableCursor.getString(0)
-                MainActivity.log.info( "Table: $tableName")
+                Logger(null).log(Logger.Level.INFO,"Table: $tableName")
 
                 val columnCursor = db.query("PRAGMA table_info($tableName)", null)
                 while (columnCursor.moveToNext()) {
                     val columnName = columnCursor.getString(columnCursor.getColumnIndexOrThrow("name"))
                     val columnType = columnCursor.getString(columnCursor.getColumnIndexOrThrow("type"))
-                    MainActivity.log.info("-- Column: $columnName ($columnType)")
+                    Logger(null).log(Logger.Level.INFO,"-- Column: $columnName ($columnType)")
                 }
                 columnCursor.close()
             }

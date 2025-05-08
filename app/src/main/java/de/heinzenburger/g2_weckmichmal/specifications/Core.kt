@@ -1,5 +1,7 @@
 package de.heinzenburger.g2_weckmichmal.specifications
 
+import de.heinzenburger.g2_weckmichmal.persistence.Logger
+
 /**
  * Interface defining the core
  */
@@ -38,6 +40,16 @@ interface I_Core{
      * Get RAPLA URL from settings database
      */
     fun getRaplaURL(): String?
+
+    /**
+     * Logs [text] to log file and LogCat
+     */
+    fun log(level: Logger.Level, text: String)
+
+    /**
+     * Retrieves Log from database
+     */
+    fun getLog() : String
 
     /**
      * Update attribute active in a [ConfigurationEntity]

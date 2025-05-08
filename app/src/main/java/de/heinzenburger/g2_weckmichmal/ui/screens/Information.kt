@@ -6,8 +6,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -22,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.components.NavBar
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
 
@@ -44,22 +48,37 @@ class InformationScreen : ComponentActivity() {
             }
         }
     }
-    companion object{
+    companion object {
         //When text is clicked, platypus mode in AlarmClockOverviewScreen is activated hehe
-        val innerInformationComposable : @Composable (PaddingValues, I_Core) -> Unit =
+        val innerInformationComposable: @Composable (PaddingValues, I_Core) -> Unit =
             { innerPadding: PaddingValues, core: I_Core ->
-                Button(
-                    modifier = Modifier.padding(0.dp,50.dp,0.dp,0.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                    onClick = {
-                        AlarmClockOverviewScreen.aPlatypus = !AlarmClockOverviewScreen.aPlatypus
+                Column {
+                    Button(
+                        modifier = Modifier.padding(0.dp, 50.dp, 0.dp, 0.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                        onClick = {
+                            AlarmClockOverviewScreen.aPlatypus = !AlarmClockOverviewScreen.aPlatypus
+                        }
+                    ) {
+                        Text(
+                            style = MaterialTheme.typography.titleMedium,
+                            text = "Ich fürchte, dass dieser Screen unverändert in der Production landen wird",
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                     }
+                    innerLogComposable(innerPadding, core)
+                }
+            }
+        val innerLogComposable: @Composable (PaddingValues, I_Core) -> Unit =
+            { innerPadding: PaddingValues, core: I_Core ->
+                Column(
+                    Modifier
+                        .verticalScroll(rememberScrollState())
                 ) {
-                    Text(
-                        style = MaterialTheme.typography.titleMedium,
-                        text = "Ich fürchte, dass dieser Screen unverändert in der Production landen wird",
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onBackground
+                    OurText(
+                        text = core.getLog(),
+                        modifier = Modifier,
                     )
                 }
             }

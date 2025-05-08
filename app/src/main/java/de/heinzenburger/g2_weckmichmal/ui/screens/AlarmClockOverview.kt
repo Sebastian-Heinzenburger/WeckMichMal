@@ -46,7 +46,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.core.app.ActivityCompat.finishAffinity
-import de.heinzenburger.g2_weckmichmal.MainActivity
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationAndEventEntity
@@ -64,7 +63,6 @@ class AlarmClockOverviewScreen : ComponentActivity(){
         enableEdgeToEdge()
         val core = Core(context = applicationContext)
         thread {
-            MainActivity.log.severe("Hello wusstest du dass ich mich unendlich oft wiederhole?")
             configurationAndEventEntities.value = core.getAllConfigurationAndEvent()!!
         }
         setContent {
