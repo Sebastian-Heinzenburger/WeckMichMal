@@ -9,16 +9,23 @@ import java.time.LocalDateTime
 interface CourseFetcherSpecification {
 
     /**
-     * Fetches all courses occurring within the specified period.
-     *
-     * This method retrieves and parses all events from the configured course system (e.g., RAPLA),
-     * filters them by valid categories, expands recurring events, filters them by the provided period,
-     * and maps them into [Course] objects.
-     *
-     * @param period The [Period] defining the start and end date/time of the time range.
-     * @return A list of [Course] objects that fall within the specified time period.
-     * @throws Exception if the course data cannot be fetched or parsed (e.g., due to network issues or invalid data).
-     */
+    * Determines the next wake-up event based on the provided configuration.
+    *
+    * The calculation includes:
+    * - Identifying the next valid date based on the configured active days.
+    * - Determining the arrival time at the destination (e.g., from course schedules or a fixed target time).
+    * - Calculating the required departure time, factoring in the selected route and estimated travel duration.
+    * - Subtracting the configured wake-up buffer to arrive at the final wake-up time.
+    *
+    * WARNING: The "next valid date" always refers to the next scheduled occurrence of the event,
+    * based on the configuration. The reference point is **LocalDate**, not LocalDateTime.
+    * 
+    * @param configuration The [Configuration] containing alarm settings, including buffers,
+    * travel preferences, station details, and active weekdays.
+    * @return A calculated [Event] including the wake-up time, event date,
+    * associated courses, and travel routes.
+    * @throws Exception if the calculation fails (e.g., due to missing course data or invalid configuration).
+    */
     @Throws(Exception::class)
     fun fetchCoursesBetween(period: Period): List<Course>
 
