@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "de.heinzenburger.g2_weckmichmal"
-        minSdk = 29
+        minSdk = 31
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"

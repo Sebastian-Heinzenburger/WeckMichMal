@@ -4,12 +4,16 @@ import de.heinzenburger.g2_weckmichmal.specifications.I_RoutePlannerSpecificatio
 import de.heinzenburger.g2_weckmichmal.specifications.Route
 import de.heinzenburger.g2_weckmichmal.specifications.RouteSection
 import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
+import java.io.IOException
 import java.net.URL
 import java.net.URLEncoder
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.zip.GZIPInputStream
+import java.util.zip.ZipException
+import kotlin.jvm.Throws
 
 typealias StationID = String
 
@@ -32,6 +36,7 @@ class RoutePlanner : I_RoutePlannerSpecification {
         return firstResult.getString("id")
     }
 
+    @Throws(JSONException::class, IOException::class, ZipException::class)
     override fun planRoute(
         startStation: String, endStation: String, timeOfArrival: LocalDateTime
     ): List<Route> {
@@ -55,7 +60,7 @@ class RoutePlanner : I_RoutePlannerSpecification {
                 "ankunftsHalt":"$endStationID",
                 "ankunftSuche":"ANKUNFT",
                 "klasse":"KLASSE_2",
-                "produktgattungen":["REGIONAL","SBAHN","BUS","SCHIFF","UBAHN","TRAM"],
+                "produktgattungen":["REGIONAL","SBAHN","ICE","BUS","SCHIFF","UBAHN","TRAM"],
                 "reisende":[{"typ":"ERWACHSENER","ermaessigungen":[{"art":"KEINE_ERMAESSIGUNG","klasse":"KLASSENLOS"}],"alter":[],"anzahl":1}],
                 "schnelleVerbindungen":true,
                 "sitzplatzOnly":false,
