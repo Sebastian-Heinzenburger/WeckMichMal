@@ -40,3 +40,13 @@ interface WakeUpCalculationSpecification {
     @Throws(Exception::class)
     fun batchCalculateNextEvent(configurations: List<Configuration>): List<Event>
 }
+
+data class WakeUpCalculationException(
+    override val message: String, // The original exception message
+    val reason: Reason
+): Exception(){
+    enum class Reason{ // The generic reason
+        ConnectionError(),
+        ParserError()
+    }
+}

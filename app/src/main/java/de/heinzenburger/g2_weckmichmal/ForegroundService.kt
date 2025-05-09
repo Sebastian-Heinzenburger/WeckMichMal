@@ -12,6 +12,8 @@ import android.os.Vibrator
 import androidx.core.app.NotificationCompat
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.persistence.Logger
+import java.time.Duration
+import java.time.LocalDateTime
 import kotlin.concurrent.thread
 
 class ForegroundService : Service() {
@@ -53,15 +55,15 @@ class ForegroundService : Service() {
                 var sleepDuration = 10000
                 while (!wakeUp) {
                     Thread.sleep(sleepDuration.toLong())
-                    /*
+
                     var configs = core.getAllConfigurationAndEvent()
                     configs?.forEach {
-                        core.generateOrUpdateAlarmConfiguration(it.configurationEntity)
+                        core.generateOrUpdateAlarmConfiguration(it.configuration)
                     }
                     configs = core.getAllConfigurationAndEvent()
                     var earliestEventDate = LocalDateTime.of(8000, 1, 1, 0, 0)
                     configs?.forEach {
-                        val eventDateTime = it.eventEntity!!.date.atTime(it.eventEntity.wakeUpTime)
+                        val eventDateTime = it.event!!.date.atTime(it.event.wakeUpTime)
                         if (eventDateTime > LocalDateTime.now() && eventDateTime < earliestEventDate) {
                             earliestEventDate = eventDateTime
                         }
@@ -92,7 +94,7 @@ class ForegroundService : Service() {
                     core.log(Logger.Level.SEVERE, "Going to sleep for $sleepDuration ms")
                     core.log(Logger.Level.SEVERE, "Alarm at $earliestEventDate")
                     core.log(Logger.Level.SEVERE, "Time between ${Duration.between(LocalDateTime.now(),earliestEventDate).seconds}")
-                     */
+
                     core.log(Logger.Level.SEVERE, "")
 
                 }

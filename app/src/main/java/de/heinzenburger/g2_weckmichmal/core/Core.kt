@@ -1,6 +1,7 @@
 package de.heinzenburger.g2_weckmichmal.core
 
 import android.content.Context
+import android.util.Log
 import android.webkit.URLUtil
 import android.widget.Toast
 import androidx.core.content.ContextCompat
@@ -13,7 +14,9 @@ import de.heinzenburger.g2_weckmichmal.persistence.EventHandler
 import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationWithEvent
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
+import de.heinzenburger.g2_weckmichmal.specifications.CourseFetcherException
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import de.heinzenburger.g2_weckmichmal.specifications.WakeUpCalculationException
 import java.net.URL
 
 /*
@@ -50,17 +53,26 @@ data class Core(
 
     override fun generateOrUpdateAlarmConfiguration(configuration: Configuration) {
         val configurationHandler = ConfigurationHandler(context)
+        try {
+
+        }
+        catch (e: WakeUpCalculationException){
+            when(e.reason){
+                WakeUpCalculationException.Reason.ConnectionError -> logger.log(Logger.Level.SEVERE, e.message)
+                WakeUpCalculationException.Reason.ParserError -> logger.log(Logger.Level.SEVERE, e.message)
+            }
+        }
         if (validateConfigurationEntity(configuration)){
             val eventHandler = EventHandler(context)
             configurationHandler.saveOrUpdate(configuration)
-            val eventEntity = WakeUpCalculator(
+            val event = WakeUpCalculator(
                 routePlanner = RoutePlanner(),
                 courseFetcher = CoursesFetcher(URL(getRaplaURL()))
             ).calculateNextEvent(configuration)
-            eventHandler.saveOrUpdate(eventEntity)
+            eventHandler.saveOrUpdate(event)
 
             configuration.log()
-            eventEntity.log()
+            event.log()
         }
         else{
             showToast("Configuration is not valid")
@@ -150,7 +162,6 @@ data class Core(
     }
 
     override fun showToast(message: String) {
-
         ContextCompat.getMainExecutor(context).execute( { ->
             Toast.makeText(context, message, Toast.LENGTH_LONG).show()
         }

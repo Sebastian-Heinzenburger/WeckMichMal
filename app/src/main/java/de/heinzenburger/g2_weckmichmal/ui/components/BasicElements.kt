@@ -15,17 +15,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-
+/**
+ * Until now, the following Elements have been defined:
+ * [OurTextField]: Should be used as a TextField
+ * [OurText]: Should be used for text that is medium sized
+ *
+ * Optional Elements:
+ * [OurButtonInEditAlarm]: The Buttons in AlarmEditScreen with primary color as background and Text
+ */
 class BasicElements {
     companion object{
-        /**
-         * Until now, the following Elements have been defined:
-         * [OurTextField]: Should be used as a TextField
-         * [OurText]: Should be used for text that is medium large
-         *
-         * Optional Elements:
-         * [OurButtonInEditAlarm]: The Buttons in AlarmEditScreen with primary color as background and Text
-         */
         @Composable
         fun OurTextField(value: String, onValueChange: (String)->Unit, modifier: Modifier, placeholderText: String) {
             TextField(

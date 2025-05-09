@@ -72,3 +72,15 @@ data class Course(
     val startDate: LocalDateTime,
     val endDate: LocalDateTime
 )
+
+data class CourseFetcherException(
+    override val message: String, // The original exception message
+    val reason: Reason
+): Exception(){
+    enum class Reason{ // The generic reason
+        ConnectionError(),
+        ParserError()
+    }
+}
+
+

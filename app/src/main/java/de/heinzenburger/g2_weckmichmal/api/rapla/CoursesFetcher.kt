@@ -7,12 +7,14 @@ import biweekly.Biweekly
 import biweekly.component.VEvent
 import biweekly.util.Frequency
 import biweekly.util.ICalDate
+import de.heinzenburger.g2_weckmichmal.specifications.CourseFetcherException
 import java.io.InputStream
 import java.net.URL
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import java.util.Date
+import de.heinzenburger.g2_weckmichmal.specifications.CourseFetcherException.Reason
 
 class CoursesFetcher(
     private val raplaUrl: URL,
@@ -21,7 +23,7 @@ class CoursesFetcher(
 
     override fun fetchCoursesBetween(period: Period): List<Course> {
         val icalStream: InputStream =
-            fetchInputStream(raplaUrl) ?: throw Exception("Could not load RAPLA")
+            fetchInputStream(raplaUrl) ?: throw CourseFetcherException(message = "Could not load URL", reason = Reason.ConnectionError)
 
         return Biweekly.parse(icalStream).first()
             .events
@@ -33,7 +35,7 @@ class CoursesFetcher(
 
     override fun batchFetchCoursesBetween(periods: Batch<Period>): Batch<List<Course>> {
         val icalStream: InputStream =
-            fetchInputStream(raplaUrl) ?: throw Exception("Could not load RAPLA")
+            fetchInputStream(raplaUrl) ?: throw CourseFetcherException(message = "Could not load URL", reason = Reason.ConnectionError)
 
         val events = Biweekly.parse(icalStream).first().events
         val eventsInCategory = events
