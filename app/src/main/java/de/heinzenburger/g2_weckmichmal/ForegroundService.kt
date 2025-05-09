@@ -26,7 +26,7 @@ class ForegroundService : Service() {
         vibrator = getSystemService("vibrator") as Vibrator
     }
 
-    fun playWithPerry() {
+    private fun playWithPerry() {
         mediaPlayer = MediaPlayer.create(this, R.raw.alarm)
         mediaPlayer?.start()
         mediaPlayer?.setOnCompletionListener {
@@ -46,10 +46,17 @@ class ForegroundService : Service() {
         startForeground(1, notification)
 
         thread {
-            playWithPerry()
             while (true) {
+                // wait for perry
                 Thread.sleep(3 * 1000)
-                MainActivity.log.severe("I am running in the foreground")
+                MainActivity.log.severe("Waiting for perry")
+
+                val currentTime = LocalDateTime.now()
+                val perryTime = LocalDateTime.parse("2025-05-07T12:48:00")
+                if (currentTime.isAfter(perryTime)) {
+                    MainActivity.log.severe("Perry time reached")
+                    break
+                }
             }
             playWithPerry()
         }

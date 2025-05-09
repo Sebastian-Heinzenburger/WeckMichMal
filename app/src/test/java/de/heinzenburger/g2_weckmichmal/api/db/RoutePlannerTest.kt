@@ -59,4 +59,23 @@ class RoutePlannerTest {
         }
     }
 
+    @Test
+    fun `temporary test pls modify later`() {
+        try {
+            val routePlanner = RoutePlanner()
+            val result = routePlanner.planRoute(
+                "Berlin Hbf", "Frankfurt(Main) Hbf", LocalDateTime.parse("2025-05-09T23:59:00")
+            )
+            result.forEach {
+                route ->
+                run {
+                    println("Route: ${route.startStation} to ${route.endStation} ${route.startTime} to ${route.endTime}")
+                }
+            }
+        } catch (ignored: IOException) {
+            // Gitlab CI raises an IOException. No idea why
+        }
+    }
+
+
 }

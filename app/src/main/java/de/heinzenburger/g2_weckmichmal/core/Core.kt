@@ -1,9 +1,15 @@
 package de.heinzenburger.g2_weckmichmal.core
 
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
+import android.provider.Settings
 import android.webkit.URLUtil
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import de.heinzenburger.g2_weckmichmal.AlarmEditIntentReceiver
+import de.heinzenburger.g2_weckmichmal.AlarmReceiver
 import de.heinzenburger.g2_weckmichmal.api.db.RoutePlanner
 import de.heinzenburger.g2_weckmichmal.api.rapla.CoursesFetcher
 import de.heinzenburger.g2_weckmichmal.calculation.WakeUpCalculator
@@ -13,7 +19,10 @@ import de.heinzenburger.g2_weckmichmal.persistence.Event
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationAndEventEntity
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationEntity
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import de.heinzenburger.g2_weckmichmal.ui.screens.AlarmClockOverviewScreen
 import java.net.URL
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 /*
 Schön wäre es gewesen, wenn man einmalig irgendwo den Core instanziiert und dann dauernd mit dieser Instanz arbeitet, aber
@@ -32,10 +41,11 @@ data class Core(
     val context: Context
 ) : I_Core {
     //For description of each method, see I_Core in specifications
-    override fun deriveStationName(input: String) : List<String>{
+    override fun deriveStationName(input: String): List<String> {
         val routePlanner = RoutePlanner()
         return routePlanner.deriveValidStationNames(input)
     }
+
     override fun runUpdateLogic() {
     }
 
@@ -47,19 +57,17 @@ data class Core(
 
     override fun generateOrUpdateAlarmConfiguration(configurationEntity: ConfigurationEntity) {
         val alarmConfiguration = AlarmConfiguration(context)
-        if (validateConfigurationEntity(configurationEntity)){
+        if (validateConfigurationEntity(configurationEntity)) {
             val event = Event(context)
             alarmConfiguration.saveOrUpdate(configurationEntity)
             val eventEntity = WakeUpCalculator(
-                routePlanner = RoutePlanner(),
-                courseFetcher = CoursesFetcher(URL(getRaplaURL()))
+                routePlanner = RoutePlanner(), courseFetcher = CoursesFetcher(URL(getRaplaURL()))
             ).calculateNextEvent(configurationEntity)
             event.saveOrUpdate(eventEntity)
 
             configurationEntity.log()
             eventEntity.log()
-        }
-        else{
+        } else {
             showToast("Configuration is not valid")
         }
     }
@@ -69,40 +77,42 @@ data class Core(
         return alarmConfiguration.getAllConfigurationAndEvent()
     }
 
-    override fun saveRaplaURL(urlString : String){
-        if(isValidCourseURL(urlString)){
+    override fun saveRaplaURL(urlString: String) {
+        if (isValidCourseURL(urlString)) {
             val applicationSettings = ApplicationSettings(context)
             val settingsEntity = applicationSettings.getApplicationSettings()
             settingsEntity.raplaURL = urlString
             applicationSettings.saveOrUpdateApplicationSettings(settingsEntity)
-        }
-        else{
+        } else {
             showToast("Invalid URL")
         }
     }
 
-    override fun isValidCourseURL(urlString : String) : Boolean{
-        return  URLUtil.isValidUrl(urlString) && CoursesFetcher(URL(urlString)).hasValidCourseURL()
+    override fun isValidCourseURL(urlString: String): Boolean {
+        return URLUtil.isValidUrl(urlString) && CoursesFetcher(URL(urlString)).hasValidCourseURL()
     }
 
     override fun validateConfigurationEntity(configurationEntity: ConfigurationEntity): Boolean {
         var validation = true
         // Should contain a name
-        if(configurationEntity.name == ""){
+        if (configurationEntity.name == "") {
             validation = false
         }
         // Days should not be empty
-        else if(configurationEntity.days.isEmpty()){
+        else if (configurationEntity.days.isEmpty()) {
             validation = false
         }
-        if(configurationEntity.startStation != null || configurationEntity.endStation != null){
+        if (configurationEntity.startStation != null || configurationEntity.endStation != null) {
             // If one station is set but one is null, error
-            if(configurationEntity.startStation == null || configurationEntity.endStation == null){
+            if (configurationEntity.startStation == null || configurationEntity.endStation == null) {
                 validation = false
             }
             // Station exists if can be found in List of DB similar station names
-            else if (!RoutePlanner().deriveValidStationNames(configurationEntity.startStation!!).contains(configurationEntity.startStation!!)
-                || !RoutePlanner().deriveValidStationNames(configurationEntity.endStation!!).contains(configurationEntity.endStation!!)){
+            else if (!RoutePlanner().deriveValidStationNames(configurationEntity.startStation!!)
+                    .contains(configurationEntity.startStation!!) || !RoutePlanner().deriveValidStationNames(
+                    configurationEntity.endStation!!
+                ).contains(configurationEntity.endStation!!)
+            ) {
                 validation = false
             }
         }
@@ -115,8 +125,7 @@ data class Core(
     }
 
     override fun updateConfigurationActive(
-        isActive: Boolean,
-        configurationEntity: ConfigurationEntity
+        isActive: Boolean, configurationEntity: ConfigurationEntity
     ) {
         val alarmConfiguration = AlarmConfiguration(context)
         alarmConfiguration.updateConfigurationActive(isActive, configurationEntity.uid)
@@ -137,9 +146,42 @@ data class Core(
 
     override fun showToast(message: String) {
 
-        ContextCompat.getMainExecutor(context).execute( { ->
+        ContextCompat.getMainExecutor(context).execute({ ->
             Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+        })
+    }
+
+    fun scheduleAndroidAlarm(targetTime: LocalDateTime) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val alarmIntent = Intent(context, AlarmReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            0,
+            alarmIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val alarmEditIntent = Intent(context, AlarmReceiver::class.java)
+        val pendingEditIntent = PendingIntent.getBroadcast(
+            context,
+            0,
+            alarmIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        if (!alarmManager.canScheduleExactAlarms()) {
+            val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(intent)
         }
+
+        val alarmClockInfo = AlarmManager.AlarmClockInfo(
+            targetTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+            pendingEditIntent
+        )
+
+        alarmManager.setAlarmClock(
+            alarmClockInfo, pendingIntent
         )
     }
 }

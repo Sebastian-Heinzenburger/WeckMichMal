@@ -63,6 +63,8 @@ class AlarmClockOverviewScreen : ComponentActivity(){
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val core = Core(context = applicationContext)
+        setShowWhenLocked(true);
+        setTurnScreenOn(true);
         thread {
             MainActivity.log.severe("Hello wusstest du dass ich mich unendlich oft wiederhole?")
             configurationAndEventEntities.value = core.getAllConfigurationAndEvent()!!
