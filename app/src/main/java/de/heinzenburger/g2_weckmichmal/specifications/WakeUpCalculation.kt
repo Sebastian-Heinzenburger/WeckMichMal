@@ -1,52 +1,81 @@
 package de.heinzenburger.g2_weckmichmal.specifications
 
 /**
- * Interface defining the behavior for calculating the next wake-up time based on configuration settings.
+ * Interface for defining the logic used to calculate the next wake-up event
+ * based on user-defined configuration settings.
  */
 interface WakeUpCalculationSpecification {
 
     /**
-     * Calculates the next wake-up event based on the provided configuration.
+     * Calculates the next wake-up event using the specified configuration.
      *
-     * This involves:
-     * - Selecting the next valid date according to the configured active days.
-     * - Identifying the arrival time at the destination (e.g., based on course schedules or a fixed time).
-     * - Calculating the required departure time, accounting for route and travel time.
+     * The calculation includes:
+     * - Selecting the next applicable date based on active days.
+     * - Determining the expected arrival time (e.g., via course schedules or a fixed arrival time).
+     * - Calculating the departure time using the selected route and estimated travel duration.
      * - Subtracting the configured wake-up buffer to determine the final wake-up time.
      *
-     * @param configuration The [Configuration] containing alarm settings, including buffers,
-     * travel preferences, station details, and active days.
-     * @return The calculated [Event], which includes the wake-up time, event date,
-     * associated courses, and travel routes.
-     * @throws Exception if the calculation fails (e.g., due to missing course data or invalid configuration).
+     * @param configuration The [Configuration] object containing alarm parameters,
+     * such as active days, buffers, station details, and travel preferences.
+     * @return An [Event] containing the calculated wake-up time, associated date,
+     * relevant courses, and route details.
+     * @throws WakeUpCalculatorException if the calculation fails due to invalid or missing data.
      */
-    @Throws(Exception::class)
+    @Throws(WakeUpCalculatorException::class)
     fun calculateNextEvent(configuration: Configuration): Event
 
     /**
-     * Calculates the next wake-up events for multiple configurations in batch.
+     * Calculates the next wake-up events for a list of configurations in batch.
      *
-     * For each configuration:
-     * - Determines the next valid date based on active days.
-     * - Calculates arrival, departure, and wake-up times.
-     * - Groups relevant course and route information into the result.
+     * For each [Configuration]:
+     * - Determines the next valid date.
+     * - Computes the wake-up time based on arrival, departure, and travel time.
+     * - Aggregates associated course and route data.
      *
-     * Batch processing can optimize shared operations, such as bulk course fetching or route calculations.
+     * Batch processing may improve efficiency by reusing shared computations,
+     * such as fetching course data or calculating routes.
      *
-     * @param configurations A list of [Configuration] objects to process.
-     * @return A list of calculated [Event]s, one for each configuration.
-     * @throws Exception if the calculation fails for any configuration.
+     * @param configurations A list of [Configuration] instances to process.
+     * @return A list of [Event]s corresponding to each configuration.
+     * @throws WakeUpCalculatorException if any configuration fails to produce a result.
      */
-    @Throws(Exception::class)
+    @Throws(WakeUpCalculatorException::class)
     fun batchCalculateNextEvent(configurations: List<Configuration>): List<Event>
 }
 
-data class WakeUpCalculationException(
-    override val message: String, // The original exception message
-    val reason: Reason
-): Exception(){
-    enum class Reason{ // The generic reason
-        ConnectionError(),
-        ParserError()
-    }
+
+/**
+ * Represents a sealed hierarchy of exceptions that may occur during wake-up time calculations.
+ */
+sealed class WakeUpCalculatorException(message: String?, cause: Throwable?) :
+    Throwable(message, cause) {
+
+    /**
+     * Thrown when no course data is available for the given configuration or date range.
+     */
+    class NoCoursesFound : CourseFetcherException("No courses found", null)
+
+    /**
+     * Thrown when a connection error occurs while fetching course data.
+     *
+     * @param cause The underlying exception causing the connection failure.
+     */
+    class CoursesConnectionError(cause: Throwable?) :
+        CourseFetcherException("Could not fetch courses due to a connection error", cause)
+
+    /**
+     * Thrown when the fetched course data is malformed or cannot be parsed.
+     *
+     * @param cause The underlying exception related to data format issues.
+     */
+    class CoursesInvalidDataFormatError(cause: Throwable?) :
+        CourseFetcherException("Invalid data format in fetched course data", cause)
+
+    /**
+     * Thrown when an unexpected or logically impossible state is encountered.
+     */
+    class InvalidStateException :
+        CourseFetcherException("An unexpected internal state was reached", null)
+
+    // TODO: Implement error handling for RoutePlanner-related failures
 }
