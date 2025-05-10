@@ -1,4 +1,4 @@
-package de.heinzenburger.g2_weckmichmal.api.rapla
+package de.heinzenburger.g2_weckmichmal.api.courses
 
 import de.heinzenburger.g2_weckmichmal.specifications.Course
 import de.heinzenburger.g2_weckmichmal.specifications.CourseFetcherSpecification
@@ -14,58 +14,66 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import java.util.Date
-import de.heinzenburger.g2_weckmichmal.specifications.CourseFetcherException.Reason
 
-class CoursesFetcher(
+class RaplaFetcher(
     private val raplaUrl: URL,
     private val validCourseCategories: Set<String> = setOf("Prüfung", "Lehrveranstaltung")
 ) : CourseFetcherSpecification {
 
+    @Throws(CourseFetcherException::class)
     override fun fetchCoursesBetween(period: Period): List<Course> {
-        val icalStream: InputStream =
-            fetchInputStream(raplaUrl) ?: throw CourseFetcherException(message = "Could not load URL", reason = Reason.ConnectionError)
+        val icalStream: InputStream = fetchInputStream(raplaUrl)
 
-        return Biweekly.parse(icalStream).first()
-            .events
-            .filter { eventInCategory(it, validCourseCategories) }
-            .map { expandOccurrences(it) }.flatten()
-            .filter { eventInPeriod(it, period) }
-            .mapNotNull { eventToCourse(it) }
+        return try {
+            Biweekly.parse(icalStream).first()
+                .events
+                .filter { eventInCategory(it, validCourseCategories) }
+                .map { expandOccurrences(it) }.flatten()
+                .filter { eventInPeriod(it, period) }
+                .mapNotNull { eventToCourse(it) }
+        } catch (e: Exception) {
+            throw CourseFetcherException.DataFormatError(e)
+        }
     }
 
+    @Throws(CourseFetcherException::class)
     override fun batchFetchCoursesBetween(periods: Batch<Period>): Batch<List<Course>> {
-        val icalStream: InputStream =
-            fetchInputStream(raplaUrl) ?: throw CourseFetcherException(message = "Could not load URL", reason = Reason.ConnectionError)
+        val icalStream: InputStream = fetchInputStream(raplaUrl)
 
-        val events = Biweekly.parse(icalStream).first().events
-        val eventsInCategory = events
-            .filter { eventInCategory(it, validCourseCategories) }
-            .map { expandOccurrences(it) }
-            .flatten()
+        try {
+            val events = Biweekly.parse(icalStream).first().events
+            val eventsInCategory = events
+                .filter { eventInCategory(it, validCourseCategories) }
+                .map { expandOccurrences(it) }
+                .flatten()
 
-        return periods.map { batchPeriod ->
-            val courses = eventsInCategory
-                .filter { eventInPeriod(it, batchPeriod.value) }
-                .mapNotNull { eventToCourse(it) }
-            BatchTuple(batchPeriod.id, courses)
+            return periods.map { batchPeriod ->
+                val courses = eventsInCategory
+                    .filter { eventInPeriod(it, batchPeriod.value) }
+                    .mapNotNull { eventToCourse(it) }
+                BatchTuple(batchPeriod.id, courses)
+            }
+        } catch (e: Exception) {
+            throw CourseFetcherException.DataFormatError(e)
         }
     }
 
     override fun hasValidCourseURL(): Boolean {
         return try {
-            fetchCoursesBetween(Period(LocalDateTime.now(), LocalDateTime.now().plusSeconds(1)))
+            fetchCoursesBetween(Period(LocalDateTime.now(), LocalDateTime.now().plusDays(1)))
             true
-        } catch (_: Exception) {
+        } catch (_: CourseFetcherException) {
             false
         }
     }
 
     private companion object {
-        fun fetchInputStream(url: URL): InputStream? {
+        @Throws(CourseFetcherException.ConnectionError::class)
+        fun fetchInputStream(url: URL): InputStream {
             return try {
                 url.openConnection().inputStream
-            } catch (_: Exception) {
-                null
+            } catch (e: Exception) {
+                throw CourseFetcherException.ConnectionError(e)
             }
         }
 

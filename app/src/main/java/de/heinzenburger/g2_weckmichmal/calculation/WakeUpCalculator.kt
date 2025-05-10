@@ -1,8 +1,8 @@
 package de.heinzenburger.g2_weckmichmal.calculation
 
-import de.heinzenburger.g2_weckmichmal.api.rapla.Batch
-import de.heinzenburger.g2_weckmichmal.api.rapla.batchFrom
-import de.heinzenburger.g2_weckmichmal.api.rapla.innerJoinBranches
+import de.heinzenburger.g2_weckmichmal.api.courses.Batch
+import de.heinzenburger.g2_weckmichmal.api.courses.batchFrom
+import de.heinzenburger.g2_weckmichmal.api.courses.innerJoinBranches
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.Course
 import de.heinzenburger.g2_weckmichmal.specifications.CourseFetcherSpecification
@@ -44,7 +44,6 @@ class WakeUpCalculator(
             routes = routes
         )
     }
-
 
     override fun batchCalculateNextEvent(configurations: List<Configuration>): List<Event> {
         val configsWithDates = configurations.map { it to deriveNextValidDate(it.days) }

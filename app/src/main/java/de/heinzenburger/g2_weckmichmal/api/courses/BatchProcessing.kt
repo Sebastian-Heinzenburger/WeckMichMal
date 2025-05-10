@@ -1,4 +1,4 @@
-package de.heinzenburger.g2_weckmichmal.api.rapla
+package de.heinzenburger.g2_weckmichmal.api.courses
 
 /**
  * Represents an element in a batch, paired with a unique ID.

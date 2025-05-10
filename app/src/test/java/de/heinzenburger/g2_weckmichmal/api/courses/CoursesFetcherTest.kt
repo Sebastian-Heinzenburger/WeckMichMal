@@ -1,4 +1,4 @@
-package de.heinzenburger.g2_weckmichmal.api.rapla
+package de.heinzenburger.g2_weckmichmal.api.courses
 
 import de.heinzenburger.g2_weckmichmal.specifications.Period
 import org.junit.Test
@@ -14,16 +14,16 @@ class CoursesFetcherTest {
 
     @Test
     fun `test hasValidURL`() {
-        val validFetcher = CoursesFetcher(url)
+        val validFetcher = RaplaFetcher(url)
         assertEquals("Fetcher should be valid", true, validFetcher.hasValidCourseURL())
 
-        val invalidFetcher = CoursesFetcher(URL("https://foo"))
+        val invalidFetcher = RaplaFetcher(URL("https://foo"))
         assertEquals("Fetcher should be invalid", false, invalidFetcher.hasValidCourseURL())
     }
 
     @Test
     fun `test fetchCoursesBetween`() {
-        val fetcher = CoursesFetcher(url)
+        val fetcher = RaplaFetcher(url)
         val start = LocalDateTime.of(2025, 4, 28, 0, 0, 0)
         val end = start.plusDays(4)
         val expCourseNames = listOf(
@@ -41,7 +41,7 @@ class CoursesFetcherTest {
 
     @Test
     fun `test batchFetchCoursesBetween`() {
-        val fetcher = CoursesFetcher(url)
+        val fetcher = RaplaFetcher(url)
         val startA = LocalDateTime.of(2025, 4, 28, 0, 0, 0)
         val startB = LocalDateTime.of(2025, 4, 30, 0, 0, 0)
         val expCourseNamesA = listOf(
@@ -76,14 +76,14 @@ class CoursesFetcherTest {
     fun `invalid RAPLA URL caught`() {
         val url =
             URL("https://rapla.dhbw-karlsruhe.de/rapla?page=ical&user=ritterbusch&file=TINF23BN99")
-        assertFalse(CoursesFetcher(url).hasValidCourseURL())
+        assertFalse(RaplaFetcher(url).hasValidCourseURL())
     }
 
     @Test
     fun `valid RAPLA URL`() {
         val url =
             URL("https://rapla.dhbw-karlsruhe.de/rapla?page=ical&user=ritterbusch&file=TINF23BN2")
-        assertTrue(CoursesFetcher(url).hasValidCourseURL())
+        assertTrue(RaplaFetcher(url).hasValidCourseURL())
     }
 
 }

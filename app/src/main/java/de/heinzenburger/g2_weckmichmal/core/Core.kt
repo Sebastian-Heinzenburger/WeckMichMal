@@ -3,16 +3,14 @@ package de.heinzenburger.g2_weckmichmal.core
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
-import android.util.Log
 import android.content.Intent
 import android.provider.Settings
 import android.webkit.URLUtil
 import android.widget.Toast
 import androidx.core.content.ContextCompat
-import de.heinzenburger.g2_weckmichmal.AlarmEditIntentReceiver
 import de.heinzenburger.g2_weckmichmal.AlarmReceiver
 import de.heinzenburger.g2_weckmichmal.api.db.RoutePlanner
-import de.heinzenburger.g2_weckmichmal.api.rapla.CoursesFetcher
+import de.heinzenburger.g2_weckmichmal.api.courses.RaplaFetcher
 import de.heinzenburger.g2_weckmichmal.calculation.WakeUpCalculator
 import de.heinzenburger.g2_weckmichmal.persistence.ConfigurationHandler
 import de.heinzenburger.g2_weckmichmal.persistence.ApplicationSettingsHandler
@@ -20,13 +18,10 @@ import de.heinzenburger.g2_weckmichmal.persistence.EventHandler
 import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationWithEvent
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
-import de.heinzenburger.g2_weckmichmal.specifications.CourseFetcherException
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
-import de.heinzenburger.g2_weckmichmal.ui.screens.AlarmClockOverviewScreen
 import de.heinzenburger.g2_weckmichmal.specifications.WakeUpCalculationException
 import java.net.URL
 import java.time.LocalDateTime
-import java.time.ZoneId
 
 /*
 Schön wäre es gewesen, wenn man einmalig irgendwo den Core instanziiert und dann dauernd mit dieser Instanz arbeitet, aber
@@ -77,7 +72,7 @@ data class Core(
             configurationHandler.saveOrUpdate(configuration)
             val event = WakeUpCalculator(
                 routePlanner = RoutePlanner(),
-                courseFetcher = CoursesFetcher(URL(getRaplaURL()))
+                courseFetcher = RaplaFetcher(URL(getRaplaURL()))
             ).calculateNextEvent(configuration)
             eventHandler.saveOrUpdate(event)
 
@@ -107,7 +102,7 @@ data class Core(
     }
 
     override fun isValidCourseURL(urlString : String) : Boolean{
-        return  URLUtil.isValidUrl(urlString) && CoursesFetcher(URL(urlString)).hasValidCourseURL()
+        return  URLUtil.isValidUrl(urlString) && RaplaFetcher(URL(urlString)).hasValidCourseURL()
     }
 
     override fun validateConfigurationEntity(configuration: Configuration): Boolean {

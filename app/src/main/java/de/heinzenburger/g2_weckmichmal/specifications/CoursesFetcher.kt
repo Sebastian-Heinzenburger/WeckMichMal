@@ -1,59 +1,72 @@
 package de.heinzenburger.g2_weckmichmal.specifications
 
-import de.heinzenburger.g2_weckmichmal.api.rapla.Batch
+import de.heinzenburger.g2_weckmichmal.api.courses.Batch
 import java.time.LocalDateTime
 
 /**
  * Interface defining the contract for fetching course data from external systems.
+ *
+ * This interface provides methods for retrieving course data, checking the validity of the course data source,
+ * and fetching course data in batches. It also includes error handling for various scenarios like network issues
+ * or data format problems during the fetching process.
  */
 interface CourseFetcherSpecification {
 
     /**
-    * Determines the next wake-up event based on the provided configuration.
-    *
-    * The calculation includes:
-    * - Identifying the next valid date based on the configured active days.
-    * - Determining the arrival time at the destination (e.g., from course schedules or a fixed target time).
-    * - Calculating the required departure time, factoring in the selected route and estimated travel duration.
-    * - Subtracting the configured wake-up buffer to arrive at the final wake-up time.
-    *
-    * WARNING: The "next valid date" always refers to the next scheduled occurrence of the event,
-    * based on the configuration. The reference point is **LocalDate**, not LocalDateTime.
-    * 
-    * @param configuration The [Configuration] containing alarm settings, including buffers,
-    * travel preferences, station details, and active weekdays.
-    * @return A calculated [Event] including the wake-up time, event date,
-    * associated courses, and travel routes.
-    * @throws Exception if the calculation fails (e.g., due to missing course data or invalid configuration).
-    */
-    @Throws(Exception::class)
+     * Fetches courses between the specified time period.
+     *
+     * This method retrieves the list of courses that occur within the given [Period].
+     * If there is any error in fetching or parsing the courses, a [CourseFetcherException] will be thrown.
+     *
+     * @param period The [Period] defining the time range for which courses are to be fetched.
+     * @return A list of [Course] objects that occur within the specified period.
+     * @throws CourseFetcherException if there is an error fetching or parsing the courses.
+     *
+     * This method is responsible for interacting with the external system to fetch the courses within a given time range.
+     * If any issue occurs during the process, such as network problems or data parsing failures, a [CourseFetcherException]
+     * will be thrown to indicate the failure.
+     */
+    @Throws(CourseFetcherException::class)
     fun fetchCoursesBetween(period: Period): List<Course>
 
     /**
-     * Checks whether the course data source (e.g., RAPLA URL) is reachable and returns valid data.
+     * Checks if the course data source (e.g., RAPLA URL) is reachable and returns valid data.
      *
-     * This is typically done by performing a minimal fetch to verify connectivity and data format.
+     * This method verifies whether the external data source for courses is online and returning data in the correct format.
+     * A minimal fetch is performed to ensure connectivity and data integrity.
      *
      * @return true if the course data source is valid and reachable, false otherwise.
+     *
+     * This method can be used to perform a connectivity check for the course data source. It will return `true` if the
+     * source is available and responds with valid data. If the data source is unreachable or returns invalid data, it
+     * will return `false`.
      */
     fun hasValidCourseURL(): Boolean
 
     /**
      * Fetches courses for multiple periods in batches.
      *
-     * This method retrieves all events once from the external system, expands recurring events,
-     * and partitions them into batches by matching them against the provided periods.
+     * This method retrieves all the courses for the specified periods and groups them into batches. It performs a fetch
+     * from the external system, expands recurring events, and associates them with the provided periods.
+     * If any error occurs during the fetch or parsing process, a [CourseFetcherException] will be thrown.
      *
-     * @param periods A [Batch] of [Period]s, each associated with an identifier.
-     * @return A [Batch] of [List<Course>]s, each paired with the corresponding identifier.
-     * @throws Exception if the course data cannot be fetched or parsed.
+     * @param periods A [Batch] of [Period]s to fetch courses for.
+     * @return A [Batch] of lists of [Course] objects, where each list corresponds to a period in the input batch.
+     * @throws CourseFetcherException if there is an error fetching or parsing the courses.
+     *
+     * This method is designed to handle multiple time periods at once. It retrieves and returns courses for each period
+     * within a batch. If any issue arises during the fetch (e.g., connectivity issues or invalid data formats), a
+     * [CourseFetcherException] will be thrown.
      */
-    @Throws(Exception::class)
+    @Throws(CourseFetcherException::class)
     fun batchFetchCoursesBetween(periods: Batch<Period>): Batch<List<Course>>
 }
 
 /**
  * Represents a time range with a start and end date/time.
+ *
+ * This class is used to define a period of time between a start and end, which is useful when specifying
+ * a time window for fetching courses.
  *
  * @property start The start date and time of the period.
  * @property end The end date and time of the period.
@@ -65,6 +78,9 @@ data class Period(
 
 /**
  * Represents a course retrieved from the external course system (e.g., RAPLA).
+ *
+ * This class contains information about a specific course, including its name, lecturer, room, and start and end times.
+ * Courses are typically fetched from external systems for scheduling and event management purposes.
  *
  * @property name The name or title of the course.
  * @property lecturer The name of the lecturer or instructor.
@@ -80,14 +96,33 @@ data class Course(
     val endDate: LocalDateTime
 )
 
-data class CourseFetcherException(
-    override val message: String, // The original exception message
-    val reason: Reason
-): Exception(){
-    enum class Reason{ // The generic reason
-        ConnectionError(),
-        ParserError()
-    }
+/**
+ * Represents exceptions related to fetching course data.
+ *
+ * This sealed class defines the types of errors that can occur during the course-fetching process.
+ * It includes specific error types for connection failures and data format issues. The exception includes
+ * a message and an optional cause to help with troubleshooting and debugging.
+ */
+sealed class CourseFetcherException(message: String?, cause: Throwable?) :
+    Throwable(message, cause) {
+
+    /**
+     * Represents a connection error that occurred during the course-fetching process.
+     *
+     * This could be due to network issues, an unreachable external system, or a timeout during the fetch process.
+     *
+     * @param cause The underlying exception that caused the connection error, such as a network timeout or unreachable server.
+     */
+    class ConnectionError(cause: Throwable?) : CourseFetcherException("Connection error", cause)
+
+    /**
+     * Represents a data format error during the course-fetching process.
+     *
+     * This error occurs when the fetched data is invalid or incorrectly formatted, causing issues during parsing or data
+     * handling. Such errors may arise when the course data from the external system doesn't match the expected structure
+     * or contains malformed entries.
+     *
+     * @param cause The underlying exception that caused the format error, such as invalid data structure or parsing failure.
+     */
+    class DataFormatError(cause: Throwable?) : CourseFetcherException("Data format error", cause)
 }
-
-
