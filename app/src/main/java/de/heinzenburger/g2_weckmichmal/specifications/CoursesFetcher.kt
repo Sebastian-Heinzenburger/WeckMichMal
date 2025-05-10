@@ -1,6 +1,5 @@
 package de.heinzenburger.g2_weckmichmal.specifications
 
-import de.heinzenburger.g2_weckmichmal.api.courses.Batch
 import java.time.LocalDateTime
 
 /**
@@ -42,24 +41,6 @@ interface CourseFetcherSpecification {
      * will return `false`.
      */
     fun hasValidCourseURL(): Boolean
-
-    /**
-     * Fetches courses for multiple periods in batches.
-     *
-     * This method retrieves all the courses for the specified periods and groups them into batches. It performs a fetch
-     * from the external system, expands recurring events, and associates them with the provided periods.
-     * If any error occurs during the fetch or parsing process, a [CourseFetcherException] will be thrown.
-     *
-     * @param periods A [Batch] of [Period]s to fetch courses for.
-     * @return A [Batch] of lists of [Course] objects, where each list corresponds to a period in the input batch.
-     * @throws CourseFetcherException if there is an error fetching or parsing the courses.
-     *
-     * This method is designed to handle multiple time periods at once. It retrieves and returns courses for each period
-     * within a batch. If any issue arises during the fetch (e.g., connectivity issues or invalid data formats), a
-     * [CourseFetcherException] will be thrown.
-     */
-    @Throws(CourseFetcherException::class)
-    fun batchFetchCoursesBetween(periods: Batch<Period>): Batch<List<Course>>
 }
 
 /**

@@ -36,28 +36,6 @@ class RaplaFetcher(
         }
     }
 
-    @Throws(CourseFetcherException::class)
-    override fun batchFetchCoursesBetween(periods: Batch<Period>): Batch<List<Course>> {
-        val icalStream: InputStream = fetchInputStream(raplaUrl)
-
-        try {
-            val events = Biweekly.parse(icalStream).first().events
-            val eventsInCategory = events
-                .filter { eventInCategory(it, validCourseCategories) }
-                .map { expandOccurrences(it) }
-                .flatten()
-
-            return periods.map { batchPeriod ->
-                val courses = eventsInCategory
-                    .filter { eventInPeriod(it, batchPeriod.value) }
-                    .mapNotNull { eventToCourse(it) }
-                BatchTuple(batchPeriod.id, courses)
-            }
-        } catch (e: Exception) {
-            throw CourseFetcherException.DataFormatError(e)
-        }
-    }
-
     override fun hasValidCourseURL(): Boolean {
         return try {
             fetchCoursesBetween(Period(LocalDateTime.now(), LocalDateTime.now().plusDays(1)))

@@ -23,24 +23,6 @@ interface WakeUpCalculationSpecification {
      */
     @Throws(WakeUpCalculatorException::class)
     fun calculateNextEvent(configuration: Configuration): Event
-
-    /**
-     * Calculates the next wake-up events for a list of configurations in batch.
-     *
-     * For each [Configuration]:
-     * - Determines the next valid date.
-     * - Computes the wake-up time based on arrival, departure, and travel time.
-     * - Aggregates associated course and route data.
-     *
-     * Batch processing may improve efficiency by reusing shared computations,
-     * such as fetching course data or calculating routes.
-     *
-     * @param configurations A list of [Configuration] instances to process.
-     * @return A list of [Event]s corresponding to each configuration.
-     * @throws WakeUpCalculatorException if any configuration fails to produce a result.
-     */
-    @Throws(WakeUpCalculatorException::class)
-    fun batchCalculateNextEvent(configurations: List<Configuration>): List<Event>
 }
 
 

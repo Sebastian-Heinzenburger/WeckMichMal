@@ -1,8 +1,5 @@
 package de.heinzenburger.g2_weckmichmal.calculation
 
-import de.heinzenburger.g2_weckmichmal.api.courses.Batch
-import de.heinzenburger.g2_weckmichmal.api.courses.batchFrom
-import de.heinzenburger.g2_weckmichmal.api.courses.innerJoinBranches
 import de.heinzenburger.g2_weckmichmal.specifications.*
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -44,43 +41,6 @@ class WakeUpCalculator(
         )
     }
 
-    @Throws(
-        WakeUpCalculatorException.InvalidStateException::class,
-        WakeUpCalculatorException.CoursesConnectionError::class,
-        WakeUpCalculatorException.CoursesInvalidDataFormatError::class
-    )
-    override fun batchCalculateNextEvent(configurations: List<Configuration>): List<Event> {
-        val configsWithDates = configurations.map { it to deriveNextValidDate(it.days) }
-        return batchCalculateEventForDates(configsWithDates)
-    }
-
-    @Throws(
-        WakeUpCalculatorException.CoursesConnectionError::class,
-        WakeUpCalculatorException.CoursesInvalidDataFormatError::class
-    )
-    private fun batchCalculateEventForDates(configsWithDates: List<Pair<Configuration, LocalDate>>): List<Event> {
-        val batchedConfigs = batchFrom(configsWithDates)
-        val batchedAtPlaceTimes = batchDeriveAtPlaceTimes(courseFetcher, batchedConfigs)
-
-        return innerJoinBranches(batchedConfigs, batchedAtPlaceTimes).map { batchEntry ->
-            val (bConfigs, bAtPlaceTime) = batchEntry
-            val (configuration, date) = bConfigs
-            val (atPlaceTime, courses) = bAtPlaceTime
-
-            val arrivalTime = atPlaceTime.minusMinutes(configuration.endBuffer.toLong())
-            val (departureTime, routes) = deriveDepartureTime(routePlanner, configuration, arrivalTime)
-            val wakeUpTime = departureTime.minusMinutes(configuration.startBuffer.toLong())
-
-            Event(
-                configID = configuration.uid,
-                wakeUpTime = wakeUpTime.toLocalTime(),
-                date = date,
-                days = setOf(wakeUpTime.dayOfWeek),
-                courses = courses,
-                routes = routes
-            )
-        }
-    }
 
     private companion object {
 
@@ -117,41 +77,6 @@ class WakeUpCalculator(
                 } catch (e: CourseFetcherException.DataFormatError) {
                     throw WakeUpCalculatorException.CoursesInvalidDataFormatError(e)
                 }
-            }
-        }
-
-        @Throws(
-            WakeUpCalculatorException.CoursesInvalidDataFormatError::class,
-            WakeUpCalculatorException.CoursesConnectionError::class
-        )
-        fun batchDeriveAtPlaceTimes(
-            courseFetcher: CourseFetcherSpecification,
-            configs: Batch<Pair<Configuration, LocalDate>>
-        ): Batch<Pair<LocalDateTime, List<Course>>> {
-            val (withFixed, withoutFixed) = configs.partition { it.value.first.fixedArrivalTime != null }
-
-            val fixedResults: Batch<Pair<LocalDateTime, List<Course>>> = withFixed.map { entry ->
-                val (config, date) = entry.value
-                entry.map(config.fixedArrivalTime!!.atDate(date) to emptyList())
-            }
-
-            val periods = withoutFixed.map { entry ->
-                val (_, date) = entry.value
-                entry.map(Period(date.atStartOfDay(), date.atTime(23, 59)))
-            }
-
-            return try {
-                val variableResults = courseFetcher.batchFetchCoursesBetween(periods).mapNotNull { entry ->
-                    val courses = entry.value
-                    val earliestCourse = courses.minByOrNull { it.startDate }
-                    earliestCourse?.let { entry.map(it.startDate to courses) }
-                }
-
-                variableResults + fixedResults
-            } catch (e: CourseFetcherException.ConnectionError) {
-                throw WakeUpCalculatorException.CoursesConnectionError(e)
-            } catch (e: CourseFetcherException.DataFormatError) {
-                throw WakeUpCalculatorException.CoursesInvalidDataFormatError(e)
             }
         }
 
