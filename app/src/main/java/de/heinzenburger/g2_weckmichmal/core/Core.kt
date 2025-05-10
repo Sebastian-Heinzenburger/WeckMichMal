@@ -8,7 +8,8 @@ import android.provider.Settings
 import android.webkit.URLUtil
 import android.widget.Toast
 import androidx.core.content.ContextCompat
-import de.heinzenburger.g2_weckmichmal.AlarmReceiver
+import de.heinzenburger.g2_weckmichmal.AlarmEvent
+import de.heinzenburger.g2_weckmichmal.AlarmUpdater
 import de.heinzenburger.g2_weckmichmal.api.db.RoutePlanner
 import de.heinzenburger.g2_weckmichmal.api.courses.RaplaFetcher
 import de.heinzenburger.g2_weckmichmal.calculation.WakeUpCalculator
@@ -18,10 +19,12 @@ import de.heinzenburger.g2_weckmichmal.persistence.EventHandler
 import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationWithEvent
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
+import de.heinzenburger.g2_weckmichmal.specifications.Event
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
-import de.heinzenburger.g2_weckmichmal.specifications.WakeUpCalculationException
 import java.net.URL
+import java.time.Duration
 import java.time.LocalDateTime
+import java.time.ZoneId
 
 /*
 Schön wäre es gewesen, wenn man einmalig irgendwo den Core instanziiert und dann dauernd mit dieser Instanz arbeitet, aber
@@ -47,26 +50,118 @@ data class Core(
         return routePlanner.deriveValidStationNames(input)
     }
 
+    fun scheduleAndroidAlarm(targetTime: LocalDateTime) {
+
+    }
+
+
     override fun runUpdateLogic() {
+        var configurationsWithEventsBeforeUpdate = getAllConfigurationAndEvent()
+        configurationsWithEventsBeforeUpdate?.forEach {
+            generateOrUpdateAlarmConfiguration(configuration = it.configuration)
+        }
+        var configurationsWithEventsAfterUpdate = getAllConfigurationAndEvent()
+        var earliestEventDate = LocalDateTime.of(9999,1,1,0,0)
+        var earliestEvent: Event? = null
+        configurationsWithEventsAfterUpdate?.forEach {
+            val eventDateTime = it.event?.date?.atTime(it.event.wakeUpTime)
+            if(eventDateTime?.isBefore(LocalDateTime.now()) == false && eventDateTime.isBefore(earliestEventDate) == true){
+                earliestEventDate = eventDateTime
+                earliestEvent = it.event
+            }
+        }
+        if (Duration.between(
+                LocalDateTime.now(),
+                earliestEventDate
+            ).seconds > 28800 // 8 hours
+        ) {
+            startUpdateScheduler(25200) // 7 hours
+        }else if (Duration.between(
+                LocalDateTime.now(),
+                earliestEventDate
+            ).seconds > 14400 //4 hours
+        ) {
+            startUpdateScheduler(12600) // 3.5 hours
+        }
+        else if (Duration.between(
+                LocalDateTime.now(),
+                earliestEventDate
+            ).seconds > 3600 // 1 hour
+        ) {
+            startUpdateScheduler(1800) // 30 minutes
+        } else if (Duration.between(
+                LocalDateTime.now(),
+                earliestEventDate
+            ).seconds > 600 // 10 minutes
+        ) {
+            startUpdateScheduler(240) // 4 minutes
+        } else {
+            runWakeUpLogic(earliestEvent!!)
+        }
     }
 
-    override fun runWakeUpLogic() {
+    override fun runWakeUpLogic(earliestEvent: Event) {
+        logger.log(Logger.Level.SEVERE, "Alarm ringing at ${earliestEvent.wakeUpTime}!")
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val alarmIntent = Intent(context, AlarmEvent::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            0,
+            alarmIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val pendingEditIntent = PendingIntent.getBroadcast(
+            context,
+            0,
+            alarmIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        if (!alarmManager.canScheduleExactAlarms()) {
+            val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(intent)
+        }
+        val alarmDate = earliestEvent.date.atTime(earliestEvent.wakeUpTime)
+        val alarmClockInfo = AlarmManager.AlarmClockInfo(alarmDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+            pendingEditIntent)
+        log(Logger.Level.SEVERE, alarmDate.toString())
+        alarmManager.setAlarmClock(alarmClockInfo, pendingIntent)
     }
 
-    override fun startUpdateScheduler() {
+    override fun startUpdateScheduler(delay: Int) {
+        logger.log(Logger.Level.SEVERE, "Alarm updating in $delay seconds")
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val alarmIntent = Intent(context, AlarmUpdater::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            0,
+            alarmIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val pendingEditIntent = PendingIntent.getBroadcast(
+            context,
+            0,
+            alarmIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        if (!alarmManager.canScheduleExactAlarms()) {
+            val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(intent)
+        }
+        val alarmClockInfo = AlarmManager.AlarmClockInfo(
+            LocalDateTime.now().plusSeconds(delay.toLong()).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+            pendingEditIntent)
+        alarmManager.setAlarmClock(alarmClockInfo, pendingIntent)
     }
 
     override fun generateOrUpdateAlarmConfiguration(configuration: Configuration) {
         val configurationHandler = ConfigurationHandler(context)
-        try {
 
-        }
-        catch (e: WakeUpCalculationException){
-            when(e.reason){
-                WakeUpCalculationException.Reason.ConnectionError -> logger.log(Logger.Level.SEVERE, e.message)
-                WakeUpCalculationException.Reason.ParserError -> logger.log(Logger.Level.SEVERE, e.message)
-            }
-        }
         if (validateConfigurationEntity(configuration)){
             val eventHandler = EventHandler(context)
             configurationHandler.saveOrUpdate(configuration)
@@ -167,37 +262,9 @@ data class Core(
     }
 
     override fun showToast(message: String) {
-
-        ContextCompat.getMainExecutor(context).execute({ ->
         ContextCompat.getMainExecutor(context).execute( { ->
             Toast.makeText(context, message, Toast.LENGTH_LONG).show()
         })
-    }
-
-    fun scheduleAndroidAlarm(targetTime: LocalDateTime) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val alarmIntent = Intent(context, AlarmReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            0,
-            alarmIntent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
-
-        val alarmEditIntent = Intent(context, AlarmReceiver::class.java)
-        val pendingEditIntent = PendingIntent.getBroadcast(
-            context,
-            0,
-            alarmIntent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
-
-        if (!alarmManager.canScheduleExactAlarms()) {
-            val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(intent)
-        }
-        )
     }
 }
 

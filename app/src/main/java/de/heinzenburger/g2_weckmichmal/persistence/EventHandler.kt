@@ -38,9 +38,7 @@ data class EventHandler(
 
     override fun saveOrUpdate(event: Event): Boolean {
         try {
-            database.eventConfigurationDao().deleteByIdAndDays(event.configID,
-                DataConverter().fromSetOfDays(event.days).toString()
-            )
+            database.eventConfigurationDao().deleteById(event.configID)
             database.eventConfigurationDao().insert(event)
             return true
         }

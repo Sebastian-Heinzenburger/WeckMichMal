@@ -3,14 +3,21 @@ package de.heinzenburger.g2_weckmichmal
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.media.MediaPlayer
+import android.os.VibrationEffect
+import android.os.Vibrator
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat.getSystemService
+import de.heinzenburger.g2_weckmichmal.core.Core
+import de.heinzenburger.g2_weckmichmal.persistence.Logger
+import kotlin.concurrent.thread
 
-class AlarmEditIntentReceiver : BroadcastReceiver() {
+
+class AlarmEvent : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
-        MainActivity.log.severe("Alarm Edit Receiver triggered")
         val notification = NotificationCompat.Builder(context!!, "alarm_channel")
-            .setContentTitle("Alarm Edit Receiver")
-            .setContentText("Alarm Edit Receiver here :)")
+            .setContentTitle("Alarm")
+            .setContentText("Wake up!")
             .setSmallIcon(R.drawable.ic_launcher_background)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
@@ -18,5 +25,14 @@ class AlarmEditIntentReceiver : BroadcastReceiver() {
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
         notificationManager.notify(1, notification)
+
+        val serviceIntent = Intent(context, ForegroundService::class.java)
+        context.startService(serviceIntent)
+
+        val core = Core(context)
+        core.log(Logger.Level.SEVERE, "I rang hehe!")
+        thread {
+            core.runUpdateLogic()
+        }
     }
 }

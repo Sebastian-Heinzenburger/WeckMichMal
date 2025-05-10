@@ -1,14 +1,10 @@
 package de.heinzenburger.g2_weckmichmal
 
-import android.app.AlarmManager
 import android.app.PendingIntent
-import android.content.Context
 import android.app.AlertDialog
-import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
 import androidx.activity.ComponentActivity
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.persistence.Logger
@@ -16,7 +12,6 @@ import de.heinzenburger.g2_weckmichmal.ui.screens.AlarmClockOverviewScreen
 import de.heinzenburger.g2_weckmichmal.ui.screens.WelcomeScreen
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.util.logging.Logger
 import kotlin.concurrent.thread
 import android.app.AlarmManager
 import android.net.Uri
@@ -30,10 +25,9 @@ class MainActivity : ComponentActivity() {
         val core = Core(context = applicationContext)
         core.log(Logger.Level.INFO, "Starting Application")
 
-        core.scheduleAndroidAlarm(LocalDateTime.now().plusSeconds(20))
-
-        //val serviceIntent = Intent(this, ForegroundService::class.java)
-        //startService(serviceIntent)
+        thread {
+            core.runUpdateLogic()
+        }
 
         if (core.isApplicationOpenedFirstTime()) {
             val intent = Intent(applicationContext, WelcomeScreen::class.java)

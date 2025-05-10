@@ -46,61 +46,10 @@ class ForegroundService : Service() {
         val notification = createNotification()
         startForeground(1, notification)
 
-        val core = Core(
-            context = applicationContext
-        )
         thread {
-            while (true) {
-                var wakeUp = false
-                var sleepDuration = 10000
-                while (!wakeUp) {
-                    Thread.sleep(sleepDuration.toLong())
-
-                    var configs = core.getAllConfigurationAndEvent()
-                    configs?.forEach {
-                        core.generateOrUpdateAlarmConfiguration(it.configuration)
-                    }
-                    configs = core.getAllConfigurationAndEvent()
-                    var earliestEventDate = LocalDateTime.of(8000, 1, 1, 0, 0)
-                    configs?.forEach {
-                        val eventDateTime = it.event!!.date.atTime(it.event.wakeUpTime)
-                        if (eventDateTime > LocalDateTime.now() && eventDateTime < earliestEventDate) {
-                            earliestEventDate = eventDateTime
-                        }
-                    }
-                    sleepDuration = if (Duration.between(
-                            LocalDateTime.now(),
-                            earliestEventDate
-                        ).seconds > 14400
-                    ) {
-                        14000000
-                    }
-                    else if (Duration.between(
-                            LocalDateTime.now(),
-                            earliestEventDate
-                        ).seconds > 3600
-                    ) {
-                        3000000
-                    } else if (Duration.between(
-                            LocalDateTime.now(),
-                            earliestEventDate
-                        ).seconds > 600
-                    ) {
-                        240000
-                    } else {
-                        10000
-                    }
-                    wakeUp = Duration.between(LocalDateTime.now(),earliestEventDate).seconds < 10
-                    core.log(Logger.Level.SEVERE, "Going to sleep for $sleepDuration ms")
-                    core.log(Logger.Level.SEVERE, "Alarm at $earliestEventDate")
-                    core.log(Logger.Level.SEVERE, "Time between ${Duration.between(LocalDateTime.now(),earliestEventDate).seconds}")
-
-                    core.log(Logger.Level.SEVERE, "")
-
-                }
-                playWithPerry()
-            }
+            playWithPerry()
         }
+
         return START_STICKY
     }
 

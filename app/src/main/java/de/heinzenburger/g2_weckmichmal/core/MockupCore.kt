@@ -20,9 +20,10 @@ class MockupCore : I_Core {
     }
 
     override fun runUpdateLogic() {}
-    override fun runWakeUpLogic() {}
-    override fun startUpdateScheduler() {}
+    override fun runWakeUpLogic(event: Event) {}
+    override fun startUpdateScheduler(delay: Int) {}
     override fun saveRaplaURL(url : String){}
+
     override fun isApplicationOpenedFirstTime(): Boolean? {return null}
     override fun generateOrUpdateAlarmConfiguration(configuration: Configuration) {}
 

@@ -23,12 +23,12 @@ interface I_Core{
     /**
      * Start the background process that wakes the user at the time of next occuring event
      */
-    fun runWakeUpLogic()
+    fun runWakeUpLogic(event: Event)
 
     /**
      * Start the background process that regularly updates the events
      */
-    fun startUpdateScheduler()
+    fun startUpdateScheduler(delay: Int)
 
     /**
      * Save the rapla URL to the settings database
