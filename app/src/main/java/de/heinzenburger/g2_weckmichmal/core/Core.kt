@@ -50,11 +50,6 @@ data class Core(
         return routePlanner.deriveValidStationNames(input)
     }
 
-    fun scheduleAndroidAlarm(targetTime: LocalDateTime) {
-
-    }
-
-
     override fun runUpdateLogic() {
         var configurationsWithEventsBeforeUpdate = getAllConfigurationAndEvent()
         configurationsWithEventsBeforeUpdate?.forEach {

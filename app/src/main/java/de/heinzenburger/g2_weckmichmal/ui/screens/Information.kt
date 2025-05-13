@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -52,9 +53,25 @@ class InformationScreen : ComponentActivity() {
         //When text is clicked, platypus mode in AlarmClockOverviewScreen is activated hehe
         val innerInformationComposable: @Composable (PaddingValues, I_Core) -> Unit =
             { innerPadding: PaddingValues, core: I_Core ->
+                val context = LocalContext.current
                 Column {
                     Button(
-                        modifier = Modifier.padding(0.dp, 50.dp, 0.dp, 0.dp),
+                        onClick = {
+                            val intent = Intent(context, AlarmRingingScreen::class.java)
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                            context.startActivity(intent)
+                            (context as ComponentActivity).finish()
+                        },
+                        modifier = Modifier.fillMaxWidth().padding(top = 20.dp),
+                        contentPadding = PaddingValues(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent
+                        )
+                    ){
+                        Text("\uD83D\uDCC4")
+                    }
+                    Button(
+                        modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 0.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                         onClick = {
                             AlarmClockOverviewScreen.aPlatypus = !AlarmClockOverviewScreen.aPlatypus

@@ -250,3 +250,11 @@ data class SettingsEntity(
     }
 }
 
+sealed class PersistenceException(message: String?, cause: Throwable?) :
+    Throwable(message, cause) {
+
+    /**
+     * Thrown when no course data is available for the given configuration or date range.
+     */
+    class UnableToConvertException : PersistenceException("Converting complex data type into primitive data type not possible", null)
+}

@@ -15,6 +15,7 @@ interface I_Core{
      */
     fun deriveStationName(input: String) : List<String>
 
+
     /**
      * Update all events depending on current train and rapla status
      */

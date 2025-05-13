@@ -1,23 +1,12 @@
 package de.heinzenburger.g2_weckmichmal
 
-import android.app.PendingIntent
-import android.app.AlertDialog
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import de.heinzenburger.g2_weckmichmal.ui.screens.AlarmClockOverviewScreen
 import de.heinzenburger.g2_weckmichmal.ui.screens.WelcomeScreen
-import java.time.LocalDateTime
-import java.time.ZoneId
-import kotlin.concurrent.thread
-import android.app.AlarmManager
-import android.net.Uri
-import android.provider.Settings
-import androidx.annotation.RequiresApi
-import androidx.core.net.toUri
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,9 +14,6 @@ class MainActivity : ComponentActivity() {
         val core = Core(context = applicationContext)
         core.log(Logger.Level.INFO, "Starting Application")
 
-        thread {
-            core.runUpdateLogic()
-        }
 
         if (core.isApplicationOpenedFirstTime()) {
             val intent = Intent(applicationContext, WelcomeScreen::class.java)

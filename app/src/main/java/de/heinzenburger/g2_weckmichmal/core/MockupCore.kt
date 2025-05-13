@@ -3,8 +3,15 @@ package de.heinzenburger.g2_weckmichmal.core
 import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationWithEvent
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
+import de.heinzenburger.g2_weckmichmal.specifications.Course
 import de.heinzenburger.g2_weckmichmal.specifications.Event
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import de.heinzenburger.g2_weckmichmal.specifications.Route
+import de.heinzenburger.g2_weckmichmal.specifications.RouteSection
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 //Is a mockup version of real core, in order to keep UI preview functionality
 //Most methods do nothing, only those that cause something in UI are relevant
@@ -15,8 +22,90 @@ class MockupCore : I_Core {
     }
 
     companion object{
-        val mockupConfigurations = listOf(Configuration.emptyConfiguration)
-        val mockupEvents = listOf(Event.emptyEvent)
+        val mockupConfigurations = listOf(
+            Configuration(
+                uid = 123,
+                name = "Wecker 1",
+                days = setOf(DayOfWeek.MONDAY, DayOfWeek.THURSDAY),
+                fixedArrivalTime = null,
+                fixedTravelBuffer = null,
+                startBuffer = 30,
+                endBuffer = 0,
+                startStation = "Wiesloch",
+                endStation = "Duale Folter",
+                isActive = true
+            )
+        )
+        val mockupEvents = listOf(
+            Event(
+                configID = 123,
+                wakeUpTime = LocalTime.of(8,30),
+                days = setOf(DayOfWeek.MONDAY, DayOfWeek.THURSDAY),
+                date = LocalDate.of(2024,10,1),
+                courses = listOf(
+                    Course(
+                        name = "Rechnerarchitekturen",
+                        lecturer = "Kollege Röthig",
+                        room = "4692",
+                        startDate = LocalDateTime.of(2024,10,1,10,0,0),
+                        endDate = LocalDateTime.of(2024,10,1,13,0,0)
+                    ),
+                    Course(
+                        name = "Statistik",
+                        lecturer = "Kollege Markus",
+                        room = "4692",
+                        startDate = LocalDateTime.of(2024,10,1,14,0,0),
+                        endDate = LocalDateTime.of(2024,10,1,18,0,0)
+                    )
+                ),
+                routes = listOf(
+                    Route(
+                        startStation = "Wiesloch",
+                        endStation = "Duale Folter",
+                        startTime = LocalDateTime.of(2024,10,1,9,0,0),
+                        endTime = LocalDateTime.of(2024,10,1,9,50,0),
+                        sections = listOf(
+                            RouteSection(
+                                vehicleName = "S3",
+                                startTime = LocalDateTime.of(2024,10,1,9,0,0),
+                                startStation = "Wiesloch",
+                                endTime = LocalDateTime.of(2024,10,1,9,30,0),
+                                endStation = "Funkloch",
+                            ),
+                            RouteSection(
+                                vehicleName = "STR 1",
+                                startTime = LocalDateTime.of(2024,10,1,9,30,0),
+                                startStation = "Funkloch",
+                                endTime = LocalDateTime.of(2024,10,1,9,50,0),
+                                endStation = "Duale Folter",
+                            )
+                        )
+                    ),
+                    Route(
+                        startStation = "Wiesloch",
+                        endStation = "Duale Folter",
+                        startTime = LocalDateTime.of(2024,10,1,9,30,0),
+                        endTime = LocalDateTime.of(2024,10,1,10,20,0),
+                        sections = listOf(
+                            RouteSection(
+                                vehicleName = "S3",
+                                startTime = LocalDateTime.of(2024,10,1,9,30,0),
+                                startStation = "Wiesloch",
+                                endTime = LocalDateTime.of(2024,10,1,10,0,0),
+                                endStation = "Funkloch",
+                            ),
+                            RouteSection(
+                                vehicleName = "STR 1",
+                                startTime = LocalDateTime.of(2024,10,1,10,0,0),
+                                startStation = "Funkloch",
+                                endTime = LocalDateTime.of(2024,10,1,10,20,0),
+                                endStation = "Duale Folter",
+                            )
+                        )
+                    )
+                )
+            )
+        )
     }
 
     override fun runUpdateLogic() {}

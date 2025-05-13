@@ -50,6 +50,7 @@ import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationWithEvent
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
+import de.heinzenburger.g2_weckmichmal.specifications.Event
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.components.NavBar
@@ -62,10 +63,9 @@ class AlarmClockOverviewScreen : ComponentActivity(){
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val core = Core(context = applicationContext)
-        setShowWhenLocked(true);
-        setTurnScreenOn(true);
         thread {
             configurationAndEventEntities.value = core.getAllConfigurationAndEvent()!!
+            //core.runUpdateLogic()
         }
         setContent {
             G2_WeckMichMalTheme {
@@ -103,6 +103,16 @@ class AlarmClockOverviewScreen : ComponentActivity(){
             (context as ComponentActivity).finish()
         }
 
+        private fun setRingingScreen(context: Context, event: Event?){
+            if (event != null) {
+                val intent = Intent(context, AlarmRingingScreen::class.java)
+                intent.putExtra("Event ID", event.configID)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                context.startActivity(intent)
+                (context as ComponentActivity).finish()
+            }
+        }
+
         var aPlatypus = false //Static variable to set Platypus mode
 
         //List of all configurationAndEvent Entities existant in database
@@ -113,6 +123,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                 @Composable (PaddingValues, I_Core, ConfigurationWithEvent)
                 -> Unit = { innerPadding: PaddingValues, core: I_Core, properties: ConfigurationWithEvent ->
             var userActivated by remember { mutableStateOf(properties.configuration.isActive) }
+            val context = LocalContext.current
 
             Column(
                 Modifier
@@ -167,11 +178,22 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                         }
                     }
 
-                    OurText(
-                        text = "Geplant um: ${properties.event?.wakeUpTime}",
-                        textAlign = TextAlign.Right,
-                        modifier = Modifier.padding(16.dp, 0.dp, 16.dp, 3.dp).fillMaxWidth(1f)
-                    )
+                    Button(
+                        modifier = Modifier,
+                        onClick = {
+                            setRingingScreen(context, properties.event)
+                        },
+                        contentPadding = PaddingValues(0.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent
+                        )
+                    ) {
+                        OurText(
+                            text = "Geplant um: ${properties.event?.wakeUpTime} \uD83D\uDCC4",
+                            textAlign = TextAlign.Right,
+                            modifier = Modifier.padding(16.dp, 0.dp, 16.dp, 3.dp).fillMaxWidth(1f)
+                        )
+                    }
                 }
             }
         }
@@ -327,9 +349,10 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         configurationAndEventEntities.value.forEach {
+                            configurationAndEvent ->
                             Button(
                                 onClick = {
-                                    setEditScreen(context, it.configuration)
+                                    setEditScreen(context, configurationAndEvent.configuration)
                                 },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Color.Transparent
@@ -339,17 +362,16 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                             ){
                                 if (aPlatypus) {
                                     APlatypus(
-                                        innerPadding, core, it
+                                        innerPadding, core, configurationAndEvent
                                     )
                                 } else {
                                     SingleAlarmConfiguration(
-                                        innerPadding, core, it
+                                        innerPadding, core, configurationAndEvent
                                     )
                                 }
                             }
                         }
                         Button(
-
                             onClick = {
                                 setEditScreen(context, null)
                             },
