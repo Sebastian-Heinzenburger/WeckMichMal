@@ -68,6 +68,9 @@ dependencies {
     // ICS parsing lib
     implementation(libs.biweekly)
 
+    // web requests for uploading the log file
+    implementation(libs.okhttp)
+
     testImplementation(libs.junit.jupiter.api)
     testImplementation(libs.junit.jupiter.engine)
     testImplementation(libs.mockito.kotlin)

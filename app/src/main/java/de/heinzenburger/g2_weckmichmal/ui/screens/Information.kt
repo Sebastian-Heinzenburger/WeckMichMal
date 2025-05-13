@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -29,6 +30,13 @@ import de.heinzenburger.g2_weckmichmal.specifications.I_Core
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.components.NavBar
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
+import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
+import java.io.IOException
+import kotlin.concurrent.thread
 
 class InformationScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,6 +57,7 @@ class InformationScreen : ComponentActivity() {
             }
         }
     }
+
     companion object {
         //When text is clicked, platypus mode in AlarmClockOverviewScreen is activated hehe
         val innerInformationComposable: @Composable (PaddingValues, I_Core) -> Unit =
@@ -62,13 +71,47 @@ class InformationScreen : ComponentActivity() {
                             context.startActivity(intent)
                             (context as ComponentActivity).finish()
                         },
-                        modifier = Modifier.fillMaxWidth().padding(top = 20.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 20.dp),
                         contentPadding = PaddingValues(),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.Transparent
                         )
-                    ){
+                    ) {
                         Text("\uD83D\uDCC4")
+                    }
+                    Button(
+                        onClick = {
+                            thread {
+                                val file = File(context.filesDir, "log")
+
+                                val requestBody = MultipartBody.Builder()
+                                    .setType(MultipartBody.FORM)
+                                    .addFormDataPart("logFile", "file", file.asRequestBody())
+                                    .build()
+
+                                val request = Request.Builder()
+                                    .url("https://log.heinzenburger.de/submit")
+                                    .post(requestBody)
+                                    .build()
+
+                                OkHttpClient().newCall(request).execute().use { response ->
+                                    if (!response.isSuccessful) throw IOException("Unexpected code $response")
+                                    val responseText = response.body?.string()
+                                    core.showToast(responseText!!)
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 20.dp),
+                        contentPadding = PaddingValues(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent
+                        )
+                    ) {
+                        Text("\uD83D\uDD25")
                     }
                     Button(
                         modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 0.dp),
@@ -104,7 +147,12 @@ class InformationScreen : ComponentActivity() {
 
 @Composable
 fun InformationComposable(modifier: Modifier, core: I_Core) {
-    NavBar.Companion.NavigationBar(modifier, core, InformationScreen.innerInformationComposable, caller = InformationScreen::class)
+    NavBar.Companion.NavigationBar(
+        modifier,
+        core,
+        InformationScreen.innerInformationComposable,
+        caller = InformationScreen::class
+    )
 }
 
 @Preview(showBackground = true)
