@@ -9,6 +9,7 @@ import androidx.room.Transaction
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationWithEvent
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.InterfaceConfigurationHandler
+import de.heinzenburger.g2_weckmichmal.specifications.PersistenceException
 
 data class ConfigurationHandler(
     val context: Context,
@@ -45,30 +46,24 @@ data class ConfigurationHandler(
 
     private var database: AppDatabase = AppDatabase.getDatabase(context)
 
-    override fun saveOrUpdate(config: Configuration): Boolean {
+    override fun saveOrUpdate(config: Configuration) {
         try {
             //Updating means deleting and inserting again
             database.alarmConfigurationDao().deleteById(config.uid)
             database.alarmConfigurationDao().insert(config)
-            return true
         }
         catch (e: Exception){
-            logger.log(Logger.Level.SEVERE, e.message.toString())
-            e.printStackTrace()
-            return false
+            throw PersistenceException.UpdateConfigurationException(e)
         }
     }
 
-    override fun updateConfigurationActive(isActive: Boolean, uid: Long): Boolean {
+    override fun updateConfigurationActive(isActive: Boolean, uid: Long) {
         try {
             //Updating means deleting and inserting again
             database.alarmConfigurationDao().updateActiveById(uid, isActive)
-            return true
         }
         catch (e: Exception){
-            logger.log(Logger.Level.SEVERE, e.message.toString())
-            e.printStackTrace()
-            return false
+            throw PersistenceException.UpdateConfigurationException(e)
         }
     }
 
@@ -78,9 +73,7 @@ data class ConfigurationHandler(
             return result
         }
         catch (e: Exception){
-            logger.log(Logger.Level.SEVERE, e.message.toString())
-            e.printStackTrace()
-            return null
+            throw PersistenceException.GetConfigurationException(e)
         }
     }
 
@@ -90,21 +83,16 @@ data class ConfigurationHandler(
             return result
         }
         catch (e: Exception){
-            logger.log(Logger.Level.SEVERE, e.message.toString())
-            e.printStackTrace()
-            return null
+            throw PersistenceException.GetConfigurationException(e)
         }
     }
 
-    override fun removeAlarmConfiguration(id: Long): Boolean {
+    override fun removeAlarmConfiguration(id: Long){
         try {
             database.alarmConfigurationDao().deleteById(id)
-            return true
         }
         catch (e: Exception){
-            logger.log(Logger.Level.SEVERE, e.message.toString())
-            e.printStackTrace()
-            return false
+            throw PersistenceException.UpdateConfigurationException(e)
         }
     }
 
@@ -114,9 +102,7 @@ data class ConfigurationHandler(
             return result
         }
         catch (e: Exception){
-            logger.log(Logger.Level.SEVERE, e.message.toString())
-            e.printStackTrace()
-            return null
+            throw PersistenceException.GetConfigurationException(e)
         }
     }
 
@@ -126,9 +112,7 @@ data class ConfigurationHandler(
             return result
         }
         catch (e: Exception){
-            logger.log(Logger.Level.SEVERE, e.message.toString())
-            e.printStackTrace()
-            return null
+            throw PersistenceException.GetConfigurationException(e)
         }
     }
 }

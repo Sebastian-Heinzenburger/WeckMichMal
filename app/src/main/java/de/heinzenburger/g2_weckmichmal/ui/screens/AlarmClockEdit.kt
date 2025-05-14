@@ -199,6 +199,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                 }
                 else if(core.getRaplaURL() == "" || core.getRaplaURL() == null){
                     validation = false
+                    core.showToast("Ankunft nach Vorlesungsplan nicht möglich. URL fehlt.")
                 }
                 //fixed travel time if selected, else null
                 if(isManualTravelTime.value){
@@ -237,6 +238,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                 }
                 if(validation){
                     core.generateOrUpdateAlarmConfiguration(configuration)
+                    core.runUpdateLogic()
 
                     val intent = Intent(context, AlarmClockOverviewScreen::class.java)
                     intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)

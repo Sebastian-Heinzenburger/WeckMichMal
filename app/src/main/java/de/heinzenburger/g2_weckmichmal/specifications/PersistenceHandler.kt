@@ -11,6 +11,7 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import kotlin.concurrent.thread
 
 /**
  * Interface defining the behavior for the persistence layer.
@@ -21,42 +22,49 @@ interface InterfaceConfigurationHandler{
      *
      * @param config The [Configuration] object that contains the data to be saved or updated.
      */
-    fun saveOrUpdate(config: Configuration): Boolean
+    @Throws(PersistenceException.UpdateConfigurationException::class)
+    fun saveOrUpdate(config: Configuration)
 
     /**
      * Update attribute active in a [Configuration]
      * @param isActive stores whether the configuration should be active
      * @param uid of the [Configuration] to be updated
      */
-    fun updateConfigurationActive(isActive: Boolean, uid: Long) : Boolean
+    @Throws(PersistenceException.UpdateConfigurationException::class)
+    fun updateConfigurationActive(isActive: Boolean, uid: Long)
 
     /**
      * Returns the alarm configuration from the persistence layer.
      *
      * @return A ConfigurationEntity object representing the saved alarm configuration.
      */
+    @Throws(PersistenceException.GetConfigurationException::class)
     fun getAlarmConfiguration(id: Long): Configuration?
     /**
      * Returns all alarm configurations listed in the persistence layer.
      *
      * @return A list of [Configuration] objects representing all the saved alarm configurations.
      */
+    @Throws(PersistenceException.GetConfigurationException::class)
     fun getAllAlarmConfigurations(): List<Configuration>?
     /**
      * Removes the alarm configuration from the persistence layer.
      *
      * @param id The id of the [Configuration] object to be removed from the persistence layer.
      */
-    fun removeAlarmConfiguration(id: Long): Boolean
+    @Throws(PersistenceException.UpdateConfigurationException::class)
+    fun removeAlarmConfiguration(id: Long)
     /**
      * Returns a [Configuration] with corresponding [Event]
      *
      * @param id The id of the [Configuration] object.
      */
+    @Throws(PersistenceException.GetConfigurationException::class)
     fun getConfigurationAndEvent(id: Long): ConfigurationWithEvent?
     /**
      * Returns a list of all [Configuration] with corresponding [Event]
      */
+    @Throws(PersistenceException.GetConfigurationException::class)
     fun getAllConfigurationAndEvent(): List<ConfigurationWithEvent>?
 
 }
@@ -66,44 +74,43 @@ interface InterfaceEventHandler {
      *
      * @param event The [Event] object that contains the data to be saved or updated.
      */
-    fun saveOrUpdate(event: Event): Boolean
+    @Throws(PersistenceException.UpdateEventException::class)
+    fun saveOrUpdate(event: Event)
     /**
      * Returns all events listed in the persistence layer.
      *
      * @return A list of [Event] objects representing all the saved events.
      */
+    @Throws(PersistenceException.GetEventException::class)
     fun getAllEvents(): List<Event>?
     /**
      * Returns the alarm configuration from the persistence layer.
      *
      * @return A ConfigurationEntity object representing the saved alarm configuration.
      */
+    @Throws(PersistenceException.GetEventException::class)
     fun getEvent(id: Long, days : Set<DayOfWeek>): Event?
     /**
      * Removes an event from the persistence layer.
      *
      * @param configID The id of the [Configuration] object corresponding to the Event.
-     * @param days The days of the [Configuration] object corresponding to the Event.
      */
-    fun removeEvent(configID: Long, days: Set<DayOfWeek>): Boolean
-    /**
-     * Removes an event from the persistence layer.
-     *
-     * @param configID The id of the [Configuration] object corresponding to the Event.
-     */
-    fun removeEvent(configID: Long): Boolean
+    @Throws(PersistenceException.UpdateEventException::class)
+    fun removeEvent(configID: Long)
 }
 interface InterfaceApplicationSettings {
     /**
      * Overrides the application settings in the persistence layer with the given parameter.
      */
-    fun saveOrUpdateApplicationSettings(settings: SettingsEntity) : Boolean
+    @Throws(PersistenceException.WriteSettingsException::class)
+    fun saveOrUpdateApplicationSettings(settings: SettingsEntity)
 
     /**
      * Returns the application settings entity from the persistence layer.
      *
      * @return A [SettingsEntity] object.
      */
+    @Throws(PersistenceException.ReadSettingsException::class)
     fun getApplicationSettings() : SettingsEntity?
 
     /**
@@ -151,7 +158,9 @@ data class Configuration(
 ){
     @Suppress("unused")
     fun log(){
-        Logger(null).log(Logger.Level.INFO,"Logging configuration with id $uid:\n$name\n$days\n$fixedArrivalTime\n$fixedTravelBuffer\n$startBuffer\n$endBuffer\n$startStation\n$endStation\n$isActive")
+        thread {
+            Logger(null).log(Logger.Level.INFO,"Logging configuration with id $uid:\n$name\n$days\n$fixedArrivalTime\n$fixedTravelBuffer\n$startBuffer\n$endBuffer\n$startStation\n$endStation\n$isActive")
+        }
     }
 
     companion object{
@@ -196,8 +205,9 @@ data class Event(
 ){
     @Suppress("unused")
     fun log(){
-        Logger(null).log(Logger.Level.INFO,"Logging Event with id $configID:\n$wakeUpTime\n$days\n$date\n${DataConverter().fromListOfCourses(courses)}\n${
-            DataConverter().fromListOfRoutes(routes)}")
+        thread {
+            Logger(null).log(Logger.Level.INFO,"Logging Event with id $configID:\n$wakeUpTime\n$days\n$date\n${DataConverter().fromListOfCourses(courses)}\n${DataConverter().fromListOfRoutes(routes)}")
+        }
     }
     companion object{
         val emptyEvent = Event(
@@ -254,7 +264,48 @@ sealed class PersistenceException(message: String?, cause: Throwable?) :
     Throwable(message, cause) {
 
     /**
-     * Thrown when no course data is available for the given configuration or date range.
+     * Thrown when writing to settings.json fails
      */
-    class UnableToConvertException : PersistenceException("Converting complex data type into primitive data type not possible", null)
+    class WriteSettingsException(cause: Throwable?): PersistenceException("Error writing settings to file", cause)
+
+    /**
+     * Thrown when writing to settings.json fails
+     */
+    class ReadSettingsException(cause: Throwable?): PersistenceException("Error reading settings from file", cause)
+
+    /**
+     * Thrown when creating the log file
+     */
+    class CreateLogFileException(cause: Throwable?): PersistenceException("Error creating log file", cause)
+
+    /**
+     * Thrown when writing to log file
+     */
+    class WriteLogException(cause: Throwable?): PersistenceException("Error writing to log file", cause)
+
+    /**
+     * Thrown when reading from log file
+     */
+    class ReadLogException(cause: Throwable?): PersistenceException("Error reading from log file", cause)
+
+    /**
+     * Thrown when exception during Event Update
+     */
+    class UpdateEventException(cause: Throwable?): PersistenceException("Error updating event in database", cause)
+
+    /**
+     * Thrown when exception during Event Update
+     */
+    class GetEventException(cause: Throwable?): PersistenceException("Error retrieving event from database", cause)
+
+    /**
+     * Thrown when exception during Event Update
+     */
+    class UpdateConfigurationException(cause: Throwable?): PersistenceException("Error updating configuration in database", cause)
+
+    /**
+     * Thrown when exception during Event Update
+     */
+    class GetConfigurationException(cause: Throwable?): PersistenceException("Error retrieving configuration from database", cause)
+
 }

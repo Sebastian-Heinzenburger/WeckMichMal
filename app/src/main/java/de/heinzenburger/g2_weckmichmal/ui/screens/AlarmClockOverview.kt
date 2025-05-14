@@ -65,7 +65,6 @@ class AlarmClockOverviewScreen : ComponentActivity(){
         val core = Core(context = applicationContext)
         thread {
             configurationAndEventEntities.value = core.getAllConfigurationAndEvent()!!
-            //core.runUpdateLogic()
         }
         setContent {
             G2_WeckMichMalTheme {
@@ -145,6 +144,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                             userActivated = it
                             thread {
                                 core.updateConfigurationActive(userActivated, properties.configuration)
+                                core.runUpdateLogic()
                             }
                         },
                         enabled = true,

@@ -2,6 +2,7 @@ package de.heinzenburger.g2_weckmichmal.persistence
 
 import android.content.Context
 import de.heinzenburger.g2_weckmichmal.specifications.InterfaceApplicationSettings
+import de.heinzenburger.g2_weckmichmal.specifications.PersistenceException
 import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity
 import org.json.JSONObject
 import java.io.File
@@ -21,26 +22,31 @@ data class ApplicationSettingsHandler (
         )
         return settingsEntity
     }
-    override fun saveOrUpdateApplicationSettings(settings: SettingsEntity): Boolean {
+    override fun saveOrUpdateApplicationSettings(settings: SettingsEntity) {
         try {
             var json = toJson(settings)
             //context.filesDir is the apps personal data folder
             File(context.filesDir, "settings.json").writeText(json.toString())
-            return true
         }
         catch (e : Exception){
             logger.log(Logger.Level.SEVERE, e.message.toString())
-            return false
+            throw PersistenceException.WriteSettingsException(e)
         }
     }
     override fun getApplicationSettings() : SettingsEntity{
-        val json = if(isApplicationOpenedFirstTime()){
-            toJson(SettingsEntity(raplaURL = ""))
-        } else{
-            JSONObject(File(context.filesDir,"settings.json").readText())
+        try {
+            val json = if(isApplicationOpenedFirstTime()){
+                toJson(SettingsEntity(raplaURL = ""))
+            } else{
+                JSONObject(File(context.filesDir,"settings.json").readText())
+            }
+            return fromJson(json)
         }
-        return fromJson(json)
+        catch (e: Exception){
+            throw PersistenceException.ReadSettingsException(e)
+        }
     }
+
     override fun isApplicationOpenedFirstTime(): Boolean{
         //Application is considered opened first time if the configuration file doesn't yet exist
         return !File(context.filesDir, "settings.json").exists()

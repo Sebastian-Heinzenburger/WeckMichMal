@@ -7,6 +7,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import de.heinzenburger.g2_weckmichmal.specifications.Event
 import de.heinzenburger.g2_weckmichmal.specifications.InterfaceEventHandler
+import de.heinzenburger.g2_weckmichmal.specifications.PersistenceException
 import java.time.DayOfWeek
 
 data class EventHandler(
@@ -36,16 +37,13 @@ data class EventHandler(
 
     private var database: AppDatabase = AppDatabase.getDatabase(context)
 
-    override fun saveOrUpdate(event: Event): Boolean {
+    override fun saveOrUpdate(event: Event) {
         try {
             database.eventConfigurationDao().deleteById(event.configID)
             database.eventConfigurationDao().insert(event)
-            return true
         }
         catch (e: Exception){
-            logger.log(Logger.Level.SEVERE, e.message.toString())
-            e.printStackTrace()
-            return false
+            throw PersistenceException.UpdateEventException(e)
         }
     }
 
@@ -55,34 +53,16 @@ data class EventHandler(
             return result
         }
         catch (e: Exception){
-            logger.log(Logger.Level.SEVERE, e.message.toString())
-            e.printStackTrace()
-            return null
+            throw PersistenceException.GetEventException(e)
         }
     }
 
-    override fun removeEvent(configID: Long, days: Set<DayOfWeek>): Boolean {
-        try {
-            database.eventConfigurationDao().deleteByIdAndDays(configID,
-                DataConverter().fromSetOfDays(days).toString()
-            )
-            return true
-        }
-        catch (e: Exception){
-            logger.log(Logger.Level.SEVERE, e.message.toString())
-            e.printStackTrace()
-            return false
-        }
-    }
-    override fun removeEvent(configID: Long): Boolean {
+    override fun removeEvent(configID: Long) {
         try {
             database.eventConfigurationDao().deleteById(configID)
-            return true
         }
         catch (e: Exception){
-            logger.log(Logger.Level.SEVERE, e.message.toString())
-            e.printStackTrace()
-            return false
+            throw PersistenceException.UpdateEventException(e)
         }
     }
 
@@ -91,9 +71,7 @@ data class EventHandler(
             return database.eventConfigurationDao().getByIdAndDays(id, DataConverter().fromSetOfDays(days).toString())
         }
         catch (e: Exception){
-            logger.log(Logger.Level.SEVERE, e.message.toString())
-            e.printStackTrace()
-            return null
+            throw PersistenceException.GetEventException(e)
         }
     }
 }

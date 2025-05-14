@@ -1,6 +1,7 @@
 package de.heinzenburger.g2_weckmichmal.persistence
 
 import android.content.Context
+import de.heinzenburger.g2_weckmichmal.specifications.PersistenceException
 import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
@@ -15,6 +16,7 @@ data class Logger(
     ) { INFO(), WARNING(), SEVERE() }
 
     val logger: java.util.logging.Logger = java.util.logging.Logger.getLogger(ConfigurationHandler::class.java.name)
+    @Throws(PersistenceException.CreateLogFileException::class, PersistenceException.WriteLogException::class)
     fun log(level: Level, text: String) {
         val formatter = DateTimeFormatter.ofPattern("MM-dd HH:mm:ss")
         var modifiedText = LocalDateTime.now().format(formatter) + " " + text
@@ -38,8 +40,7 @@ data class Logger(
                     logFile.createNewFile()
                 }
                 catch (e: IOException) {
-                    logger.severe(e.message)
-                    e.printStackTrace()
+                    throw PersistenceException.CreateLogFileException(e)
                 }
             }
             try {
@@ -49,17 +50,22 @@ data class Logger(
                 buf.close()
             }
             catch (e: IOException) {
-                logger.severe(e.message)
-                e.printStackTrace()
+                throw PersistenceException.WriteLogException(e)
             }
         }
     }
+    @Throws(PersistenceException.ReadLogException::class)
     fun getLogs() : String{
-        if(context != null){
-            var text = File(context.filesDir,"log").readText().split("\n").reversed().joinToString("\n")
-            return text
-        } else{
-            return "Called getLogs without context"
+        try{
+            if(context != null){
+                var text = File(context.filesDir,"log").readText().split("\n").reversed().joinToString("\n")
+                return text
+            } else{
+                return "Called getLogs without context"
+            }
+        }
+        catch (e: Exception){
+            throw PersistenceException.ReadLogException(e)
         }
     }
 }

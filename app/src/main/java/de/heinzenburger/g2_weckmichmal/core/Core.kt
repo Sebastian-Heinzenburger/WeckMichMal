@@ -21,6 +21,7 @@ import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationWithEvent
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.Event
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import de.heinzenburger.g2_weckmichmal.specifications.PersistenceException
 import java.net.URL
 import java.time.Duration
 import java.time.LocalDateTime
@@ -96,7 +97,7 @@ data class Core(
     }
 
     override fun runWakeUpLogic(earliestEvent: Event) {
-        logger.log(Logger.Level.SEVERE, "Alarm ringing at ${earliestEvent.wakeUpTime}!")
+        log(Logger.Level.SEVERE, "Alarm ringing at ${earliestEvent.wakeUpTime}!")
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val alarmIntent = Intent(context, AlarmEvent::class.java)
         val pendingIntent = PendingIntent.getBroadcast(
@@ -126,7 +127,7 @@ data class Core(
     }
 
     override fun startUpdateScheduler(delay: Int) {
-        logger.log(Logger.Level.SEVERE, "Alarm updating in $delay seconds")
+        log(Logger.Level.SEVERE, "Alarm updating in $delay seconds")
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val alarmIntent = Intent(context, AlarmUpdater::class.java)
         val pendingIntent = PendingIntent.getBroadcast(
@@ -155,39 +156,61 @@ data class Core(
     }
 
     override fun generateOrUpdateAlarmConfiguration(configuration: Configuration) {
-        val configurationHandler = ConfigurationHandler(context)
+        try {
+            val configurationHandler = ConfigurationHandler(context)
 
-        if (validateConfigurationEntity(configuration)){
-            val eventHandler = EventHandler(context)
-            configurationHandler.saveOrUpdate(configuration)
-            val event = WakeUpCalculator(
-                routePlanner = RoutePlanner(),
-                courseFetcher = RaplaFetcher(URL(getRaplaURL()))
-            ).calculateNextEvent(configuration)
-            eventHandler.saveOrUpdate(event)
+            if (validateConfigurationEntity(configuration)){
+                val eventHandler = EventHandler(context)
+                configurationHandler.saveOrUpdate(configuration)
+                val event = WakeUpCalculator(
+                    routePlanner = RoutePlanner(),
+                    courseFetcher = RaplaFetcher(URL(getRaplaURL()))
+                ).calculateNextEvent(configuration)
+                eventHandler.saveOrUpdate(event)
 
-            configuration.log()
-            event.log()
+                configuration.log()
+                event.log()
+            }
+            else{
+                showToast("Configuration is not valid")
+            }
         }
-        else{
-            showToast("Configuration is not valid")
+        catch (e: PersistenceException){
+            log(Logger.Level.SEVERE, e.message.toString())
+            log(Logger.Level.SEVERE, e.stackTraceToString())
+            showToast("Error communicating with database. Try reinstalling the app.")
         }
     }
 
     override fun getAllConfigurationAndEvent(): List<ConfigurationWithEvent>? {
-        val configurationHandler = ConfigurationHandler(context)
-        return configurationHandler.getAllConfigurationAndEvent()
+        try {
+            val configurationHandler = ConfigurationHandler(context)
+            return configurationHandler.getAllConfigurationAndEvent()
+        }
+        catch (e: PersistenceException){
+            log(Logger.Level.SEVERE, e.message.toString())
+            log(Logger.Level.SEVERE, e.stackTraceToString())
+            showToast("Could not load alarms from database. Try reinstalling the app.")
+            return null
+        }
     }
 
     override fun saveRaplaURL(urlString : String){
-        if(isValidCourseURL(urlString)){
-            val applicationSettingsHandler = ApplicationSettingsHandler(context)
-            val settingsEntity = applicationSettingsHandler.getApplicationSettings()
-            settingsEntity.raplaURL = urlString
-            applicationSettingsHandler.saveOrUpdateApplicationSettings(settingsEntity)
+        try {
+            if(isValidCourseURL(urlString)){
+                val applicationSettingsHandler = ApplicationSettingsHandler(context)
+                val settingsEntity = applicationSettingsHandler.getApplicationSettings()
+                settingsEntity.raplaURL = urlString
+                applicationSettingsHandler.saveOrUpdateApplicationSettings(settingsEntity)
+            }
+            else{
+                showToast("Invalid URL")
+            }
         }
-        else{
-            showToast("Invalid URL")
+        catch (e: PersistenceException){
+            log(Logger.Level.SEVERE, e.message.toString())
+            log(Logger.Level.SEVERE, e.stackTraceToString())
+            showToast("Error saving URL to database. Try reinstalling the app.")
         }
     }
 
@@ -220,35 +243,70 @@ data class Core(
     }
 
     override fun getRaplaURL(): String? {
-        val applicationSettingsHandler = ApplicationSettingsHandler(context)
-        return applicationSettingsHandler.getApplicationSettings().raplaURL
+        try {
+            val applicationSettingsHandler = ApplicationSettingsHandler(context)
+            return applicationSettingsHandler.getApplicationSettings().raplaURL
+        }
+        catch (e: PersistenceException){
+            log(Logger.Level.SEVERE, e.message.toString())
+            log(Logger.Level.SEVERE, e.stackTraceToString())
+            showToast("Error retrieving URL from database. Try reinstalling the app.")
+            return null
+        }
     }
 
     override fun log(
         level: Logger.Level,
         text: String
     ) {
-        logger.log(level, text)
+        try {
+            logger.log(level, text)
+        }
+        catch (e: PersistenceException){
+            val logger = Logger(null)
+            logger.log(Logger.Level.SEVERE, "Can't write to log " + e.message)
+        }
+        catch (e: Exception){
+            showToast("Error with Log writing " + e.message)
+        }
     }
 
     override fun getLog(): String {
-        return logger.getLogs()
+        return try {
+            logger.getLogs()
+        } catch (e: PersistenceException){
+            e.message.toString()
+        }
     }
 
     override fun updateConfigurationActive(
         isActive: Boolean,
         configuration: Configuration
     ) {
-        val configurationHandler = ConfigurationHandler(context)
-        configurationHandler.updateConfigurationActive(isActive, configuration.uid)
+        try {
+            val configurationHandler = ConfigurationHandler(context)
+            configurationHandler.updateConfigurationActive(isActive, configuration.uid)
+        }
+        catch (e: PersistenceException){
+            log(Logger.Level.SEVERE, e.message.toString())
+            log(Logger.Level.SEVERE, e.stackTraceToString())
+            showToast("Could not update active state of configuration.")
+        }
     }
 
     override fun deleteAlarmConfiguration(uid: Long) {
-        val eventHandler = EventHandler(context)
-        val configurationHandler = ConfigurationHandler(context)
-        //Always remove all associated events when removing an alarm configuration
-        eventHandler.removeEvent(uid)
-        configurationHandler.removeAlarmConfiguration(uid)
+        try {
+            val eventHandler = EventHandler(context)
+            val configurationHandler = ConfigurationHandler(context)
+            //Always remove all associated events when removing an alarm configuration
+            eventHandler.removeEvent(uid)
+            configurationHandler.removeAlarmConfiguration(uid)
+        }
+        catch (e: PersistenceException){
+            log(Logger.Level.SEVERE, e.message.toString())
+            log(Logger.Level.SEVERE, e.stackTraceToString())
+            showToast("Could not delete from database. Try reinstalling the app.")
+        }
     }
 
     override fun isApplicationOpenedFirstTime(): Boolean {
@@ -257,9 +315,15 @@ data class Core(
     }
 
     override fun showToast(message: String) {
-        ContextCompat.getMainExecutor(context).execute( { ->
-            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-        })
+        try {
+            ContextCompat.getMainExecutor(context).execute( { ->
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+            })
+        }
+        catch (e: Exception){
+            log(Logger.Level.SEVERE, e.message.toString())
+            log(Logger.Level.SEVERE, e.stackTraceToString())
+        }
     }
 }
 
