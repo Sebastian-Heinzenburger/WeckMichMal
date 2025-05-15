@@ -13,6 +13,9 @@ interface I_RoutePlannerSpecification {
      * @param endStation The DB Navigator conform name of the destination station for the journey.
      * @param timeOfArrival The desired time of arrival at the destination station.
      * @return A list of [Route] objects that represent possible routes from the start station to the end station.
+     * @throws RoutePlannerException.MalformedStationNameException if the station name is malformed.
+     * @throws RoutePlannerException.NetworkException if there is a network error.
+     * @throws RoutePlannerException.InvalidResponseFormatException if the response format is invalid.
      */
     fun planRoute(startStation: String, endStation: String, timeOfArrival: LocalDateTime): List<Route>
 
@@ -21,6 +24,9 @@ interface I_RoutePlannerSpecification {
      *
      * @param stationName The station name that may be invalid or incomplete.
      * @return A list of valid station names that match or correct the given station name.
+     * @throws RoutePlannerException.MalformedStationNameException if the station name is malformed.
+     * @throws RoutePlannerException.NetworkException if there is a network error.
+     * @throws RoutePlannerException.InvalidResponseFormatException if the response format is invalid.
      */
     fun deriveValidStationNames(stationName: String): List<String>
 }
@@ -78,3 +84,9 @@ data class RouteSection (
     /** The DB Navigator conform name of the end station for this section. */
     val endStation: String,
 )
+
+sealed class RoutePlannerException(message: String, cause: Throwable?) : Throwable(message, cause) {
+    class MalformedStationNameException(stationName: String, cause: Throwable?) : RoutePlannerException("The Station Name '$stationName' is malformed!", cause)
+    class NetworkException(cause: Throwable?) : RoutePlannerException("Network error occurred!", cause)
+    class InvalidResponseFormatException(cause: Throwable?) : RoutePlannerException("The response format is invalid!", cause)
+}
