@@ -118,7 +118,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                 selectedDays = mutableStateOf(listOf(true,true,true,true,true,false,false))
                 isManualArrivalTime = mutableStateOf(false)
                 isManualTravelTime = mutableStateOf(false)
-                enforceStartBuffer = mutableStateOf(false)
+                enforceStartBuffer = mutableStateOf(true)
                 AlarmClockEditScreen.configuration = Configuration(
                     name = "Wecker",
                     days = setOf(),
@@ -129,7 +129,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                     startStation = null,
                     endStation = null,
                     isActive = true,
-                    enforceStartBuffer = false
+                    enforceStartBuffer = true
                 )
             }
             else{
@@ -185,7 +185,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                     startStation = null,
                     endStation = null,
                     isActive = true, //Even if the alarm was initially inactive, it will be set as active again
-                    enforceStartBuffer = false
+                    enforceStartBuffer = true
                 )
             }
         }
@@ -283,27 +283,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                         .selectableGroup() //All radio buttons in this column correspond to one group
                 ) {
 
-                    Row {
-                        Switch(
-                            checked = enforceStartBuffer.value,
-                            //Configuration will always be reset to active when edited in AlarmClockEdit
-                            onCheckedChange = {
-                                enforceStartBuffer.value = it
-                            },
-                            enabled = true,
-                            colors = SwitchDefaults.colors(
-                                checkedBorderColor = MaterialTheme.colorScheme.background,
-                                uncheckedBorderColor = MaterialTheme.colorScheme.background,
-                                checkedIconColor = MaterialTheme.colorScheme.primary,
-                                uncheckedIconColor = MaterialTheme.colorScheme.error
-                            ),
-                            modifier = Modifier.padding(16.dp, 0.dp)
-                        )
-                        OurText(
-                            text = "Strikte Ankunftszeit",
-                            modifier = Modifier.padding(0.dp, 16.dp, 0.dp, 0.dp)
-                        )
-                    }
+
 
                     Row(
                         Modifier
@@ -511,6 +491,29 @@ class AlarmClockEditScreen : ComponentActivity() {
                             openStartBufferPickerDialog.value = true
                         },
                         text = setStartBufferTime.intValue.toString() + "min",
+                    )
+                }
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                ) {
+                    OurText(
+                        text = "Puffer vor Fahrt erzwingen",
+                        modifier = Modifier.padding(24.dp, 16.dp, 0.dp, 0.dp)
+                    )
+                    Switch(
+                        checked = enforceStartBuffer.value,
+                        //Configuration will always be reset to active when edited in AlarmClockEdit
+                        onCheckedChange = {
+                            enforceStartBuffer.value = it
+                        },
+                        enabled = true,
+                        colors = SwitchDefaults.colors(
+                            checkedBorderColor = MaterialTheme.colorScheme.background,
+                            uncheckedBorderColor = MaterialTheme.colorScheme.background,
+                            checkedIconColor = MaterialTheme.colorScheme.primary,
+                            uncheckedIconColor = MaterialTheme.colorScheme.error
+                        ),
+                        modifier = Modifier.padding(16.dp, 0.dp)
                     )
                 }
                 Row(

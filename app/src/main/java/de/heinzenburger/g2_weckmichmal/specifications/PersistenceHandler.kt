@@ -176,7 +176,7 @@ data class Configuration(
             startStation = "",
             endStation = "",
             isActive = true,
-            enforceStartBuffer = false
+            enforceStartBuffer = true
         )
     }
 }

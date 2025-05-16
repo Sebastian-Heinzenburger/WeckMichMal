@@ -19,9 +19,9 @@ import java.time.LocalTime
 
 class WakeUpCalculatorTest {
 
-    private val referenceDate = LocalDate.now();
-    private val eventDate = referenceDate.plusDays(1);
-    private val eventDay = eventDate.dayOfWeek;
+    private val referenceDate = LocalDate.now()
+    private val eventDate = referenceDate.plusDays(1)
+    private val eventDay = eventDate.dayOfWeek
 
     private val routePlannerMock: RoutePlannerSpecification = mock()
     private val courseFetcherMock: CourseFetcherSpecification = mock()
@@ -77,7 +77,8 @@ class WakeUpCalculatorTest {
             endBuffer = 30,
             startStation = "StationA",
             endStation = "StationB",
-            isActive = true
+            isActive = true,
+            enforceStartBuffer = true
         )
 
         val result = wakeUpCalculator.calculateNextEvent(config)
@@ -102,7 +103,8 @@ class WakeUpCalculatorTest {
             endBuffer = 30,
             startStation = null,
             endStation = null,
-            isActive = true
+            isActive = true,
+            enforceStartBuffer = true
         )
 
         val result = wakeUpCalculator.calculateNextEvent(config)
@@ -129,7 +131,8 @@ class WakeUpCalculatorTest {
                 endBuffer = 30,
                 startStation = null,
                 endStation = null,
-                isActive = true
+                isActive = true,
+                enforceStartBuffer = true
             ),
 
         )
@@ -145,7 +148,8 @@ class WakeUpCalculatorTest {
             endBuffer = 30,
             startStation = null,
             endStation = null,
-            isActive = true
+            isActive = true,
+            enforceStartBuffer = true
         )
 
         val result = wakeUpCalculator.calculateNextEvent(config)
