@@ -8,8 +8,8 @@ import android.provider.Settings
 import android.webkit.URLUtil
 import android.widget.Toast
 import androidx.core.content.ContextCompat
-import de.heinzenburger.g2_weckmichmal.AlarmEvent
-import de.heinzenburger.g2_weckmichmal.AlarmUpdater
+import de.heinzenburger.g2_weckmichmal.backend.AlarmEvent
+import de.heinzenburger.g2_weckmichmal.backend.AlarmUpdater
 import de.heinzenburger.g2_weckmichmal.api.db.RoutePlanner
 import de.heinzenburger.g2_weckmichmal.api.courses.RaplaFetcher
 import de.heinzenburger.g2_weckmichmal.calculation.WakeUpCalculator
@@ -164,6 +164,7 @@ data class Core(
     override fun runWakeUpLogic(earliestEvent: Event) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val alarmIntent = Intent(context, AlarmEvent::class.java)
+        alarmIntent.putExtra("configID", earliestEvent.configID)
         val pendingIntent = PendingIntent.getBroadcast(
             context,
             0,

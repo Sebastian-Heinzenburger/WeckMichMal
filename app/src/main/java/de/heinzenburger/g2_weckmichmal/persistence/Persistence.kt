@@ -192,7 +192,7 @@ class DataConverter {
 //Definition of the database. It consists of ConfigurationEntity Table and EventEntity Table
 //eportSchema doesn't work... I don't know why but I want to keep it anyways, hoping the schema will be randomly exported to the project directory anytime soon
 //Version needs to be updated everytime something changes in the table structure. This will destroy all data because of fallbackToDestructiveMigration
-@Database(entities = [Configuration::class, Event::class], version = 18,exportSchema = true)
+@Database(entities = [Configuration::class, Event::class], version = 19,exportSchema = true)
 @TypeConverters(DataConverter::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun alarmConfigurationDao(): ConfigurationHandler.ConfigurationDao
