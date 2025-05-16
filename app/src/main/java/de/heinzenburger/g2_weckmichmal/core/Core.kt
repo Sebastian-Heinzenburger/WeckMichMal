@@ -19,26 +19,17 @@ import de.heinzenburger.g2_weckmichmal.persistence.EventHandler
 import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationWithEvent
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
+import de.heinzenburger.g2_weckmichmal.specifications.CourseFetcherException
 import de.heinzenburger.g2_weckmichmal.specifications.Event
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
 import de.heinzenburger.g2_weckmichmal.specifications.PersistenceException
+import de.heinzenburger.g2_weckmichmal.specifications.WakeUpCalculatorException
+import java.net.MalformedURLException
 import java.net.URL
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneId
-
-/*
-Schön wäre es gewesen, wenn man einmalig irgendwo den Core instanziiert und dann dauernd mit dieser Instanz arbeitet, aber
-das stellt sich als schwer heraus.
-Android UI funktioniert mit Context. Der Context beschreibt die momentan im Vordergrund stehende Komponente.
-Soll eine neue Komponente im Vordergrund stehen, wird der Context weiter gereicht. Aus diesem Grund darf der Context
-nie irgendwo hängen bleiben, wie zum Beispiel als statische Variable. Das Problem bei unserer Architektur ist, dass sogar die
-tiefsten Komponenten wie die Persistenz einen Context brauchen um zu funktionieren. Deswegen braucht unser Core diesen Context.
-Man kann den Core also nicht einmalig instanziieren und dann in eine statische variable klatschen.
-Die zweite Option wäre die Instanz des Cores einfach immer an die Komponente im Vordergrund weiter zu reichen. Aber auch
-das krieg ich nicht hin. Also instanziieren wir momentan den Core jedes Mal neu wenn ein neuer Screen aufgerufen wird. Vielleicht
-ist das auch besser so
- */
+import java.time.format.DateTimeFormatter
 
 data class Core(
     val context: Context,
@@ -52,20 +43,86 @@ data class Core(
     }
 
     override fun runUpdateLogic() {
-        var configurationsWithEventsBeforeUpdate = getAllConfigurationAndEvent()
-        configurationsWithEventsBeforeUpdate?.forEach {
-            generateOrUpdateAlarmConfiguration(configuration = it.configuration)
+        val url = getRaplaURL()
+        val wakeUpCalculator = WakeUpCalculator(
+            routePlanner = RoutePlanner(),
+            courseFetcher = RaplaFetcher(
+                URL(
+                    if(url == ""){
+                        "http://example.com"
+                    }else{
+                        url
+                    }
+                )
+            )
+        )
+
+        var configurationsWithEvents = getAllConfigurationAndEvent()?.toMutableList()
+
+        configurationsWithEvents?.forEachIndexed {
+            index, it ->
+            //Strict and Lazy are missing
+            var configurationWithEvent : ConfigurationWithEvent
+            try {
+                log(Logger.Level.INFO, "Updating Event. Before:")
+                it.event?.log(this)
+                configurationWithEvent = ConfigurationWithEvent(
+                    it.configuration,
+                    wakeUpCalculator.calculateNextEvent(it.configuration)
+                )
+                log(Logger.Level.INFO, "Updating Event. After:")
+                configurationWithEvent.event?.log(this)
+            }
+            //If course suddenly disappeared -> No school? -> Do not wake up and delete Event
+            catch (e: WakeUpCalculatorException.NoCoursesFound){
+                configurationWithEvent = ConfigurationWithEvent(
+                    it.configuration, null
+                )
+                log(Logger.Level.SEVERE, e.message.toString())
+                log(Logger.Level.SEVERE, e.stackTraceToString())
+            }
+            //Course URL suddenly not valid anymore? -> Continue with previously assumed wake up time
+            catch (e: WakeUpCalculatorException.CoursesInvalidDataFormatError){
+                configurationWithEvent = it
+                log(Logger.Level.SEVERE, e.message.toString())
+                log(Logger.Level.SEVERE, e.stackTraceToString())
+            }
+            //Internet connection error -> Continue with previously assumed wake up time
+            catch (e: WakeUpCalculatorException.CoursesConnectionError){
+                configurationWithEvent = it
+                log(Logger.Level.SEVERE, e.message.toString())
+                log(Logger.Level.SEVERE, e.stackTraceToString())
+            }
+            //Something bad happened -> Continue with previously assumed wake up time
+            catch (e: Exception){
+                configurationWithEvent = it
+                log(Logger.Level.SEVERE, e.message.toString())
+                log(Logger.Level.SEVERE, e.stackTraceToString())
+            }
+            configurationsWithEvents[index] = configurationWithEvent
+            val eventHandler = EventHandler(context)
+            //Save updated event to database
+            if(configurationWithEvent.event != null){
+                try {
+                    eventHandler.saveOrUpdate(configurationWithEvent.event)
+                }
+                catch (e: PersistenceException){
+                    log(Logger.Level.SEVERE, e.message.toString())
+                    log(Logger.Level.SEVERE, e.stackTraceToString())
+                }
+            }
         }
-        var configurationsWithEventsAfterUpdate = getAllConfigurationAndEvent()
-        var earliestEventDate = LocalDateTime.of(9999,1,1,0,0)
+
+        var earliestEventDate = LocalDateTime.MAX
         var earliestEvent: Event? = null
-        configurationsWithEventsAfterUpdate?.forEach {
+        configurationsWithEvents?.forEach {
             val eventDateTime = it.event?.date?.atTime(it.event.wakeUpTime)
             if(eventDateTime?.isBefore(LocalDateTime.now()) == false && eventDateTime.isBefore(earliestEventDate) == true){
                 earliestEventDate = eventDateTime
                 earliestEvent = it.event
             }
         }
+        log(Logger.Level.INFO, "Earliest Event is at " + earliestEventDate.format(DateTimeFormatter.ofPattern("MM-dd HH:mm:ss")))
         if (Duration.between(
                 LocalDateTime.now(),
                 earliestEventDate
@@ -85,7 +142,15 @@ data class Core(
             ).seconds > 3600 // 1 hour
         ) {
             startUpdateScheduler(1800) // 30 minutes
-        } else if (Duration.between(
+        }
+        else if (Duration.between(
+                LocalDateTime.now(),
+                earliestEventDate
+            ).seconds > 1800 // 30 minutes
+        ) {
+            startUpdateScheduler(900) // 15 minutes
+        }
+        else if (Duration.between(
                 LocalDateTime.now(),
                 earliestEventDate
             ).seconds > 600 // 10 minutes
@@ -97,7 +162,6 @@ data class Core(
     }
 
     override fun runWakeUpLogic(earliestEvent: Event) {
-        log(Logger.Level.SEVERE, "Alarm ringing at ${earliestEvent.wakeUpTime}!")
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val alarmIntent = Intent(context, AlarmEvent::class.java)
         val pendingIntent = PendingIntent.getBroadcast(
@@ -122,12 +186,11 @@ data class Core(
         val alarmDate = earliestEvent.date.atTime(earliestEvent.wakeUpTime)
         val alarmClockInfo = AlarmManager.AlarmClockInfo(alarmDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
             pendingEditIntent)
-        log(Logger.Level.SEVERE, alarmDate.toString())
+        log(Logger.Level.INFO, "Alarm ringing at ${earliestEvent.wakeUpTime}!")
         alarmManager.setAlarmClock(alarmClockInfo, pendingIntent)
     }
 
     override fun startUpdateScheduler(delay: Int) {
-        log(Logger.Level.SEVERE, "Alarm updating in $delay seconds")
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val alarmIntent = Intent(context, AlarmUpdater::class.java)
         val pendingIntent = PendingIntent.getBroadcast(
@@ -152,24 +215,34 @@ data class Core(
         val alarmClockInfo = AlarmManager.AlarmClockInfo(
             LocalDateTime.now().plusSeconds(delay.toLong()).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
             pendingEditIntent)
+
+        log(Logger.Level.INFO, "Alarm updating in ${delay/60} minutes")
         alarmManager.setAlarmClock(alarmClockInfo, pendingIntent)
     }
 
     override fun generateOrUpdateAlarmConfiguration(configuration: Configuration) {
         try {
             val configurationHandler = ConfigurationHandler(context)
-
-            if (validateConfigurationEntity(configuration)){
+            if (validateConfiguration(configuration)){
                 val eventHandler = EventHandler(context)
                 configurationHandler.saveOrUpdate(configuration)
+                var url = getRaplaURL()
                 val event = WakeUpCalculator(
                     routePlanner = RoutePlanner(),
-                    courseFetcher = RaplaFetcher(URL(getRaplaURL()))
+                    courseFetcher = RaplaFetcher(
+                        URL(
+                            if(url == ""){
+                                "http://example.com"
+                            }else{
+                                url
+                            }
+                        )
+                    )
                 ).calculateNextEvent(configuration)
                 eventHandler.saveOrUpdate(event)
 
-                configuration.log()
-                event.log()
+                configuration.log(this)
+                event.log(this)
             }
             else{
                 showToast("Configuration is not valid")
@@ -179,6 +252,16 @@ data class Core(
             log(Logger.Level.SEVERE, e.message.toString())
             log(Logger.Level.SEVERE, e.stackTraceToString())
             showToast("Error communicating with database. Try reinstalling the app.")
+        }
+        catch (e: WakeUpCalculatorException){
+            log(Logger.Level.SEVERE, e.message.toString())
+            log(Logger.Level.SEVERE, e.stackTraceToString())
+            showToast("Error calculating next Event.")
+        }
+        catch (e: MalformedURLException){
+            log(Logger.Level.SEVERE, e.message.toString())
+            log(Logger.Level.SEVERE, e.stackTraceToString())
+            showToast("Course URL is not valid.")
         }
     }
 
@@ -197,7 +280,7 @@ data class Core(
 
     override fun saveRaplaURL(urlString : String){
         try {
-            if(isValidCourseURL(urlString)){
+            if(urlString == "" || isValidCourseURL(urlString)){
                 val applicationSettingsHandler = ApplicationSettingsHandler(context)
                 val settingsEntity = applicationSettingsHandler.getApplicationSettings()
                 settingsEntity.raplaURL = urlString
@@ -215,10 +298,19 @@ data class Core(
     }
 
     override fun isValidCourseURL(urlString : String) : Boolean{
-        return  URLUtil.isValidUrl(urlString) && RaplaFetcher(URL(urlString)).hasValidCourseURL()
+        var isValid = URLUtil.isValidUrl(urlString)
+        try {
+            RaplaFetcher(URL(urlString)).throwIfInvalidCourseURL()
+        }
+        catch (e: CourseFetcherException){
+            log(Logger.Level.SEVERE, e.message.toString())
+            log(Logger.Level.SEVERE, e.stackTraceToString())
+            isValid = false
+        }
+        return isValid
     }
 
-    override fun validateConfigurationEntity(configuration: Configuration): Boolean {
+    override fun validateConfiguration(configuration: Configuration): Boolean {
         var validation = true
         // Should contain a name
         if(configuration.name == ""){

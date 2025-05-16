@@ -15,6 +15,12 @@ import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import java.util.Date
 
+/*
+Problem: Wenn URL invalid wird funktioniert gar nichts mehr
+Invalid kann auch bedeuten, es gibt kein Internet mehr
+
+ */
+
 class RaplaFetcher(
     private val raplaUrl: URL,
     private val validCourseCategories: Set<String> = setOf("Prüfung", "Lehrveranstaltung")
@@ -36,12 +42,12 @@ class RaplaFetcher(
         }
     }
 
-    override fun hasValidCourseURL(): Boolean {
-        return try {
+    @Throws(CourseFetcherException.DataFormatError::class)
+    override fun throwIfInvalidCourseURL() {
+        try {
             fetchCoursesBetween(Period(LocalDateTime.now(), LocalDateTime.now().plusDays(1)))
-            true
-        } catch (_: CourseFetcherException) {
-            false
+        } catch (e: CourseFetcherException.DataFormatError) {
+            throw CourseFetcherException.DataFormatError(e)
         }
     }
 

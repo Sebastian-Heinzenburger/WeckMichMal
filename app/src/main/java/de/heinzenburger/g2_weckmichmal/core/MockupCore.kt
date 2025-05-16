@@ -159,7 +159,7 @@ class MockupCore : I_Core {
     }
 
 
-    override fun validateConfigurationEntity(configuration: Configuration): Boolean {
+    override fun validateConfiguration(configuration: Configuration): Boolean {
         return true
     }
 

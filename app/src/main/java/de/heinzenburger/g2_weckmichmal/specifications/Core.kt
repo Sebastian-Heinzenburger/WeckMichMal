@@ -89,7 +89,7 @@ interface I_Core{
     /**
      * If configuration entity contains only valid attributes
      */
-    fun validateConfigurationEntity(configuration: Configuration) : Boolean
+    fun validateConfiguration(configuration: Configuration) : Boolean
 
     /**
      * Show a Toast message

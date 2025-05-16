@@ -40,7 +40,7 @@ interface CourseFetcherSpecification {
      * source is available and responds with valid data. If the data source is unreachable or returns invalid data, it
      * will return `false`.
      */
-    fun hasValidCourseURL(): Boolean
+    fun throwIfInvalidCourseURL()
 }
 
 /**

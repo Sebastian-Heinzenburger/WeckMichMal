@@ -5,13 +5,13 @@ import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.Relation
+import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.persistence.DataConverter
 import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-import kotlin.concurrent.thread
 
 /**
  * Interface defining the behavior for the persistence layer.
@@ -157,10 +157,8 @@ data class Configuration(
     @ColumnInfo(name = "isActive") var isActive: Boolean,
 ){
     @Suppress("unused")
-    fun log(){
-        thread {
-            Logger(null).log(Logger.Level.INFO,"Logging configuration with id $uid:\n$name\n$days\n$fixedArrivalTime\n$fixedTravelBuffer\n$startBuffer\n$endBuffer\n$startStation\n$endStation\n$isActive")
-        }
+    fun log(core : Core){
+        core.log(Logger.Level.INFO,"Logging configuration with id $uid:\n$name\n$days\n$fixedArrivalTime\n$fixedTravelBuffer\n$startBuffer\n$endBuffer\n$startStation\n$endStation\n$isActive")
     }
 
     companion object{
@@ -204,10 +202,8 @@ data class Event(
     @ColumnInfo(name = "routes") var routes: List<Route>?
 ){
     @Suppress("unused")
-    fun log(){
-        thread {
-            Logger(null).log(Logger.Level.INFO,"Logging Event with id $configID:\n$wakeUpTime\n$days\n$date\n${DataConverter().fromListOfCourses(courses)}\n${DataConverter().fromListOfRoutes(routes)}")
-        }
+    fun log(core: Core){
+        core.log(Logger.Level.INFO,"Logging Event with id $configID:\n$wakeUpTime\n$days\n$date\n${DataConverter().fromListOfCourses(courses)}\n${DataConverter().fromListOfRoutes(routes)}")
     }
     companion object{
         val emptyEvent = Event(
@@ -255,8 +251,8 @@ data class SettingsEntity(
     var raplaURL: String
 ){
     @Suppress("unused")
-    fun log(){
-        Logger(null).log(Logger.Level.INFO,"Logging SettingsEntity:\n$raplaURL")
+    fun log(core: Core){
+        core.log(Logger.Level.INFO,"Logging SettingsEntity:\n$raplaURL")
     }
 }
 
