@@ -2,15 +2,19 @@ package de.heinzenburger.g2_weckmichmal.api.db
 
 import de.heinzenburger.g2_weckmichmal.specifications.I_RoutePlannerSpecification
 import de.heinzenburger.g2_weckmichmal.specifications.Route
+import de.heinzenburger.g2_weckmichmal.specifications.RoutePlannerException
 import de.heinzenburger.g2_weckmichmal.specifications.RouteSection
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
+import java.io.UnsupportedEncodingException
+import java.net.MalformedURLException
 import java.net.URL
 import java.net.URLEncoder
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 import java.util.zip.GZIPInputStream
 import java.util.zip.ZipException
 import kotlin.jvm.Throws
@@ -21,39 +25,68 @@ class RoutePlanner : I_RoutePlannerSpecification {
 
     var DB_API_BASE_URL_WITHOUT_SLASH_IN_THE_END = "https://www.bahn.de/web/api"
 
+    @Throws(
+        RoutePlannerException.MalformedStationNameException::class,
+        RoutePlannerException.NetworkException::class,
+        RoutePlannerException.InvalidResponseFormatException::class
+    )
     private fun fetchStations(stationNameQuery: String): JSONArray {
-        val urlEncodedStationName = URLEncoder.encode(stationNameQuery, "UTF-8")
-        val url =
-            URL("${DB_API_BASE_URL_WITHOUT_SLASH_IN_THE_END}/reiseloesung/orte?suchbegriff=${urlEncodedStationName}&typ=ALL&limit=10")
-        val connection = url.openConnection()
-        val response = connection.getInputStream().bufferedReader().use { it.readText() }
-        return JSONArray(response)
+        try {
+            val urlEncodedStationName = URLEncoder.encode(stationNameQuery, "UTF-8")
+            val url =
+                URL("${DB_API_BASE_URL_WITHOUT_SLASH_IN_THE_END}/reiseloesung/orte?suchbegriff=${urlEncodedStationName}&typ=ALL&limit=10")
+            val connection = url.openConnection()
+            val response = connection.getInputStream().bufferedReader().use { it.readText() }
+            return JSONArray(response)
+        } catch (e: UnsupportedEncodingException) {
+            throw RoutePlannerException.MalformedStationNameException(stationNameQuery, e)
+        } catch (e: MalformedURLException) {
+            throw RoutePlannerException.MalformedStationNameException(stationNameQuery, e)
+        } catch (e: IOException) {
+            throw RoutePlannerException.NetworkException(e)
+        } catch (e: JSONException) {
+            throw RoutePlannerException.InvalidResponseFormatException(e)
+        }
     }
 
+    @Throws(
+        RoutePlannerException.MalformedStationNameException::class,
+        RoutePlannerException.NetworkException::class,
+        RoutePlannerException.InvalidResponseFormatException::class
+    )
     private fun fetchStationID(stationName: String): StationID {
         val stations = fetchStations(stationName)
-        val firstResult = stations.getJSONObject(0)
-        return firstResult.getString("id")
+        try {
+            val firstResult = stations.getJSONObject(0)
+            return firstResult.getString("id")
+        } catch (e: JSONException) {
+            throw RoutePlannerException.InvalidResponseFormatException(e)
+        }
     }
 
-    @Throws(JSONException::class, IOException::class, ZipException::class)
+    @Throws(
+        RoutePlannerException.MalformedStationNameException::class,
+        RoutePlannerException.NetworkException::class,
+        RoutePlannerException.InvalidResponseFormatException::class
+    )
     override fun planRoute(
         startStation: String, endStation: String, timeOfArrival: LocalDateTime
     ): List<Route> {
+        try {
 
-        val url = URL("${DB_API_BASE_URL_WITHOUT_SLASH_IN_THE_END}/angebote/fahrplan")
-        val httpConnection = url.openConnection()
-        httpConnection.setRequestProperty("Accept", "application/json")
-        httpConnection.setRequestProperty("Content-Type", "application/json")
+            val url = URL("${DB_API_BASE_URL_WITHOUT_SLASH_IN_THE_END}/angebote/fahrplan")
+            val httpConnection = url.openConnection()
+            httpConnection.setRequestProperty("Accept", "application/json")
+            httpConnection.setRequestProperty("Content-Type", "application/json")
 
-        httpConnection.doOutput = true
-        httpConnection.getOutputStream().use {
-            val startStationID = fetchStationID(startStation)
-            val endStationID = fetchStationID(endStation)
-            val dbDAteTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
-            val timeOfArrivalString = timeOfArrival.format(dbDAteTimeFormatter)
-            it.write(
-                """
+            httpConnection.doOutput = true
+            httpConnection.getOutputStream().use {
+                val startStationID = fetchStationID(startStation)
+                val endStationID = fetchStationID(endStation)
+                val dbDAteTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
+                val timeOfArrivalString = timeOfArrival.format(dbDAteTimeFormatter)
+                it.write(
+                    """
             {
                 "abfahrtsHalt":"$startStationID",
                 "anfrageZeitpunkt":"$timeOfArrivalString",
@@ -70,47 +103,70 @@ class RoutePlanner : I_RoutePlannerSpecification {
                 "deutschlandTicketVorhanden":false
             }
             """.toByteArray()
-            )
+                )
+            }
+
+            // In the app, the android system handles gzip encoding transparently.
+            // This means we can just read the input stream directly.
+            // However, in unit tests, we have to manually handle gzip encoding.
+            // For more information, see https://stackoverflow.com/a/42346308
+            val responseStream = if (httpConnection.contentEncoding == "gzip") {
+                GZIPInputStream(httpConnection.getInputStream())
+            } else {
+                httpConnection.getInputStream()
+            }
+            val response = responseStream.bufferedReader().use { it.readText() }
+            val jsonResponse = JSONObject(response)
+
+            val routes = jsonResponse.getJSONArray("verbindungen")
+
+            val results = mutableListOf<Route>()
+            for (i in 0 until routes.length()) {
+                val route = routes.getJSONObject(i)
+                val potentialRoute = ParsingUtilities.parsePotentialRouteFromJSON(route)
+                results.add(potentialRoute)
+            }
+            return results
+
+        } catch (e: IOException) {
+            throw RoutePlannerException.NetworkException(e)
+        } catch (e: JSONException) {
+            throw RoutePlannerException.InvalidResponseFormatException(e)
+        } catch (e: ZipException) {
+            throw RoutePlannerException.InvalidResponseFormatException(e)
+        } catch (e: DateTimeParseException) {
+            throw RoutePlannerException.InvalidResponseFormatException(e)
+        } catch (e: NoSuchElementException) {
+            throw RoutePlannerException.InvalidResponseFormatException(e)
         }
 
-        // In the app, the android system handles gzip encoding transparently.
-        // This means we can just read the input stream directly.
-        // However, in unit tests, we have to manually handle gzip encoding.
-        // For more information, see https://stackoverflow.com/a/42346308
-        val responseStream = if (httpConnection.contentEncoding == "gzip") {
-            GZIPInputStream(httpConnection.getInputStream())
-        } else {
-            httpConnection.getInputStream()
-        }
-        val response = responseStream.bufferedReader().use { it.readText() }
-        val jsonResponse = JSONObject(response)
-
-        val routes = jsonResponse.getJSONArray("verbindungen")
-
-        val results = mutableListOf<Route>()
-        for (i in 0 until routes.length()) {
-            val route = routes.getJSONObject(i)
-            val potentialRoute = ParsingUtilities.parsePotentialRouteFromJSON(route)
-            results.add(potentialRoute)
-        }
-        return results
     }
 
+    @Throws(
+        RoutePlannerException.MalformedStationNameException::class,
+        RoutePlannerException.NetworkException::class,
+        RoutePlannerException.InvalidResponseFormatException::class
+    )
     override fun deriveValidStationNames(stationName: String): List<String> {
-        val stations = fetchStations(stationName)
+        try {
+            val stations = fetchStations(stationName)
 
-        val stationNames = mutableListOf<String>()
-        for (i in 0 until stations.length()) {
-            val station = stations.getJSONObject(i)
-            stationNames.add(station.getString("name"))
+            val stationNames = mutableListOf<String>()
+            for (i in 0 until stations.length()) {
+                val station = stations.getJSONObject(i)
+                stationNames.add(station.getString("name"))
+            }
+            return stationNames
+        } catch (e: JSONException) {
+            throw RoutePlannerException.InvalidResponseFormatException(e)
         }
-        return stationNames
     }
 
 
     private class ParsingUtilities {
         companion object {
 
+            @Throws(JSONException::class, DateTimeParseException::class, NoSuchFileException::class)
             fun parsePotentialRouteFromJSON(route: JSONObject): Route {
                 val sections = route.getJSONArray("verbindungsAbschnitte")
                 val routeSections = mutableListOf<RouteSection>()
@@ -131,6 +187,7 @@ class RoutePlanner : I_RoutePlannerSpecification {
                 )
             }
 
+            @Throws(JSONException::class, DateTimeParseException::class)
             private fun parseRouteSectionFromJSON(section: JSONObject): RouteSection {
                 val trainName = section.getJSONObject("verkehrsmittel").getString("name")
 
