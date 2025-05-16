@@ -26,6 +26,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePickerState
 import androidx.compose.runtime.Composable
@@ -95,6 +97,7 @@ class AlarmClockEditScreen : ComponentActivity() {
         private lateinit var isManualArrivalTime : MutableState<Boolean>
         private lateinit var manuallySetTravelTime: MutableIntState //Set if travel time shouldnt be dependent on Deutsche Bahn
         private lateinit var isManualTravelTime : MutableState<Boolean>
+        private lateinit var isStrict : MutableState<Boolean>
         private lateinit var setStartBufferTime: MutableIntState //Set if arrival time shouldnt be dependent on lecture plan
         private lateinit var setEndBufferTime: MutableIntState //Time between arrival and lecture start
         private lateinit var startStation: MutableState<String>
@@ -115,6 +118,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                 selectedDays = mutableStateOf(listOf(true,true,true,true,true,false,false))
                 isManualArrivalTime = mutableStateOf(false)
                 isManualTravelTime = mutableStateOf(false)
+                isStrict = mutableStateOf(false)
                 AlarmClockEditScreen.configuration = Configuration(
                     name = "Wecker",
                     days = setOf(),
@@ -124,7 +128,8 @@ class AlarmClockEditScreen : ComponentActivity() {
                     endBuffer = 10,
                     startStation = null,
                     endStation = null,
-                    isActive = true
+                    isActive = true,
+                    isStrict = false
                 )
             }
             else{
@@ -149,6 +154,8 @@ class AlarmClockEditScreen : ComponentActivity() {
                 } else{
                     mutableStateOf(LocalTime.NOON)
                 }
+
+                isStrict = mutableStateOf(Companion.configuration.isStrict)
 
                 //Manual set Travel Time
                 isManualTravelTime = mutableStateOf(configuration.fixedTravelBuffer != null)
@@ -177,7 +184,8 @@ class AlarmClockEditScreen : ComponentActivity() {
                     endBuffer = 10,
                     startStation = null,
                     endStation = null,
-                    isActive = true //Even if the alarm was initially inactive, it will be set as active again
+                    isActive = true, //Even if the alarm was initially inactive, it will be set as active again
+                    isStrict = false
                 )
             }
         }
@@ -223,6 +231,8 @@ class AlarmClockEditScreen : ComponentActivity() {
                 //set required start and endbuffer
                 configuration.startBuffer = setStartBufferTime.intValue
                 configuration.endBuffer = setEndBufferTime.intValue
+
+                configuration.isStrict = isStrict.value
 
                 //Setting days parameter
                 var days = mutableSetOf<DayOfWeek>()
@@ -272,6 +282,29 @@ class AlarmClockEditScreen : ComponentActivity() {
                         .fillMaxWidth()
                         .selectableGroup() //All radio buttons in this column correspond to one group
                 ) {
+
+                    Row {
+                        Switch(
+                            checked = isStrict.value,
+                            //Configuration will always be reset to active when edited in AlarmClockEdit
+                            onCheckedChange = {
+                                isStrict.value = it
+                            },
+                            enabled = true,
+                            colors = SwitchDefaults.colors(
+                                checkedBorderColor = MaterialTheme.colorScheme.background,
+                                uncheckedBorderColor = MaterialTheme.colorScheme.background,
+                                checkedIconColor = MaterialTheme.colorScheme.primary,
+                                uncheckedIconColor = MaterialTheme.colorScheme.error
+                            ),
+                            modifier = Modifier.padding(16.dp, 0.dp)
+                        )
+                        OurText(
+                            text = "Strikte Ankunftszeit",
+                            modifier = Modifier.padding(0.dp, 16.dp, 0.dp, 0.dp)
+                        )
+                    }
+
                     Row(
                         Modifier
                             .selectable(

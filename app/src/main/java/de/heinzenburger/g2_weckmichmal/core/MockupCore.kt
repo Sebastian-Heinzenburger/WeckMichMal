@@ -33,7 +33,8 @@ class MockupCore : I_Core {
                 endBuffer = 0,
                 startStation = "Wiesloch",
                 endStation = "Duale Folter",
-                isActive = true
+                isActive = true,
+                isStrict = false
             )
         )
         val mockupEvents = listOf(
