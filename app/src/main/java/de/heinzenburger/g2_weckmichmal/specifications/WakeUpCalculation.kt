@@ -25,39 +25,74 @@ interface WakeUpCalculationSpecification {
     fun calculateNextEvent(configuration: Configuration): Event
 }
 
-
 /**
- * Represents a sealed hierarchy of exceptions that may occur during wake-up time calculations.
+ * Represents a sealed hierarchy of exceptions that can occur during wake-up time calculations.
  */
 sealed class WakeUpCalculatorException(message: String?, cause: Throwable?) :
     Throwable(message, cause) {
 
     /**
-     * Thrown when no course data is available for the given configuration or date range.
+     * Thrown when no course data is found for the given configuration or date range.
      */
-    class NoCoursesFound : CourseFetcherException("No courses found", null)
+    class NoCoursesFound : WakeUpCalculatorException("No courses found", null)
 
     /**
-     * Thrown when a connection error occurs while fetching course data.
+     * Thrown when a network or server issue occurs while attempting to fetch course data.
      *
-     * @param cause The underlying exception causing the connection failure.
+     * @param cause The underlying exception that caused the connection failure.
      */
     class CoursesConnectionError(cause: Throwable?) :
-        CourseFetcherException("Could not fetch courses due to a connection error", cause)
+        WakeUpCalculatorException("Failed to fetch courses due to a connection error", cause)
 
     /**
-     * Thrown when the fetched course data is malformed or cannot be parsed.
+     * Thrown when the fetched course data is malformed, incomplete, or cannot be parsed.
      *
-     * @param cause The underlying exception related to data format issues.
+     * @param cause The underlying exception related to the data parsing or format issue.
      */
     class CoursesInvalidDataFormatError(cause: Throwable?) :
-        CourseFetcherException("Invalid data format in fetched course data", cause)
+        WakeUpCalculatorException("Received invalid or unparsable course data", cause)
 
     /**
-     * Thrown when an unexpected or logically impossible state is encountered.
+     * Thrown when an unexpected or logically invalid state is encountered during execution.
      */
     class InvalidStateException :
-        CourseFetcherException("An unexpected internal state was reached", null)
+        WakeUpCalculatorException("An unexpected internal state was encountered", null)
 
-    // TODO: Implement error handling for RoutePlanner-related failures
+    /**
+     * Thrown when the provided configuration is invalid or incomplete.
+     *
+     * @param message A descriptive message indicating the nature of the configuration issue.
+     */
+    class InvalidConfiguration(message: String) :
+        WakeUpCalculatorException(message, null)
+
+    /**
+     * Thrown when no valid routes can be found with the given configuration and arrival time.
+     */
+    class NoRoutesFound :
+        WakeUpCalculatorException("No routes found with the provided configuration", null)
+
+    /**
+     * Thrown when the route configuration is invalid or malformed.
+     *
+     * @param cause The underlying exception that caused the failure.
+     */
+    class RouteInvalidConfiguration(cause: Throwable?) :
+        WakeUpCalculatorException("Invalid route configuration", cause)
+
+    /**
+     * Thrown when a network or connection issue occurs during route planning.
+     *
+     * @param cause The underlying exception that caused the connection failure.
+     */
+    class RouteConnectionError(cause: Throwable?) :
+        WakeUpCalculatorException("Failed to fetch routes due to a connection error", cause)
+
+    /**
+     * Thrown when the response from the route planner has an invalid or unrecognized format.
+     *
+     * @param cause The underlying exception related to the format issue.
+     */
+    class RouteInvalidResponse(cause: Throwable?) :
+        WakeUpCalculatorException("Invalid response format from route planner", cause)
 }

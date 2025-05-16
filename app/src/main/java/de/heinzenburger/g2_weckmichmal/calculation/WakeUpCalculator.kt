@@ -10,7 +10,7 @@ import java.time.LocalDateTime
  * See: https://gitlab.com/dhbw-se/se-tinf23b2/G2-WeckMichMal/g2-weckmichmal/-/wikis/home/Implementierung/WakeUpCalculation
  */
 class WakeUpCalculator(
-    private val routePlanner: I_RoutePlannerSpecification,
+    private val routePlanner: RoutePlannerSpecification,
     private val courseFetcher: CourseFetcherSpecification
 ) : WakeUpCalculationSpecification {
 
@@ -23,7 +23,12 @@ class WakeUpCalculator(
     @Throws(
         WakeUpCalculatorException.NoCoursesFound::class,
         WakeUpCalculatorException.CoursesConnectionError::class,
-        WakeUpCalculatorException.CoursesInvalidDataFormatError::class
+        WakeUpCalculatorException.CoursesInvalidDataFormatError::class,
+        WakeUpCalculatorException.RouteConnectionError::class,
+        WakeUpCalculatorException.RouteInvalidConfiguration::class,
+        WakeUpCalculatorException.RouteInvalidResponse::class,
+        WakeUpCalculatorException.NoRoutesFound::class,
+        WakeUpCalculatorException.InvalidConfiguration::class
     )
     private fun calculateEventForDate(configuration: Configuration, date: LocalDate): Event {
         val (atPlaceTime, courses) = deriveAtPlaceTime(courseFetcher, configuration, date)
@@ -80,8 +85,11 @@ class WakeUpCalculator(
             }
         }
 
+        @Throws(WakeUpCalculatorException.RouteInvalidResponse::class, WakeUpCalculatorException.RouteInvalidConfiguration::class,
+            WakeUpCalculatorException.RouteConnectionError::class, WakeUpCalculatorException.NoRoutesFound::class,
+            WakeUpCalculatorException.InvalidConfiguration::class)
         fun deriveDepartureTime(
-            routePlanner: I_RoutePlannerSpecification,
+            routePlanner: RoutePlannerSpecification,
             config: Configuration,
             arrivalTime: LocalDateTime
         ): Pair<LocalDateTime, List<Route>?> {
@@ -92,19 +100,32 @@ class WakeUpCalculator(
                 }
 
                 config.startStation != null && config.endStation != null -> {
-                    val routes = routePlanner.planRoute(
-                        config.startStation!!,
-                        config.endStation!!,
-                        arrivalTime
-                    )
-                    val selectedRoute = routes.maxByOrNull { it.startTime }
-                        ?: throw Exception("") // TODO: Transform to WakeUpCalculatorException
-                    selectedRoute.startTime to routes
+                    try {
+                        val routes = routePlanner.planRoute(
+                            config.startStation!!,
+                            config.endStation!!,
+                            arrivalTime
+                        )
+                        val selectedRoute = routes.maxByOrNull { it.startTime }
+                            ?: throw WakeUpCalculatorException.NoRoutesFound()
+                        selectedRoute.startTime to routes
+                    }catch (e: RoutePlannerException) {
+                        throw when (e) {
+                            is RoutePlannerException.NetworkException ->
+                                WakeUpCalculatorException.RouteConnectionError(e)
+
+                            is RoutePlannerException.MalformedStationNameException ->
+                                WakeUpCalculatorException.RouteInvalidConfiguration(e)
+
+                            is RoutePlannerException.InvalidResponseFormatException ->
+                                WakeUpCalculatorException.RouteInvalidResponse(e)
+                        }
+                    }
                 }
 
-                else -> throw IllegalArgumentException(
-                    "Invalid Configuration: Missing travel buffer or station info"
-                ) // TODO: Transform to WakeUpCalculatorException
+                else -> throw WakeUpCalculatorException.InvalidConfiguration(
+                    "Configuration must either contain a fixed travel buffer OR a start and end station"
+                )
             }
         }
     }

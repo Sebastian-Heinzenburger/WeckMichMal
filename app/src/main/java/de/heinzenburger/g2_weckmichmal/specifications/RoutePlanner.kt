@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 /**
  * Interface defining the behavior of the Route Planner.
  */
-interface I_RoutePlannerSpecification {
+interface RoutePlannerSpecification {
     /**
      * Plans a list of possible routes that fulfill the given conditions.
      *
@@ -88,5 +88,5 @@ data class RouteSection (
 sealed class RoutePlannerException(message: String, cause: Throwable?) : Throwable(message, cause) {
     class MalformedStationNameException(stationName: String, cause: Throwable?) : RoutePlannerException("The Station Name '$stationName' is malformed!", cause)
     class NetworkException(cause: Throwable?) : RoutePlannerException("Network error occurred!", cause)
-    class InvalidResponseFormatException(cause: Throwable?) : RoutePlannerException("The response format is invalid!", cause)
+    class InvalidResponseFormatException(cause: Throwable   ?) : RoutePlannerException("The response format is invalid!", cause)
 }

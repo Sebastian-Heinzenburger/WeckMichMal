@@ -3,7 +3,7 @@ package de.heinzenburger.g2_weckmichmal.calculation
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.Course
 import de.heinzenburger.g2_weckmichmal.specifications.CourseFetcherSpecification
-import de.heinzenburger.g2_weckmichmal.specifications.I_RoutePlannerSpecification
+import de.heinzenburger.g2_weckmichmal.specifications.RoutePlannerSpecification
 import de.heinzenburger.g2_weckmichmal.specifications.Route
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -23,7 +23,7 @@ class WakeUpCalculatorTest {
     private val eventDate = referenceDate.plusDays(1);
     private val eventDay = eventDate.dayOfWeek;
 
-    private val routePlannerMock: I_RoutePlannerSpecification = mock()
+    private val routePlannerMock: RoutePlannerSpecification = mock()
     private val courseFetcherMock: CourseFetcherSpecification = mock()
     private val wakeUpCalculator = WakeUpCalculator(routePlannerMock, courseFetcherMock)
 
