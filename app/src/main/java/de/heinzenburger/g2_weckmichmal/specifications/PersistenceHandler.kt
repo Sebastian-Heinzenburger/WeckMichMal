@@ -132,7 +132,7 @@ interface InterfaceApplicationSettings {
  * @property startStation The DB Navigator conform name of the start station for the journey.
  * @property endStation The DB Navigator conform name of the end station for the journey.
  * @property isActive Whether the User enabled the Alarm
- * @property isStrict Strict means, that the application has to do its best to let the user be on time. No matter the cost
+ * @property enforceStartBuffer means, that the application has to do always ensure the start buffer
  */
 @Entity(tableName = "configuration")
 data class Configuration(
@@ -157,7 +157,7 @@ data class Configuration(
     /** Whether the User enabled the Alarm */
     @ColumnInfo(name = "isActive") var isActive: Boolean,
     /** Strict means, that the application has to do its best to let the user be on time. No matter the cost*/
-    @ColumnInfo(name = "isStrict") var isStrict: Boolean,
+    @ColumnInfo(name = "enforceStartBuffer") var enforceStartBuffer: Boolean,
 ){
     @Suppress("unused")
     fun log(core : Core){
@@ -176,7 +176,7 @@ data class Configuration(
             startStation = "",
             endStation = "",
             isActive = true,
-            isStrict = false
+            enforceStartBuffer = false
         )
     }
 }

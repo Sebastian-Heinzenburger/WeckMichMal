@@ -97,7 +97,7 @@ class AlarmClockEditScreen : ComponentActivity() {
         private lateinit var isManualArrivalTime : MutableState<Boolean>
         private lateinit var manuallySetTravelTime: MutableIntState //Set if travel time shouldnt be dependent on Deutsche Bahn
         private lateinit var isManualTravelTime : MutableState<Boolean>
-        private lateinit var isStrict : MutableState<Boolean>
+        private lateinit var enforceStartBuffer : MutableState<Boolean>
         private lateinit var setStartBufferTime: MutableIntState //Set if arrival time shouldnt be dependent on lecture plan
         private lateinit var setEndBufferTime: MutableIntState //Time between arrival and lecture start
         private lateinit var startStation: MutableState<String>
@@ -118,7 +118,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                 selectedDays = mutableStateOf(listOf(true,true,true,true,true,false,false))
                 isManualArrivalTime = mutableStateOf(false)
                 isManualTravelTime = mutableStateOf(false)
-                isStrict = mutableStateOf(false)
+                enforceStartBuffer = mutableStateOf(false)
                 AlarmClockEditScreen.configuration = Configuration(
                     name = "Wecker",
                     days = setOf(),
@@ -129,7 +129,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                     startStation = null,
                     endStation = null,
                     isActive = true,
-                    isStrict = false
+                    enforceStartBuffer = false
                 )
             }
             else{
@@ -155,7 +155,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                     mutableStateOf(LocalTime.NOON)
                 }
 
-                isStrict = mutableStateOf(Companion.configuration.isStrict)
+                enforceStartBuffer = mutableStateOf(Companion.configuration.enforceStartBuffer)
 
                 //Manual set Travel Time
                 isManualTravelTime = mutableStateOf(configuration.fixedTravelBuffer != null)
@@ -185,7 +185,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                     startStation = null,
                     endStation = null,
                     isActive = true, //Even if the alarm was initially inactive, it will be set as active again
-                    isStrict = false
+                    enforceStartBuffer = false
                 )
             }
         }
@@ -232,7 +232,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                 configuration.startBuffer = setStartBufferTime.intValue
                 configuration.endBuffer = setEndBufferTime.intValue
 
-                configuration.isStrict = isStrict.value
+                configuration.enforceStartBuffer = enforceStartBuffer.value
 
                 //Setting days parameter
                 var days = mutableSetOf<DayOfWeek>()
@@ -285,10 +285,10 @@ class AlarmClockEditScreen : ComponentActivity() {
 
                     Row {
                         Switch(
-                            checked = isStrict.value,
+                            checked = enforceStartBuffer.value,
                             //Configuration will always be reset to active when edited in AlarmClockEdit
                             onCheckedChange = {
-                                isStrict.value = it
+                                enforceStartBuffer.value = it
                             },
                             enabled = true,
                             colors = SwitchDefaults.colors(
