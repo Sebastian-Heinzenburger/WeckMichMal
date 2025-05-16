@@ -8,6 +8,7 @@ import android.app.Service
 import android.content.Intent
 import android.media.MediaPlayer
 import android.os.IBinder
+import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.compose.ui.util.fastForEachReversed
 import androidx.core.app.NotificationCompat
@@ -44,14 +45,14 @@ class ForegroundService : Service() {
         mediaPlayer?.setOnCompletionListener {
             vibrator?.cancel()
         }
-        /*vibrator?.vibrate(
+        vibrator?.vibrate(
             VibrationEffect.createWaveform(
-                longArrayOf(0, 500, 950), // Pattern: wait 0ms, vibrate 500ms, pause 1000ms
+                longArrayOf(0, 500, 950), // Pattern: wait 0ms, vibra,ute 500ms, pause 1000ms
                 intArrayOf(0, 255, 0),
                 1 // Repeat indefinitely
             )
         )
-         */
+
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
