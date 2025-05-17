@@ -1,4 +1,4 @@
-package de.heinzenburger.g2_weckmichmal.backend
+package de.heinzenburger.g2_weckmichmal.background
 
 import android.app.Notification
 import android.app.NotificationChannel

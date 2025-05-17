@@ -56,12 +56,12 @@
             android:exported="true"
             android:theme="@style/Theme.G2_WeckMichMal">
         </activity>
-        <service android:name=".backend.ForegroundService"
+        <service android:name=".background.ForegroundService"
             android:foregroundServiceType="specialUse"
             android:exported="false">
         </service>
-        <receiver android:name=".backend.AlarmUpdater"/>
-        <receiver android:name=".backend.AlarmEvent"/>
+        <receiver android:name=".background.AlarmUpdater"/>
+        <receiver android:name=".background.AlarmEvent"/>
     </application>
 
 </manifest>
