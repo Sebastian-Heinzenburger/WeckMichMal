@@ -61,6 +61,11 @@ data class Core(
 
         configurationsWithEvents?.forEachIndexed {
             index, it ->
+            //Skip updating configuration if inactive
+            if(!it.configuration.isActive){
+                return@forEachIndexed
+            }
+
             //Strict and Lazy are missing
             var configurationWithEvent : ConfigurationWithEvent
             try {
@@ -117,7 +122,9 @@ data class Core(
         var earliestEvent: Event? = null
         configurationsWithEvents?.forEach {
             val eventDateTime = it.event?.date?.atTime(it.event.wakeUpTime)
-            if(eventDateTime?.isBefore(LocalDateTime.now()) == false && eventDateTime.isBefore(earliestEventDate) == true){
+            if(it.configuration.isActive &&
+                eventDateTime?.isBefore(LocalDateTime.now()) == false
+                && eventDateTime.isBefore(earliestEventDate) == true){
                 earliestEventDate = eventDateTime
                 earliestEvent = it.event
             }

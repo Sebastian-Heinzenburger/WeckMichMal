@@ -52,7 +52,6 @@ class ForegroundService : Service() {
                 1 // Repeat indefinitely
             )
         )
-
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

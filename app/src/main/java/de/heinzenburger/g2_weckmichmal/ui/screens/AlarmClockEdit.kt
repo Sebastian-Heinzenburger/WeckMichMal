@@ -155,7 +155,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                     mutableStateOf(LocalTime.NOON)
                 }
 
-                enforceStartBuffer = mutableStateOf(Companion.configuration.enforceStartBuffer)
+                enforceStartBuffer = mutableStateOf(configuration.enforceStartBuffer)
 
                 //Manual set Travel Time
                 isManualTravelTime = mutableStateOf(configuration.fixedTravelBuffer != null)
