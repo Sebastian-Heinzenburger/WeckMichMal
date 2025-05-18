@@ -3,6 +3,7 @@ package de.heinzenburger.g2_weckmichmal
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import de.heinzenburger.g2_weckmichmal.background.ForegroundService
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import de.heinzenburger.g2_weckmichmal.ui.screens.AlarmClockOverviewScreen
@@ -13,6 +14,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val core = Core(context = applicationContext)
         core.log(Logger.Level.INFO, "Starting Application")
+
+        val serviceIntent = Intent(applicationContext, ForegroundService::class.java)
+        serviceIntent.putExtra("configID",intent?.getLongExtra("configID",-1))
+        applicationContext.startService(serviceIntent)
 
 
         if (core.isApplicationOpenedFirstTime()) {

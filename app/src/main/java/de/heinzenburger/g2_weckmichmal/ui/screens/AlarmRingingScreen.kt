@@ -1,12 +1,17 @@
 package de.heinzenburger.g2_weckmichmal.ui.screens
 
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.os.Bundle
+import android.os.IBinder
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,23 +20,28 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachReversed
+import de.heinzenburger.g2_weckmichmal.background.ForegroundService
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
+import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.Event
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
-import de.heinzenburger.g2_weckmichmal.ui.screens.AlarmRingingScreen.Companion.innerAlarmRingingScreenComposable
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -39,12 +49,28 @@ import java.time.format.DateTimeFormatter
 import kotlin.concurrent.thread
 
 class AlarmRingingScreen : ComponentActivity(){
+    private lateinit var foregroundService: ForegroundService
+    private val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            val binder = service as ForegroundService.MyBinder
+            foregroundService = binder.getService()
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val core = Core(context = applicationContext)
         setShowWhenLocked(true)
         setTurnScreenOn(true)
+
+
+        Intent(this, ForegroundService::class.java).also { intent ->
+            bindService(intent, serviceConnection, BIND_AUTO_CREATE)
+        }
 
         val id = intent.getLongExtra("Event ID", -1)
 
@@ -87,14 +113,15 @@ class AlarmRingingScreen : ComponentActivity(){
                     context.startActivity(intent)
                     (context as ComponentActivity).finish()
                 }
-                AlarmRingingScreenComposable(core)
+                innerAlarmRingingScreenComposable(core)
             }
         }
     }
-    companion object{
-        var event = mutableStateOf(Event.emptyEvent)
-        var configuration = mutableStateOf(Configuration.emptyConfiguration)
-        val innerAlarmRingingScreenComposable : @Composable (PaddingValues, I_Core) -> Unit = { innerPadding: PaddingValues, core: I_Core ->
+
+    var event = mutableStateOf(Event.emptyEvent)
+    var configuration = mutableStateOf(Configuration.emptyConfiguration)
+    val innerAlarmRingingScreenComposable : @Composable (I_Core) -> Unit = {core: I_Core ->
+        Box{
             Column (
                 modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxSize()
             )
@@ -105,10 +132,10 @@ class AlarmRingingScreen : ComponentActivity(){
                     style = MaterialTheme.typography.titleLarge,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth().padding(top = 32.dp)
-                    )
+                )
                 var text = "Mental vorbereiten auf: \n"
                 event.value.courses?.forEachIndexed {
-                    index, it ->
+                        index, it ->
                     text += it.name + " - " + it.startDate.format(DateTimeFormatter.ofPattern("HH:mm"))
                     if(event.value.courses!!.size-1 != index){
                         text += "\n"
@@ -172,22 +199,32 @@ class AlarmRingingScreen : ComponentActivity(){
                     }
                 }
             }
+            Button(
+                onClick = {foregroundService.onDestroy()},
+                modifier = Modifier.align(Alignment.BottomCenter).padding(0.dp, 32.dp).fillMaxWidth(0.5f),
+                colors = ButtonDefaults.buttonColors(
+                    contentColor = MaterialTheme.colorScheme.background,
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                ),
+            ) {
+                OurText(
+                    text = "Lass mich in Ruhe",
+                    modifier = Modifier
+                )
+            }
         }
     }
-}
 
-@Composable
-fun AlarmRingingScreenComposable(core: I_Core) {
-    innerAlarmRingingScreenComposable(PaddingValues(), core)
 }
 
 @Preview(showBackground = true)
 @Composable
 fun AlarmRingingScreenPreview() {
+    val alarmRingingScreen = AlarmRingingScreen()
     val core = MockupCore()
-    AlarmRingingScreen.event.value = MockupCore.mockupEvents[0]
-    AlarmRingingScreen.configuration.value = MockupCore.mockupConfigurations[0]
+    alarmRingingScreen.event.value = MockupCore.mockupEvents[0]
+    alarmRingingScreen.configuration.value = MockupCore.mockupConfigurations[0]
     G2_WeckMichMalTheme {
-        AlarmRingingScreenComposable(core = core)
+        alarmRingingScreen.innerAlarmRingingScreenComposable(core)
     }
 }

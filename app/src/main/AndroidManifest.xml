@@ -57,6 +57,7 @@
             android:theme="@style/Theme.G2_WeckMichMal">
         </activity>
         <service android:name=".background.ForegroundService"
+            android:enabled="true"
             android:foregroundServiceType="specialUse"
             android:exported="false">
         </service>

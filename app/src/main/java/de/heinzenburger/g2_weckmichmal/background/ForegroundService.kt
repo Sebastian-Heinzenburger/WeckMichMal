@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.media.MediaPlayer
+import android.os.Binder
 import android.os.IBinder
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -29,6 +30,8 @@ class ForegroundService : Service() {
     companion object{
         lateinit var event : Event
     }
+
+    private var binder = MyBinder()
 
     private var mediaPlayer: MediaPlayer? = null
     private var vibrator: Vibrator? = null
@@ -81,15 +84,22 @@ class ForegroundService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        // Release MediaPlayer resources
+        vibrator?.cancel()
         mediaPlayer?.stop()
         mediaPlayer?.release()
         mediaPlayer = null
     }
 
-    override fun onBind(intent: Intent?): IBinder? {
-        return null
+    inner class MyBinder : Binder() {
+        fun getService(): ForegroundService = this@ForegroundService
     }
+
+    override fun onBind(intent: Intent?): IBinder? {
+        val core = Core(applicationContext)
+        core.log(Logger.Level.INFO,"Das hat funktioniert")
+        return binder
+    }
+
 
     private fun createNotificationChannel() {
         val name = "g2_weckmichmal"
