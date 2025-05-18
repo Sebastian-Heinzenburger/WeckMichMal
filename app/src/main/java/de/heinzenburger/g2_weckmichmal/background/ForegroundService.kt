@@ -68,10 +68,7 @@ class ForegroundService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val configID = intent?.getLongExtra("configID",-1)
-        Logger(null).log(Logger.Level.INFO, "aaaaa Config ID $configID")
-
         val core = Core(applicationContext)
-
 
 
         thread {
@@ -84,7 +81,6 @@ class ForegroundService : Service() {
 
             val notification = createNotification(configurationWithEvent)
             startForeground(1, notification)
-
             playWithPerry()
         }
 

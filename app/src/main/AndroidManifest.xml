@@ -49,6 +49,9 @@
         <activity
             android:name=".ui.screens.AlarmRingingScreen"
             android:exported="true"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:launchMode="singleTop"
             android:theme="@style/Theme.G2_WeckMichMal">
         </activity>
         <activity
