@@ -1,7 +1,6 @@
 package de.heinzenburger.g2_weckmichmal.ui.screens
 
 import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
@@ -13,7 +12,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -26,7 +24,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -37,7 +34,6 @@ import androidx.compose.ui.util.fastForEachReversed
 import de.heinzenburger.g2_weckmichmal.background.ForegroundService
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
-import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.Event
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
@@ -199,16 +195,37 @@ class AlarmRingingScreen : ComponentActivity(){
                     }
                 }
             }
+            val context = LocalContext.current
             Button(
-                onClick = {foregroundService.onDestroy()},
-                modifier = Modifier.align(Alignment.BottomCenter).padding(0.dp, 32.dp).fillMaxWidth(0.5f),
+                onClick = {
+                            foregroundService.sleepWithPerry(isForeverSleep = true)
+                            val stopIntent = Intent(context, ForegroundService::class.java)
+                            stopService(stopIntent)
+                          },
+                modifier = Modifier.align(BiasAlignment(0.9f, 0.9f)).fillMaxWidth(0.4f),
                 colors = ButtonDefaults.buttonColors(
                     contentColor = MaterialTheme.colorScheme.background,
                     containerColor = MaterialTheme.colorScheme.secondary,
                 ),
             ) {
                 OurText(
-                    text = "Lass mich in Ruhe",
+                    text = "Stop",
+                    modifier = Modifier
+                )
+            }
+            Button(
+                onClick = {
+                    foregroundService.sleepWithPerry(isForeverSleep = false)
+                    unbindService(serviceConnection)
+                },
+                modifier = Modifier.align(BiasAlignment(-0.9f, 0.9f)).fillMaxWidth(0.4f),
+                colors = ButtonDefaults.buttonColors(
+                    contentColor = MaterialTheme.colorScheme.background,
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                ),
+            ) {
+                OurText(
+                    text = "Snooze 5m",
                     modifier = Modifier
                 )
             }

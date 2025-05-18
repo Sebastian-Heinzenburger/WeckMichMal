@@ -57,6 +57,15 @@ class ForegroundService : Service() {
         )
     }
 
+    fun sleepWithPerry(isForeverSleep : Boolean){
+        vibrator?.cancel()
+        mediaPlayer?.stop()
+        if(!isForeverSleep){
+            Thread.sleep(300000)
+            playWithPerry()
+        }
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val configID = intent?.getLongExtra("configID",-1)
         Logger(null).log(Logger.Level.INFO, "aaaaa Config ID $configID")
