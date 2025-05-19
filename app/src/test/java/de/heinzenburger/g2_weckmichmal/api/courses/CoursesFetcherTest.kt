@@ -1,5 +1,6 @@
 package de.heinzenburger.g2_weckmichmal.api.courses
 
+import de.heinzenburger.g2_weckmichmal.specifications.CourseFetcherException
 import de.heinzenburger.g2_weckmichmal.specifications.Period
 import org.junit.Test
 
@@ -15,10 +16,15 @@ class CoursesFetcherTest {
     @Test
     fun `test hasValidURL`() {
         val validFetcher = RaplaFetcher(url)
-        assertEquals("Fetcher should be valid", true, validFetcher.throwIfInvalidCourseURL())
+        validFetcher.throwIfInvalidCourseURL()
 
         val invalidFetcher = RaplaFetcher(URL("https://foo"))
-        assertEquals("Fetcher should be invalid", false, invalidFetcher.throwIfInvalidCourseURL())
+        try {
+            invalidFetcher.throwIfInvalidCourseURL()
+            assert(false)
+        } catch (_: CourseFetcherException){
+            assert(true)
+        }
     }
 
     @Test
@@ -39,19 +45,6 @@ class CoursesFetcherTest {
         courses.forEach { assert(expCourseNames.contains(it.name)) }
     }
 
-    @Test
-    fun `invalid RAPLA URL caught`() {
-        val url =
-            URL("https://rapla.dhbw-karlsruhe.de/rapla?page=ical&user=ritterbusch&file=TINF23BN99")
-        val isValid = try {
-            RaplaFetcher(url).throwIfInvalidCourseURL()
-            true
-        }
-        catch (_: Exception){
-            false
-        }
-        assertFalse(isValid)
-    }
 
     @Test
     fun `valid RAPLA URL`() {

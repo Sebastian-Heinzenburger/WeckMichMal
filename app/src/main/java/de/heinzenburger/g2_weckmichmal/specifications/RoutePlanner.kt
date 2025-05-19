@@ -12,12 +12,23 @@ interface RoutePlannerSpecification {
      * @param startStation The DB Navigator conform name of the starting station for the journey.
      * @param endStation The DB Navigator conform name of the destination station for the journey.
      * @param timeOfArrival The desired time of arrival at the destination station.
+     * @param strict If `true` (default), only routes that are strictly guaranteed to arrive *before or at* the specified
+     *               arrival time will be returned, without considering currently unavailable or past connections.
+     *               If `false`, a best-effort approach is used to find routes that ideally arrive before the desired time,
+     *               potentially excluding early connections that are no longer feasible based on the current time.
+     *
      * @return A list of [Route] objects that represent possible routes from the start station to the end station.
+     *
      * @throws RoutePlannerException.MalformedStationNameException if the station name is malformed.
      * @throws RoutePlannerException.NetworkException if there is a network error.
      * @throws RoutePlannerException.InvalidResponseFormatException if the response format is invalid.
      */
-    fun planRoute(startStation: String, endStation: String, timeOfArrival: LocalDateTime): List<Route>
+    fun planRoute(
+        startStation: String,
+        endStation: String,
+        timeOfArrival: LocalDateTime,
+        strict: Boolean = true
+    ): List<Route>
 
     /**
      * Derives a list of valid station names from a potentially invalid station name.
@@ -40,7 +51,7 @@ interface RoutePlannerSpecification {
  * @property endTime The end date and time for the entire journey.
  * @property sections The list of route sections that make up the entire route.
  */
-data class Route (
+data class Route(
 
     /** The DB Navigator conform name of the start station for the whole journey. */
     val startStation: String,
@@ -67,7 +78,7 @@ data class Route (
  * @property endTime The time the route section ends.
  * @property endStation The DB Navigator conform name of the end station for this section of the journey.
  */
-data class RouteSection (
+data class RouteSection(
 
     /** The DB Navigator conform name of the vehicle for this section of the journey. */
     val vehicleName: String,
@@ -86,7 +97,12 @@ data class RouteSection (
 )
 
 sealed class RoutePlannerException(message: String, cause: Throwable?) : Throwable(message, cause) {
-    class MalformedStationNameException(stationName: String, cause: Throwable?) : RoutePlannerException("The Station Name '$stationName' is malformed!", cause)
-    class NetworkException(cause: Throwable?) : RoutePlannerException("Network error occurred!", cause)
-    class InvalidResponseFormatException(cause: Throwable   ?) : RoutePlannerException("The response format is invalid!", cause)
+    class MalformedStationNameException(stationName: String, cause: Throwable?) :
+        RoutePlannerException("The Station Name '$stationName' is malformed!", cause)
+
+    class NetworkException(cause: Throwable?) :
+        RoutePlannerException("Network error occurred!", cause)
+
+    class InvalidResponseFormatException(cause: Throwable?) :
+        RoutePlannerException("The response format is invalid!", cause)
 }

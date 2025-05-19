@@ -29,17 +29,15 @@ interface CourseFetcherSpecification {
     fun fetchCoursesBetween(period: Period): List<Course>
 
     /**
-     * Checks if the course data source (e.g., RAPLA URL) is reachable and returns valid data.
+     * Validates the course URL by attempting to fetch a test course range.
      *
-     * This method verifies whether the external data source for courses is online and returning data in the correct format.
-     * A minimal fetch is performed to ensure connectivity and data integrity.
+     * This method checks whether the course URL is valid and reachable by invoking [fetchCoursesBetween]
+     * with a short test period (e.g., one day from the current time). If the URL is invalid or unreachable,
+     * a [CourseFetcherException] is thrown.
      *
-     * @return true if the course data source is valid and reachable, false otherwise.
-     *
-     * This method can be used to perform a connectivity check for the course data source. It will return `true` if the
-     * source is available and responds with valid data. If the data source is unreachable or returns invalid data, it
-     * will return `false`.
+     * @throws CourseFetcherException If the course URL is invalid or the fetch fails.
      */
+    @Throws(CourseFetcherException::class)
     fun throwIfInvalidCourseURL()
 }
 
