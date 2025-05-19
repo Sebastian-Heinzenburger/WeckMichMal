@@ -82,8 +82,8 @@ data class Course(
  * It includes specific error types for connection failures and data format issues. The exception includes
  * a message and an optional cause to help with troubleshooting and debugging.
  */
-sealed class CourseFetcherException(message: String?, cause: Throwable?) :
-    Throwable(message, cause) {
+sealed class CourseFetcherException(message: String?, cause: Exception?) :
+    Exception(message, cause) {
 
     /**
      * Represents a connection error that occurred during the course-fetching process.
@@ -92,7 +92,7 @@ sealed class CourseFetcherException(message: String?, cause: Throwable?) :
      *
      * @param cause The underlying exception that caused the connection error, such as a network timeout or unreachable server.
      */
-    class ConnectionError(cause: Throwable?) : CourseFetcherException("Connection error", cause)
+    class ConnectionError(cause: Exception?) : CourseFetcherException("Connection error", cause)
 
     /**
      * Represents a data format error during the course-fetching process.
@@ -103,5 +103,5 @@ sealed class CourseFetcherException(message: String?, cause: Throwable?) :
      *
      * @param cause The underlying exception that caused the format error, such as invalid data structure or parsing failure.
      */
-    class DataFormatError(cause: Throwable?) : CourseFetcherException("Data format error", cause)
+    class DataFormatError(cause: Exception?) : CourseFetcherException("Data format error", cause)
 }

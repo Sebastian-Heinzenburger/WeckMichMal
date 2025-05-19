@@ -205,6 +205,10 @@ class AlarmClockEditScreen : ComponentActivity() {
                 if(isManualArrivalTime.value){
                     configuration.fixedArrivalTime = manuallySetArrivalTime.value
                 }
+                else if(!core.isInternetAvailable()){
+                    validation = false
+                    core.showToast("Für diese Konfiguration ist eine Internetverbindung nötig")
+                }
                 else if(core.getRaplaURL() == "" || core.getRaplaURL() == null){
                     validation = false
                     core.showToast("Ankunft nach Vorlesungsplan nicht möglich. URL fehlt.")
@@ -212,6 +216,10 @@ class AlarmClockEditScreen : ComponentActivity() {
                 //fixed travel time if selected, else null
                 if(isManualTravelTime.value){
                     configuration.fixedTravelBuffer = manuallySetTravelTime.intValue
+                }
+                else if(!core.isInternetAvailable()){
+                    validation = false
+                    core.showToast("Für diese Konfiguration ist eine Internetverbindung nötig")
                 }
                 //stations needed, else null
                 else{

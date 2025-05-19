@@ -46,6 +46,7 @@ import kotlin.concurrent.thread
 
 class AlarmRingingScreen : ComponentActivity(){
     private lateinit var foregroundService: ForegroundService
+    private var isPreview = false
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             val binder = service as ForegroundService.MyBinder
@@ -56,6 +57,12 @@ class AlarmRingingScreen : ComponentActivity(){
         }
     }
 
+    fun bindService(){
+        Intent(this, ForegroundService::class.java).also { intent ->
+            bindService(intent, serviceConnection, BIND_AUTO_CREATE)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -63,12 +70,12 @@ class AlarmRingingScreen : ComponentActivity(){
         setShowWhenLocked(true)
         setTurnScreenOn(true)
 
+        val id = intent.getLongExtra("configID", -1)
+        isPreview = intent.getBooleanExtra("isPreview", false)
 
-        Intent(this, ForegroundService::class.java).also { intent ->
-            bindService(intent, serviceConnection, BIND_AUTO_CREATE)
+        if(!isPreview){
+            bindService()
         }
-
-        val id = intent.getLongExtra("Event ID", -1)
 
         if(id < 0){
             thread {
@@ -129,7 +136,13 @@ class AlarmRingingScreen : ComponentActivity(){
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth().padding(top = 32.dp)
                 )
-                var text = "Mental vorbereiten auf: \n"
+                var text =
+                    if(!event.value.courses.isNullOrEmpty()){
+                        "Mental vorbereiten auf: \n"
+                    }
+                     else{
+                        "Hallo :D"
+                    }
                 event.value.courses?.forEachIndexed {
                         index, it ->
                     text += it.name + " - " + it.startDate.format(DateTimeFormatter.ofPattern("HH:mm"))
@@ -195,39 +208,41 @@ class AlarmRingingScreen : ComponentActivity(){
                     }
                 }
             }
-            val context = LocalContext.current
-            Button(
-                onClick = {
-                            foregroundService.sleepWithPerry(isForeverSleep = true)
-                            val stopIntent = Intent(context, ForegroundService::class.java)
-                            stopService(stopIntent)
-                          },
-                modifier = Modifier.align(BiasAlignment(0.9f, 0.9f)).fillMaxWidth(0.4f),
-                colors = ButtonDefaults.buttonColors(
-                    contentColor = MaterialTheme.colorScheme.background,
-                    containerColor = MaterialTheme.colorScheme.secondary,
-                ),
-            ) {
-                OurText(
-                    text = "Stop",
-                    modifier = Modifier
-                )
-            }
-            Button(
-                onClick = {
-                    foregroundService.sleepWithPerry(isForeverSleep = false)
-                    unbindService(serviceConnection)
-                },
-                modifier = Modifier.align(BiasAlignment(-0.9f, 0.9f)).fillMaxWidth(0.4f),
-                colors = ButtonDefaults.buttonColors(
-                    contentColor = MaterialTheme.colorScheme.background,
-                    containerColor = MaterialTheme.colorScheme.secondary,
-                ),
-            ) {
-                OurText(
-                    text = "Snooze 5m",
-                    modifier = Modifier
-                )
+            if(!isPreview){
+                val context = LocalContext.current
+                Button(
+                    onClick = {
+                        foregroundService.sleepWithPerry(isForeverSleep = true)
+                        unbindService(serviceConnection)
+                        val stopIntent = Intent(context, ForegroundService::class.java)
+                        stopService(stopIntent)
+                    },
+                    modifier = Modifier.align(BiasAlignment(0.9f, 0.9f)).fillMaxWidth(0.4f),
+                    colors = ButtonDefaults.buttonColors(
+                        contentColor = MaterialTheme.colorScheme.background,
+                        containerColor = MaterialTheme.colorScheme.secondary,
+                    ),
+                ) {
+                    OurText(
+                        text = "Stop",
+                        modifier = Modifier
+                    )
+                }
+                Button(
+                    onClick = {
+                        foregroundService.sleepWithPerry(isForeverSleep = false)
+                    },
+                    modifier = Modifier.align(BiasAlignment(-0.9f, 0.9f)).fillMaxWidth(0.4f),
+                    colors = ButtonDefaults.buttonColors(
+                        contentColor = MaterialTheme.colorScheme.background,
+                        containerColor = MaterialTheme.colorScheme.secondary,
+                    ),
+                ) {
+                    OurText(
+                        text = "Snooze 5m",
+                        modifier = Modifier
+                    )
+                }
             }
         }
     }

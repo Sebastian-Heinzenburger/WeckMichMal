@@ -96,13 +96,13 @@ data class RouteSection(
     val endStation: String,
 )
 
-sealed class RoutePlannerException(message: String, cause: Throwable?) : Throwable(message, cause) {
-    class MalformedStationNameException(stationName: String, cause: Throwable?) :
+sealed class RoutePlannerException(message: String, cause: Exception?) : Exception(message, cause) {
+    class MalformedStationNameException(stationName: String, cause: Exception?) :
         RoutePlannerException("The Station Name '$stationName' is malformed!", cause)
 
-    class NetworkException(cause: Throwable?) :
+    class NetworkException(cause: Exception?) :
         RoutePlannerException("Network error occurred!", cause)
 
-    class InvalidResponseFormatException(cause: Throwable?) :
+    class InvalidResponseFormatException(cause: Exception?) :
         RoutePlannerException("The response format is invalid!", cause)
 }

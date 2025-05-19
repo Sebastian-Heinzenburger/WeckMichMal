@@ -12,7 +12,6 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-import kotlin.concurrent.thread
 
 /**
  * Interface defining the behavior for the persistence layer.
@@ -261,52 +260,52 @@ data class SettingsEntity(
     }
 }
 
-sealed class PersistenceException(message: String?, cause: Throwable?) :
-    Throwable(message, cause) {
+sealed class PersistenceException(message: String?, cause: Exception?) :
+    Exception(message, cause) {
 
     /**
      * Thrown when writing to settings.json fails
      */
-    class WriteSettingsException(cause: Throwable?): PersistenceException("Error writing settings to file", cause)
+    class WriteSettingsException(cause: Exception?): PersistenceException("Error writing settings to file", cause)
 
     /**
      * Thrown when writing to settings.json fails
      */
-    class ReadSettingsException(cause: Throwable?): PersistenceException("Error reading settings from file", cause)
+    class ReadSettingsException(cause: Exception?): PersistenceException("Error reading settings from file", cause)
 
     /**
      * Thrown when creating the log file
      */
-    class CreateLogFileException(cause: Throwable?): PersistenceException("Error creating log file", cause)
+    class CreateLogFileException(cause: Exception?): PersistenceException("Error creating log file", cause)
 
     /**
      * Thrown when writing to log file
      */
-    class WriteLogException(cause: Throwable?): PersistenceException("Error writing to log file", cause)
+    class WriteLogException(cause: Exception?): PersistenceException("Error writing to log file", cause)
 
     /**
      * Thrown when reading from log file
      */
-    class ReadLogException(cause: Throwable?): PersistenceException("Error reading from log file", cause)
+    class ReadLogException(cause: Exception?): PersistenceException("Error reading from log file", cause)
 
     /**
      * Thrown when exception during Event Update
      */
-    class UpdateEventException(cause: Throwable?): PersistenceException("Error updating event in database", cause)
+    class UpdateEventException(cause: Exception?): PersistenceException("Error updating event in database", cause)
 
     /**
      * Thrown when exception during Event Update
      */
-    class GetEventException(cause: Throwable?): PersistenceException("Error retrieving event from database", cause)
+    class GetEventException(cause: Exception?): PersistenceException("Error retrieving event from database", cause)
 
     /**
      * Thrown when exception during Event Update
      */
-    class UpdateConfigurationException(cause: Throwable?): PersistenceException("Error updating configuration in database", cause)
+    class UpdateConfigurationException(cause: Exception?): PersistenceException("Error updating configuration in database", cause)
 
     /**
      * Thrown when exception during Event Update
      */
-    class GetConfigurationException(cause: Throwable?): PersistenceException("Error retrieving configuration from database", cause)
+    class GetConfigurationException(cause: Exception?): PersistenceException("Error retrieving configuration from database", cause)
 
 }

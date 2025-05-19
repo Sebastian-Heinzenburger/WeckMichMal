@@ -8,8 +8,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -18,6 +16,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -65,56 +64,7 @@ class InformationScreen : ComponentActivity() {
                 val context = LocalContext.current
                 Column {
                     Button(
-                        onClick = {
-                            val intent = Intent(context, AlarmRingingScreen::class.java)
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-                            context.startActivity(intent)
-                            (context as ComponentActivity).finish()
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 20.dp),
-                        contentPadding = PaddingValues(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Transparent
-                        )
-                    ) {
-                        Text("\uD83D\uDCC4")
-                    }
-                    Button(
-                        onClick = {
-                            thread {
-                                val file = File(context.filesDir, "log")
-
-                                val requestBody = MultipartBody.Builder()
-                                    .setType(MultipartBody.FORM)
-                                    .addFormDataPart("logFile", "file", file.asRequestBody())
-                                    .build()
-
-                                val request = Request.Builder()
-                                    .url("https://log.heinzenburger.de/submit")
-                                    .post(requestBody)
-                                    .build()
-
-                                OkHttpClient().newCall(request).execute().use { response ->
-                                    if (!response.isSuccessful) throw IOException("Unexpected code $response")
-                                    val responseText = response.body?.string()
-                                    core.showToast(responseText!!)
-                                }
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 20.dp),
-                        contentPadding = PaddingValues(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Transparent
-                        )
-                    ) {
-                        Text("\uD83D\uDD25")
-                    }
-                    Button(
-                        modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 0.dp),
+                        modifier = Modifier.padding(0.dp, 20.dp, 0.dp, 0.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                         onClick = {
                             AlarmClockOverviewScreen.aPlatypus = !AlarmClockOverviewScreen.aPlatypus
@@ -122,10 +72,47 @@ class InformationScreen : ComponentActivity() {
                     ) {
                         Text(
                             style = MaterialTheme.typography.titleMedium,
-                            text = "Ich fürchte, dass dieser Screen unverändert in der Production landen wird",
+                            text = "Dieser Screen landet verändert in der Production",
                             textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.onBackground
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.padding(10.dp)
                         )
+                    }
+                    Button(
+                        onClick = {
+                            if(core.isInternetAvailable()){
+                                thread {
+                                    val file = File(context.filesDir, "log")
+
+                                    val requestBody = MultipartBody.Builder()
+                                        .setType(MultipartBody.FORM)
+                                        .addFormDataPart("logFile", "file", file.asRequestBody())
+                                        .build()
+
+                                    val request = Request.Builder()
+                                        .url("https://log.heinzenburger.de/submit")
+                                        .post(requestBody)
+                                        .build()
+
+                                    OkHttpClient().newCall(request).execute().use { response ->
+                                        if (!response.isSuccessful) throw IOException("Unexpected code $response")
+                                        val responseText = response.body?.string()
+                                        core.showToast(responseText!!)
+                                    }
+                                }
+                            }
+                            else{
+                                core.showToast("Dafür ist eine Internetverbindung nötig")
+                            }
+                        },
+                        modifier = Modifier
+                            .padding(top = 20.dp).align(Alignment.CenterHorizontally),
+                        contentPadding = PaddingValues(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary
+                        )
+                    ) {
+                        OurText(text="Logs zur Analyse an Server senden (Anonym)", modifier = Modifier.padding(8.dp))
                     }
                     innerLogComposable(innerPadding, core)
                 }

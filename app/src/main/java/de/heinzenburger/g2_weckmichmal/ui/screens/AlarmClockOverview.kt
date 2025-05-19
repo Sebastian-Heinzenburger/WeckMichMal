@@ -105,7 +105,8 @@ class AlarmClockOverviewScreen : ComponentActivity(){
         private fun setRingingScreen(context: Context, event: Event?){
             if (event != null) {
                 val intent = Intent(context, AlarmRingingScreen::class.java)
-                intent.putExtra("Event ID", event.configID)
+                intent.putExtra("configID", event.configID)
+                intent.putExtra("isPreview", true)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
                 context.startActivity(intent)
                 (context as ComponentActivity).finish()

@@ -43,6 +43,11 @@ interface I_Core{
     fun getRaplaURL(): String?
 
     /**
+     * Return true if Phone is connected to the Internet
+     */
+    fun isInternetAvailable(): Boolean
+
+    /**
      * Logs [text] to log file and LogCat
      */
     fun log(level: Logger.Level, text: String)

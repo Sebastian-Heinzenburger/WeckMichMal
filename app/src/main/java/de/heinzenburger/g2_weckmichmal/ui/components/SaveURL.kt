@@ -49,23 +49,28 @@ class SaveURL {
         }
 
         fun onclickSaveButton(core: I_Core, onSave: () -> Unit, url: String){
-            thread {
-                //very very dirty aber was soll man machen...
-                var updatedUrl = url.replace("page=calendar","page=ical")
-                updatedUrl = updatedUrl.replace("TINF23B2","TINF23BN2")
-                updatedUrl = updatedUrl.replace("TINF23B1","TINF23BN1")
-                updatedUrl = updatedUrl.replace("TINF23B3","TINF23BN3")
-                updatedUrl = updatedUrl.replace("TINF23B4","TINF23BN4")
-                updatedUrl = updatedUrl.replace("TINF23B5","TINF23BN5")
-                updatedUrl = updatedUrl.replace("TINF23B6","TINF23BN6")
-                if (updatedUrl == "" || core.isValidCourseURL(updatedUrl)) {
-                    core.saveRaplaURL(updatedUrl)
-                    onSave()
-                    core.showToast("Passt")
+            if(core.isInternetAvailable()){
+                thread {
+                    //very very dirty aber was soll man machen...
+                    var updatedUrl = url.replace("page=calendar","page=ical")
+                    updatedUrl = updatedUrl.replace("TINF23B2","TINF23BN2")
+                    updatedUrl = updatedUrl.replace("TINF23B1","TINF23BN1")
+                    updatedUrl = updatedUrl.replace("TINF23B3","TINF23BN3")
+                    updatedUrl = updatedUrl.replace("TINF23B4","TINF23BN4")
+                    updatedUrl = updatedUrl.replace("TINF23B5","TINF23BN5")
+                    updatedUrl = updatedUrl.replace("TINF23B6","TINF23BN6")
+                    if (updatedUrl == "" || core.isValidCourseURL(updatedUrl)) {
+                        core.saveRaplaURL(updatedUrl)
+                        onSave()
+                        core.showToast("Passt")
 
-                } else {
-                    core.showToast("Immer Schulfrei??? Da stimmt doch was mit der URL nicht...")
+                    } else {
+                        core.showToast("Immer Schulfrei??? Da stimmt doch was mit der URL nicht...")
+                    }
                 }
+            }
+            else{
+                core.showToast("Aufgrund der Validierung ist eine Internetverbindung nötig")
             }
         }
     }

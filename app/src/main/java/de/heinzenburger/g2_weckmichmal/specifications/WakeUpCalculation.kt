@@ -33,8 +33,8 @@ interface WakeUpCalculationSpecification {
 /**
  * Represents a sealed hierarchy of exceptions that can occur during wake-up time calculations.
  */
-sealed class WakeUpCalculatorException(message: String?, cause: Throwable?) :
-    Throwable(message, cause) {
+sealed class WakeUpCalculatorException(message: String?, cause: Exception?) :
+    Exception(message, cause) {
 
     /**
      * Thrown when no course data is found for the given configuration or date range.
@@ -46,7 +46,7 @@ sealed class WakeUpCalculatorException(message: String?, cause: Throwable?) :
      *
      * @param cause The underlying exception that caused the connection failure.
      */
-    class CoursesConnectionError(cause: Throwable?) :
+    class CoursesConnectionError(cause: Exception?) :
         WakeUpCalculatorException("Failed to fetch courses due to a connection error", cause)
 
     /**
@@ -54,7 +54,7 @@ sealed class WakeUpCalculatorException(message: String?, cause: Throwable?) :
      *
      * @param cause The underlying exception related to the data parsing or format issue.
      */
-    class CoursesInvalidDataFormatError(cause: Throwable?) :
+    class CoursesInvalidDataFormatError(cause: Exception?) :
         WakeUpCalculatorException("Received invalid or unparsable course data", cause)
 
     /**
@@ -82,7 +82,7 @@ sealed class WakeUpCalculatorException(message: String?, cause: Throwable?) :
      *
      * @param cause The underlying exception that caused the failure.
      */
-    class RouteInvalidConfiguration(cause: Throwable?) :
+    class RouteInvalidConfiguration(cause: Exception?) :
         WakeUpCalculatorException("Invalid route configuration", cause)
 
     /**
@@ -90,7 +90,7 @@ sealed class WakeUpCalculatorException(message: String?, cause: Throwable?) :
      *
      * @param cause The underlying exception that caused the connection failure.
      */
-    class RouteConnectionError(cause: Throwable?) :
+    class RouteConnectionError(cause: Exception?) :
         WakeUpCalculatorException("Failed to fetch routes due to a connection error", cause)
 
     /**
@@ -98,6 +98,6 @@ sealed class WakeUpCalculatorException(message: String?, cause: Throwable?) :
      *
      * @param cause The underlying exception related to the format issue.
      */
-    class RouteInvalidResponse(cause: Throwable?) :
+    class RouteInvalidResponse(cause: Exception?) :
         WakeUpCalculatorException("Invalid response format from route planner", cause)
 }

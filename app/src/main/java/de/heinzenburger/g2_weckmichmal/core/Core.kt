@@ -30,6 +30,8 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 
 data class Core(
     val context: Context,
@@ -257,7 +259,6 @@ data class Core(
             val configurationHandler = ConfigurationHandler(context)
             if (validateConfiguration(configuration)){
                 val eventHandler = EventHandler(context)
-                configurationHandler.saveOrUpdate(configuration)
                 var url = getRaplaURL()
                 val event = WakeUpCalculator(
                     routePlanner = RoutePlanner(),
@@ -272,6 +273,7 @@ data class Core(
                     )
                 ).calculateNextEvent(configuration)
                 eventHandler.saveOrUpdate(event)
+                configurationHandler.saveOrUpdate(configuration)
 
                 configuration.log(this)
                 event.log(this)
@@ -294,6 +296,10 @@ data class Core(
             log(Logger.Level.SEVERE, e.message.toString())
             log(Logger.Level.SEVERE, e.stackTraceToString())
             showToast("Course URL is not valid.")
+        }
+        catch (e: Exception) {
+            log(Logger.Level.SEVERE, e.message.toString())
+            log(Logger.Level.SEVERE, e.stackTraceToString())
         }
     }
 
@@ -377,6 +383,15 @@ data class Core(
             showToast("Error retrieving URL from database. Try reinstalling the app.")
             return null
         }
+    }
+
+    override fun isInternetAvailable(): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
     }
 
     override fun log(

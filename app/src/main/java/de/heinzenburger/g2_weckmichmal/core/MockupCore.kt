@@ -121,6 +121,10 @@ class MockupCore : I_Core {
         return ""
     }
 
+    override fun isInternetAvailable(): Boolean {
+        return true
+    }
+
     override fun log(
         level: Logger.Level,
         text: String

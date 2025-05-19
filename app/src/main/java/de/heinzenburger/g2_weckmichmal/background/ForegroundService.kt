@@ -15,7 +15,6 @@ import androidx.compose.ui.util.fastForEachReversed
 import androidx.core.app.NotificationCompat
 import de.heinzenburger.g2_weckmichmal.R
 import de.heinzenburger.g2_weckmichmal.core.Core
-import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationWithEvent
 import de.heinzenburger.g2_weckmichmal.specifications.Course
 import de.heinzenburger.g2_weckmichmal.specifications.Event
@@ -58,11 +57,13 @@ class ForegroundService : Service() {
     }
 
     fun sleepWithPerry(isForeverSleep : Boolean){
-        vibrator?.cancel()
-        mediaPlayer?.stop()
-        if(!isForeverSleep){
-            Thread.sleep(300000)
-            playWithPerry()
+        thread {
+            vibrator?.cancel()
+            mediaPlayer?.stop()
+            if(!isForeverSleep){
+                Thread.sleep(300000)
+                playWithPerry()
+            }
         }
     }
 
@@ -100,8 +101,6 @@ class ForegroundService : Service() {
     }
 
     override fun onBind(intent: Intent?): IBinder? {
-        val core = Core(applicationContext)
-        core.log(Logger.Level.INFO,"Das hat funktioniert")
         return binder
     }
 
