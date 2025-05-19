@@ -1,12 +1,9 @@
 package de.heinzenburger.g2_weckmichmal.api.db
 
-import androidx.compose.ui.util.fastAny
 import de.heinzenburger.g2_weckmichmal.specifications.RoutePlannerException
 import org.junit.Test
-import java.io.IOException
 import java.time.Duration
 import java.time.LocalDateTime
-import java.time.Period
 
 class RoutePlannerTest {
     @Test
@@ -55,7 +52,7 @@ class RoutePlannerTest {
                 val duration = Duration.between(it.startTime, it.endTime)
                 (duration.toMinutes() >= 20) && (duration.toMinutes() <= 60 * 3)
             }) { "Expected all routes to be between 20 minutes and 3 hours" }
-        } catch (ignored: IOException) {
+        } catch (ignored: RoutePlannerException.NetworkException) {
             // Gitlab CI raises an IOException. No idea why
         }
     }
