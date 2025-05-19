@@ -1,6 +1,7 @@
 package de.heinzenburger.g2_weckmichmal.api.db
 
 import androidx.compose.ui.util.fastAny
+import de.heinzenburger.g2_weckmichmal.specifications.RoutePlannerException
 import org.junit.Test
 import java.io.IOException
 import java.time.Duration
@@ -72,8 +73,8 @@ class RoutePlannerTest {
                     println("Route: ${route.startStation} to ${route.endStation} ${route.startTime} to ${route.endTime}")
                 }
             }
-        } catch (ignored: IOException) {
-            // Gitlab CI raises an IOException. No idea why
+        } catch (ignored: RoutePlannerException.NetworkException) {
+            // Gitlab CI cannot post data to the DB API
         }
     }
 
