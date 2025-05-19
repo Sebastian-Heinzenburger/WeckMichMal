@@ -6,6 +6,8 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
+import android.media.AudioAttributes
+import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Binder
 import android.os.IBinder
@@ -42,11 +44,38 @@ class ForegroundService : Service() {
     }
 
     fun playWithPerry() {
+
+        val audioManager = this.getSystemService(AUDIO_SERVICE) as AudioManager
+        audioManager.setStreamVolume(
+            AudioManager.STREAM_ALARM,
+            audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM),
+            0
+        )
+
         mediaPlayer = MediaPlayer.create(this, R.raw.alarm)
-        mediaPlayer?.start()
-        mediaPlayer?.setOnCompletionListener {
-            vibrator?.cancel()
+        mediaPlayer?.apply {
+            setAudioAttributes(AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_ALARM)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build())
+
+            isLooping = true
+
+            setOnPreparedListener {
+                start()
+            }
+
+            setOnCompletionListener {
+                release()
+            }
+
+            setOnErrorListener { mp, what, extra ->
+                mp.release()
+                true
+            }
         }
+
+
         vibrator?.vibrate(
             VibrationEffect.createWaveform(
                 longArrayOf(0, 500, 950), // Pattern: wait 0ms, vibra,ute 500ms, pause 1000ms
