@@ -70,7 +70,7 @@ class RoutePlanner : RoutePlannerSpecification {
         RoutePlannerException.InvalidResponseFormatException::class
     )
     override fun planRoute(
-        startStation: String, endStation: String, timeOfArrival: LocalDateTime
+        startStation: String, endStation: String, timeOfArrival: LocalDateTime, strict: Boolean
     ): List<Route> {
         try {
 
@@ -126,8 +126,11 @@ class RoutePlanner : RoutePlannerSpecification {
                 val potentialRoute = ParsingUtilities.parsePotentialRouteFromJSON(route)
                 results.add(potentialRoute)
             }
-            return results
-
+            return if (strict) {
+                results.filter { !it.endTime.isAfter(timeOfArrival) } // Inverse isAfter to include isEqual and isBefore
+            } else {
+                results
+            }
         } catch (e: IOException) {
             throw RoutePlannerException.NetworkException(e)
         } catch (e: JSONException) {

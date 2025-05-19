@@ -15,9 +15,9 @@ class WakeUpCalculator(
 ) : WakeUpCalculationSpecification {
 
     @Throws(WakeUpCalculatorException::class)
-    override fun calculateNextEvent(configuration: Configuration): Event {
+    override fun calculateNextEvent(configuration: Configuration, strict: Boolean): Event {
         val eventDate = deriveNextValidDate(configuration.days)
-        return calculateEventForDate(configuration, eventDate)
+        return calculateEventForDate(configuration, eventDate, strict)
     }
 
     @Throws(
@@ -30,10 +30,10 @@ class WakeUpCalculator(
         WakeUpCalculatorException.NoRoutesFound::class,
         WakeUpCalculatorException.InvalidConfiguration::class
     )
-    private fun calculateEventForDate(configuration: Configuration, date: LocalDate): Event {
+    private fun calculateEventForDate(configuration: Configuration, date: LocalDate, strict: Boolean): Event {
         val (atPlaceTime, courses) = deriveAtPlaceTime(courseFetcher, configuration, date)
         val arrivalTime = atPlaceTime.minusMinutes(configuration.endBuffer.toLong())
-        val (departureTime, routes) = deriveDepartureTime(routePlanner, configuration, arrivalTime)
+        val (departureTime, routes) = deriveDepartureTime(routePlanner, configuration, arrivalTime, strict)
         val wakeUpTime = departureTime.minusMinutes(configuration.startBuffer.toLong())
 
         return Event(
@@ -91,7 +91,8 @@ class WakeUpCalculator(
         fun deriveDepartureTime(
             routePlanner: RoutePlannerSpecification,
             config: Configuration,
-            arrivalTime: LocalDateTime
+            arrivalTime: LocalDateTime,
+            strict: Boolean
         ): Pair<LocalDateTime, List<Route>?> {
             return when {
                 config.fixedTravelBuffer != null -> {
@@ -101,11 +102,17 @@ class WakeUpCalculator(
 
                 config.startStation != null && config.endStation != null -> {
                     try {
-                        val routes = routePlanner.planRoute(
+                        var routes = routePlanner.planRoute(
                             config.startStation!!,
                             config.endStation!!,
-                            arrivalTime
+                            arrivalTime,
+                            strict
                         )
+                        routes = if(!strict && config.enforceStartBuffer) {
+                            routes.filter { it.startTime.isAfter(LocalDateTime.now().plusMinutes(config.startBuffer.toLong())) }
+                        }else {
+                            routes.filter { it.startTime.isAfter(LocalDateTime.now()) }
+                        }
                         val selectedRoute = routes.maxByOrNull { it.startTime }
                             ?: throw WakeUpCalculatorException.NoRoutesFound()
                         selectedRoute.startTime to routes

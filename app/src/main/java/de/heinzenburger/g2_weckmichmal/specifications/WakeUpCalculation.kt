@@ -17,12 +17,17 @@ interface WakeUpCalculationSpecification {
      *
      * @param configuration The [Configuration] object containing alarm parameters,
      * such as active days, buffers, station details, and travel preferences.
+     * @param strict If `true` (default), only routes that are guaranteed to arrive *before* the arrival time
+     *               will be considered. If `false`, routes will be selected with a *best effort* approach
+     *               to arrive before the target time, potentially excluding early connections
+     *               due to current time constraints.
+     *
      * @return An [Event] containing the calculated wake-up time, associated date,
      * relevant courses, and route details.
      * @throws WakeUpCalculatorException if the calculation fails due to invalid or missing data.
      */
     @Throws(WakeUpCalculatorException::class)
-    fun calculateNextEvent(configuration: Configuration): Event
+    fun calculateNextEvent(configuration: Configuration, strict: Boolean = true): Event
 }
 
 /**

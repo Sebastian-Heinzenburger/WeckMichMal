@@ -42,13 +42,9 @@ class RaplaFetcher(
         }
     }
 
-    @Throws(CourseFetcherException.DataFormatError::class)
+    @Throws(CourseFetcherException::class)
     override fun throwIfInvalidCourseURL() {
-        try {
-            fetchCoursesBetween(Period(LocalDateTime.now(), LocalDateTime.now().plusDays(1)))
-        } catch (e: CourseFetcherException.DataFormatError) {
-            throw CourseFetcherException.DataFormatError(e)
-        }
+        fetchCoursesBetween(Period(LocalDateTime.now(), LocalDateTime.now().plusDays(1)))
     }
 
     private companion object {

@@ -29,15 +29,15 @@ class WakeUpCalculatorTest {
 
     private val routesMock = listOf(
         Route(
-            startTime = LocalDateTime.of(2025, 4, 28, 8, 45),
-            endTime = LocalDateTime.of(2025, 4, 28, 9, 30),
+            startTime = eventDate.atTime(8, 45),
+            endTime = eventDate.atTime(9, 30),
             startStation = "",
             endStation = "",
             sections = listOf()
         ),
         Route(
-            startTime = LocalDateTime.of(2025, 4, 28, 9, 0),
-            endTime = LocalDateTime.of(2025, 4, 28, 9, 30),
+            startTime = eventDate.atTime(9, 0),
+            endTime = eventDate.atTime(9, 30),
             startStation = "",
             endStation = "",
             sections = listOf()
@@ -65,7 +65,7 @@ class WakeUpCalculatorTest {
     @Test
     fun `test calculateNextEvent with CourseReference`() {
         whenever(courseFetcherMock.fetchCoursesBetween(any())).thenReturn(courseMocks)
-        whenever(routePlannerMock.planRoute(any(), any(), any())).thenReturn(routesMock)
+        whenever(routePlannerMock.planRoute(any(), any(), any(), any())).thenReturn(routesMock)
 
         val config = Configuration(
             uid = 1L,
@@ -82,7 +82,7 @@ class WakeUpCalculatorTest {
         )
 
         val result = wakeUpCalculator.calculateNextEvent(config)
-        assertDoesNotThrow { wakeUpCalculator.calculateNextEvent(config) }
+        assertDoesNotThrow {  wakeUpCalculator.calculateNextEvent(config) }
         assertNotNull("Expected to receive result", result)
         assertEquals("Expected to have same configID", 1L, result.configID)
         assertEquals("Wrong wakeUpTime", eventDate.atTime(8,50).toLocalTime(), result.wakeUpTime)
@@ -91,52 +91,7 @@ class WakeUpCalculatorTest {
     @Test
     fun `test calculateNextEvent with fixed time`() {
         whenever(courseFetcherMock.fetchCoursesBetween(any())).thenReturn(courseMocks)
-        whenever(routePlannerMock.planRoute(any(), any(), any())).thenReturn(routesMock)
-
-        val config = Configuration(
-            uid = 1L,
-            name = "Test Config",
-            days = setOf(eventDay, DayOfWeek.WEDNESDAY),
-            fixedArrivalTime = LocalTime.of(10, 0, 0),
-            fixedTravelBuffer = 30,
-            startBuffer = 10,
-            endBuffer = 30,
-            startStation = null,
-            endStation = null,
-            isActive = true,
-            enforceStartBuffer = true
-        )
-
-        val result = wakeUpCalculator.calculateNextEvent(config)
-        assertDoesNotThrow { wakeUpCalculator.calculateNextEvent(config) }
-        assertNotNull("Expected to receive result", result)
-        assertEquals("Expected to have same configID", 1L, result.configID)
-        assertEquals("Wrong wakeUpTime", eventDate.atTime(8,50).toLocalTime(), result.wakeUpTime)
-    }
-
-    @Test
-    fun `test batchCalculateNextEvent with fixed time`() {
-        whenever(courseFetcherMock.fetchCoursesBetween(any())).thenReturn(courseMocks)
-        whenever(routePlannerMock.planRoute(any(), any(), any())).thenReturn(routesMock)
-
-
-        val configs = listOf(
-            Configuration(
-                uid = 1L,
-                name = "Test Config",
-                days = setOf(eventDay, DayOfWeek.WEDNESDAY),
-                fixedArrivalTime = LocalTime.of(10, 0, 0),
-                fixedTravelBuffer = 30,
-                startBuffer = 10,
-                endBuffer = 30,
-                startStation = null,
-                endStation = null,
-                isActive = true,
-                enforceStartBuffer = true
-            ),
-
-        )
-
+        whenever(routePlannerMock.planRoute(any(), any(), any(), any())).thenReturn(routesMock)
 
         val config = Configuration(
             uid = 1L,

@@ -73,10 +73,34 @@ data class Core(
                 it.event?.log(this)
                 configurationWithEvent = ConfigurationWithEvent(
                     it.configuration,
-                    wakeUpCalculator.calculateNextEvent(it.configuration)
+                    wakeUpCalculator.calculateNextEvent(it.configuration, strict = true)
                 )
                 log(Logger.Level.INFO, "Updating Event. After:")
                 configurationWithEvent.event?.log(this)
+            }
+            catch (e: WakeUpCalculatorException.NoRoutesFound){
+                if(it.configuration.enforceStartBuffer){
+                    try {
+                        configurationWithEvent = ConfigurationWithEvent(
+                            it.configuration,
+                            wakeUpCalculator.calculateNextEvent(it.configuration, strict = false)
+                        )
+                        log(Logger.Level.SEVERE, "No Routes found and enforcing start buffer.")
+                    }
+                    catch (e: Exception){
+                        configurationWithEvent = it
+                        log(Logger.Level.SEVERE, "No Routes found and enforcing start buffer but another exception.")
+                        log(Logger.Level.SEVERE, e.message.toString())
+                        log(Logger.Level.SEVERE, e.stackTraceToString())
+                    }
+                }
+                else{
+                    log(Logger.Level.SEVERE, "No Routes found and not enforcing start buffer. Wake up now!")
+                    log(Logger.Level.SEVERE, e.message.toString())
+                    log(Logger.Level.SEVERE, e.stackTraceToString())
+                    runWakeUpLogic(it.event!!)
+                    return
+                }
             }
             //If course suddenly disappeared -> No school? -> Do not wake up and delete Event
             catch (e: WakeUpCalculatorException.NoCoursesFound){
