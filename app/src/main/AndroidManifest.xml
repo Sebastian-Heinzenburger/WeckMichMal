@@ -72,6 +72,7 @@
         </service>
         <receiver android:name=".background.AlarmUpdater"/>
         <receiver android:name=".background.AlarmEvent"/>
+        <receiver android:name=".background.DeleteConfigurationReceiver" />
     </application>
 
 </manifest>

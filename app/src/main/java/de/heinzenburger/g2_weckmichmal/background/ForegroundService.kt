@@ -5,6 +5,8 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
 import android.media.AudioManager
@@ -24,9 +26,9 @@ import kotlin.concurrent.thread
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.system.exitProcess
 
 class ForegroundService : Service() {
-
     companion object{
         lateinit var event : Event
     }
@@ -177,6 +179,12 @@ class ForegroundService : Service() {
             bigText += "\nAbfahrt von ${it.startStation} um ${it.startTime.format(DateTimeFormatter.ofPattern("HH:mm"))}"
         }
 
+        var deleteConfigurationReceiver = Intent(this, DeleteConfigurationReceiver::class.java)
+        deleteConfigurationReceiver.action = "NOTIFICATION_DELETED"
+
+        val pendingDeleteConfigurationReceiver = PendingIntent.getBroadcast(
+                this, 0, deleteConfigurationReceiver, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
         return NotificationCompat.Builder(this, "g2_weckmichmal")
             .setContentTitle(title)
@@ -185,7 +193,23 @@ class ForegroundService : Service() {
                 .bigText(bigText))
             .setSmallIcon(R.mipmap.ic_launcher_foreground) // Replace with your app's icon
             .setContentIntent(pendingIntent)
+            .addAction(R.mipmap.ic_launcher_foreground, "Aufhören!",
+                pendingDeleteConfigurationReceiver)
+            .setDeleteIntent(pendingDeleteConfigurationReceiver)
             .setAutoCancel(true)
             .build()
+    }
+}
+
+class DeleteConfigurationReceiver : BroadcastReceiver() {
+    @Override
+    override fun onReceive(context:Context, intent: Intent) {
+        val core = Core(context)
+        core.showToast("Alarm gestoppt")
+        if ("NOTIFICATION_DELETED" == intent.action) {
+            val stopIntent = Intent(context, ForegroundService::class.java)
+            context.stopService(stopIntent)
+            exitProcess(-1)
+        }
     }
 }
