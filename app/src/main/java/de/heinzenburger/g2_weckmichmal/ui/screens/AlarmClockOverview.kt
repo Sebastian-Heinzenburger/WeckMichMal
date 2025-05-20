@@ -1,7 +1,10 @@
 package de.heinzenburger.g2_weckmichmal.ui.screens
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -46,6 +49,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.core.app.ActivityCompat.finishAffinity
+import androidx.core.content.ContextCompat
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationWithEvent
@@ -66,6 +70,17 @@ class AlarmClockOverviewScreen : ComponentActivity(){
         thread {
             configurationAndEventEntities.value = core.getAllConfigurationAndEvent()!!
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                core.showToast("Please allow Notifications in System Settings")
+            }
+        }
+
         setContent {
             G2_WeckMichMalTheme {
                 val context = LocalContext.current

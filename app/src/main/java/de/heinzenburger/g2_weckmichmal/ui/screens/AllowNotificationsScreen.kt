@@ -1,22 +1,27 @@
 package de.heinzenburger.g2_weckmichmal.ui.screens
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -24,19 +29,25 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import de.heinzenburger.g2_weckmichmal.core.Core
-import de.heinzenburger.g2_weckmichmal.core.MockupCore
-import de.heinzenburger.g2_weckmichmal.specifications.I_Core
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
-import de.heinzenburger.g2_weckmichmal.ui.components.SaveURL
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
 
-class WelcomeScreen : ComponentActivity() {
+class AllowNotificationsScreen : ComponentActivity() {
+    private val requestPermissionLauncher = registerForActivityResult(
+        RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // Permission granted - proceed with notifications
+        } else {
+            Core(context = applicationContext).showToast("Please allow Notifications!")
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val core = Core(context = applicationContext)
         setContent {
             val context = LocalContext.current
             BackHandler {
@@ -44,14 +55,15 @@ class WelcomeScreen : ComponentActivity() {
                 ActivityCompat.finishAffinity(context as ComponentActivity)
             }
             G2_WeckMichMalTheme {
-                Greeting(modifier = Modifier, core)
+                InnerComposable(modifier = Modifier)
             }
         }
     }
 
     @Composable
-    fun Greeting(modifier: Modifier, core: I_Core) {
+    fun InnerComposable(modifier: Modifier) {
         val context = LocalContext.current
+        val skipText = remember { mutableStateOf("Überspringen") }
         Column(modifier
             .background(MaterialTheme.colorScheme.background)
             .fillMaxSize(),
@@ -59,47 +71,52 @@ class WelcomeScreen : ComponentActivity() {
             horizontalAlignment = Alignment.CenterHorizontally
         ){
             Text(
-                style = MaterialTheme.typography.titleMedium,
-                text = "Willkommen",
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = modifier.padding(16.dp)
-            )
-            Text(
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.titleSmall,
-                text = "Beginne damit, deinen Vorlesungsplan zu hinterlegen",
+                text = "WeckMichMal benötigt die Berechtigung, Benachrichtigungen zu senden. Nur so kann der Alarm dich zuverlässig wecken. Keine Sorge, es gibt keine Werbung oder störende Nachrichten.",
                 color = MaterialTheme.colorScheme.error,
                 modifier = modifier.padding(16.dp)
             )
-            SaveURL.innerSettingsComposable(
-                PaddingValues(0.dp), core,
-                fun () {
-                    val intent = Intent(context, AllowNotificationsScreen::class.java)
+
+            if(skipText.value != "Weiter"){
+                Button(
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.onBackground
+                    ),
+                    onClick = {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            if (ContextCompat.checkSelfPermission(
+                                    context,
+                                    Manifest.permission.POST_NOTIFICATIONS
+                                ) != PackageManager.PERMISSION_GRANTED
+                            ) {
+                                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                skipText.value = "Weiter"
+                            }
+                        }
+                    }
+                ) {
+                    OurText(
+                        text = "Berechtigung erteilen",
+                        modifier = Modifier
+                    )
+                }
+            }
+
+            Button(
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.onBackground
+                ),
+                onClick = {
+                    val intent = Intent(context, AlarmClockOverviewScreen::class.java)
                     intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
                     context.startActivity(intent)
                     (context as ComponentActivity).finish()
                 }
-            )
-            Button(
-                onClick = {
-                    core.saveRaplaURL("")
-                    val intent = Intent(context, AllowNotificationsScreen::class.java)
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-                    context.startActivity(intent)
-                    (context as ComponentActivity).finish()
-                },
-                colors = ButtonColors(
-                    contentColor = MaterialTheme.colorScheme.primary,
-                    containerColor = MaterialTheme.colorScheme.error,
-                    disabledContainerColor = MaterialTheme.colorScheme.error,
-                    disabledContentColor = MaterialTheme.colorScheme.error
-                ),
-                modifier = modifier.padding(16.dp)
             ) {
                 OurText(
-                    text = "Ohne Vorlesungsplan fortfahren",
-                    modifier = modifier.padding(8.dp),
+                    text = skipText.value,
+                    modifier = Modifier
                 )
             }
         }
@@ -111,12 +128,11 @@ class WelcomeScreen : ComponentActivity() {
 
 @Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
-    val welcomeScreen = WelcomeScreen()
+fun AllowNotificationsPreview() {
+    val allowNotificationsScreen = AllowNotificationsScreen()
     G2_WeckMichMalTheme {
-        welcomeScreen.Greeting(
+        allowNotificationsScreen.InnerComposable(
             modifier = Modifier,
-            core = MockupCore()
         )
     }
 }

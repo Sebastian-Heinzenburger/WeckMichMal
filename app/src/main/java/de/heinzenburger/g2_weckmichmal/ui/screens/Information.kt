@@ -71,8 +71,8 @@ class InformationScreen : ComponentActivity() {
                         }
                     ) {
                         Text(
-                            style = MaterialTheme.typography.titleMedium,
-                            text = "Dieser Screen landet verändert in der Production",
+                            style = MaterialTheme.typography.titleSmall,
+                            text = "Datenschutzerklärung unter fzuerner.com/privacy",
                             textAlign = TextAlign.Center,
                             color = MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier.padding(10.dp)
@@ -106,13 +106,13 @@ class InformationScreen : ComponentActivity() {
                             }
                         },
                         modifier = Modifier
-                            .padding(top = 20.dp).align(Alignment.CenterHorizontally),
+                            .padding(top = 10.dp, bottom = 10.dp).align(Alignment.CenterHorizontally),
                         contentPadding = PaddingValues(),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.secondary
                         )
                     ) {
-                        OurText(text="Logs zur Analyse an Server senden (Anonym)", modifier = Modifier.padding(8.dp))
+                        OurText(text="Logs zur Analyse an Server senden", modifier = Modifier.padding(16.dp))
                     }
                     innerLogComposable(innerPadding, core)
                 }
