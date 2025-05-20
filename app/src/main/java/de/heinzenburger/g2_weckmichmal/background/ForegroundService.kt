@@ -100,7 +100,6 @@ class ForegroundService : Service() {
         val configID = intent?.getLongExtra("configID",-1)
         val core = Core(applicationContext)
 
-
         thread {
             var configurationWithEvent: ConfigurationWithEvent? = null
             core.getAllConfigurationAndEvent()?.forEach {

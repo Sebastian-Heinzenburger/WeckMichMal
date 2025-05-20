@@ -68,7 +68,6 @@ data class Core(
                 return@forEachIndexed
             }
 
-            //Strict and Lazy are missing
             var configurationWithEvent : ConfigurationWithEvent
             try {
                 log(Logger.Level.INFO, "Updating Event. Before:")
@@ -258,6 +257,8 @@ data class Core(
         try {
             val configurationHandler = ConfigurationHandler(context)
             if (validateConfiguration(configuration)){
+                configurationHandler.saveOrUpdate(configuration)
+
                 val eventHandler = EventHandler(context)
                 var url = getRaplaURL()
                 val event = WakeUpCalculator(
@@ -273,7 +274,6 @@ data class Core(
                     )
                 ).calculateNextEvent(configuration)
                 eventHandler.saveOrUpdate(event)
-                configurationHandler.saveOrUpdate(configuration)
 
                 configuration.log(this)
                 event.log(this)
@@ -286,6 +286,11 @@ data class Core(
             log(Logger.Level.SEVERE, e.message.toString())
             log(Logger.Level.SEVERE, e.stackTraceToString())
             showToast("Error communicating with database. Try reinstalling the app.")
+        }
+        catch (e: WakeUpCalculatorException.NoRoutesFound){
+            //This can happen, e.g. when the user sets an alarm for a past event on the same day
+            log(Logger.Level.SEVERE, e.message.toString())
+            log(Logger.Level.SEVERE, e.stackTraceToString())
         }
         catch (e: WakeUpCalculatorException){
             log(Logger.Level.SEVERE, e.message.toString())
@@ -465,4 +470,3 @@ data class Core(
         }
     }
 }
-
