@@ -13,6 +13,7 @@ import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Binder
 import android.os.IBinder
+import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.compose.ui.util.fastForEachReversed
 import androidx.core.app.NotificationCompat
@@ -77,15 +78,13 @@ class ForegroundService : Service() {
         }
 
 
-        /*vibrator?.vibrate(
+        vibrator?.vibrate(
             VibrationEffect.createWaveform(
                 longArrayOf(0, 500, 950), // Pattern: wait 0ms, vibra,ute 500ms, pause 1000ms
                 intArrayOf(0, 255, 0),
                 1 // Repeat indefinitely
             )
         )
-
-         */
     }
 
     fun sleepWithPerry(isForeverSleep : Boolean){
