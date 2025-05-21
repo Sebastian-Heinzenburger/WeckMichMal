@@ -288,7 +288,7 @@ data class Core(
             showToast("Error communicating with database. Try reinstalling the app.")
         }
         catch (e: WakeUpCalculatorException.NoRoutesFound){
-            //This can happen, e.g. when the user sets an alarm for a past event on the same day
+            showToast("Event will be updated this night.")
             log(Logger.Level.SEVERE, e.message.toString())
             log(Logger.Level.SEVERE, e.stackTraceToString())
         }
