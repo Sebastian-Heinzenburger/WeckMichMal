@@ -33,6 +33,9 @@ import androidx.core.content.ContextCompat
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
+import android.provider.Settings
+import android.app.AlarmManager
+import androidx.core.net.toUri
 
 class AllowNotificationsScreen : ComponentActivity() {
     private val requestPermissionLauncher = registerForActivityResult(
@@ -63,7 +66,8 @@ class AllowNotificationsScreen : ComponentActivity() {
     @Composable
     fun InnerComposable(modifier: Modifier) {
         val context = LocalContext.current
-        val skipText = remember { mutableStateOf("Überspringen") }
+        val allowNotifications = remember { mutableStateOf(false) }
+        val allowSheduleAlarm = remember { mutableStateOf(false) }
         Column(modifier
             .background(MaterialTheme.colorScheme.background)
             .fillMaxSize(),
@@ -73,17 +77,27 @@ class AllowNotificationsScreen : ComponentActivity() {
             Text(
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.titleSmall,
-                text = "WeckMichMal benötigt die Berechtigung, Benachrichtigungen zu senden. Nur so kann der Alarm dich zuverlässig wecken. Keine Sorge, es gibt keine Werbung oder störende Nachrichten.",
+                text =
+                    if(!allowNotifications.value){
+                        "WeckMichMal benötigt die Berechtigung, Benachrichtigungen zu senden. Nur so kann der Alarm dich zuverlässig wecken.\nKeine Sorge, es gibt keine Werbung oder störende Nachrichten."
+                    }
+                    else if(!allowSheduleAlarm.value){
+                        "Außerdem benötigt WeckMichMal die Berechtigung, Alarme in deinem System zu setzen. Ansonsten verschläfst du jeden morgen."
+                    }
+                    else{
+                        "Danke!"
+                    },
                 color = MaterialTheme.colorScheme.error,
                 modifier = modifier.padding(16.dp)
             )
 
-            if(skipText.value != "Weiter"){
+            if(!(allowNotifications.value && allowSheduleAlarm.value)){
                 Button(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.onBackground
                     ),
                     onClick = {
+                        var temp = false
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                             if (ContextCompat.checkSelfPermission(
                                     context,
@@ -91,8 +105,19 @@ class AllowNotificationsScreen : ComponentActivity() {
                                 ) != PackageManager.PERMISSION_GRANTED
                             ) {
                                 requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                                skipText.value = "Weiter"
+                                allowNotifications.value = true
+                                temp = true
                             }
+                        }
+                        if (!temp && !allowSheduleAlarm.value){
+                            val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+                            if (!alarmManager.canScheduleExactAlarms()) {
+                                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                                    data = "package:$packageName".toUri()
+                                }
+                                startActivity(intent)
+                            }
+                            allowSheduleAlarm.value = true
                         }
                     }
                 ) {
@@ -115,7 +140,12 @@ class AllowNotificationsScreen : ComponentActivity() {
                 }
             ) {
                 OurText(
-                    text = skipText.value,
+                    text = if(allowNotifications.value && allowSheduleAlarm.value){
+                        "Weiter"
+                    }
+                    else{
+                        "Überspringen"
+                    },
                     modifier = Modifier
                 )
             }
