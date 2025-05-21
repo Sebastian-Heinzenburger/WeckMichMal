@@ -3,6 +3,7 @@ package de.heinzenburger.g2_weckmichmal.ui.components
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -11,8 +12,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 /**
@@ -88,6 +91,23 @@ class BasicElements {
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = modifier,
                 textAlign = textAlign
+            )
+        }
+        @Composable
+        fun NumberField(text: MutableState<Int>, modifier: Modifier) {
+            fun extractIntFromString(input: String): Int {
+                val digits = input.filter { it.isDigit() }
+                return if (digits.isNotEmpty()) digits.toInt() else 0
+            }
+
+            val change : (String) -> Unit = { it ->
+                text.value = extractIntFromString(it)
+            }
+            TextField(
+                value = text.value.toString(),
+                modifier = modifier,
+                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                onValueChange = change
             )
         }
     }

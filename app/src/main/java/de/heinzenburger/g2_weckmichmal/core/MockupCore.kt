@@ -18,7 +18,7 @@ import java.time.LocalTime
 //For description of each method, see I_Core in specifications
 class MockupCore : I_Core {
     override fun deriveStationName(input: String): List<String> {
-        return listOf("Europapapapa")
+        return listOf("Europaplatz","Europaplatz U", "Europaplatz Berlin","Europaplatz München", "Europaplatz Dortmund")
     }
 
     companion object{

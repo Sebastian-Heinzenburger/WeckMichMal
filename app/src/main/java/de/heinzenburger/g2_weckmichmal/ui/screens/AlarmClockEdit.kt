@@ -3,7 +3,6 @@ package de.heinzenburger.g2_weckmichmal.ui.screens
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.Range
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -622,7 +621,6 @@ class AlarmClockEditScreen : ComponentActivity() {
                         onDismiss = {
                             openTravelTimePickerDialog.value = false
                         },
-                        range = Range(0,120),
                         default = manuallySetTravelTime.intValue
                     )
                 }
@@ -638,7 +636,6 @@ class AlarmClockEditScreen : ComponentActivity() {
                         onDismiss = {
                             openStartBufferPickerDialog.value = false
                         },
-                        range = Range(0,120),
                         default = setStartBufferTime.intValue
                     )
                 }
@@ -654,7 +651,6 @@ class AlarmClockEditScreen : ComponentActivity() {
                         onDismiss = {
                             openEndBufferPickerDialog.value = false
                         },
-                        range = Range(-120,60),
                         default = setEndBufferTime.intValue
                     )
                 }
