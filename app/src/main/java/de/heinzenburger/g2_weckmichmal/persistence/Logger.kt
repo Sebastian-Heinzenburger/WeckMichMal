@@ -44,10 +44,8 @@ data class Logger(
                 }
             }
             try {
-                val buf = BufferedWriter(FileWriter(logFile, true))
-                buf.append(modifiedText)
-                buf.newLine()
-                buf.close()
+                logFile.appendText(modifiedText)
+                logFile.appendText(System.lineSeparator())
             }
             catch (e: IOException) {
                 throw PersistenceException.WriteLogException(e)
