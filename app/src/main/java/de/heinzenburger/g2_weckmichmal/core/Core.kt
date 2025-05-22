@@ -40,12 +40,17 @@ data class Core(
 
     //For description of each method, see I_Core in specifications
     override fun deriveStationName(input: String): List<String> {
+        log(Logger.Level.INFO, "deriveStationName called with input: $input")
         val routePlanner = RoutePlanner()
-        return routePlanner.deriveValidStationNames(input)
+        val result = routePlanner.deriveValidStationNames(input)
+        log(Logger.Level.INFO, "deriveStationName result: $result")
+        return result
     }
 
     override fun runUpdateLogic() {
+        log(Logger.Level.INFO, "runUpdateLogic started")
         val url = getRaplaURL()
+        log(Logger.Level.INFO, "Rapla URL: $url")
         val wakeUpCalculator = WakeUpCalculator(
             routePlanner = RoutePlanner(),
             courseFetcher = RaplaFetcher(
@@ -60,11 +65,14 @@ data class Core(
         )
 
         var configurationsWithEvents = getAllConfigurationAndEvent()?.toMutableList()
+        log(Logger.Level.INFO, "ConfigurationsWithEvents loaded: $configurationsWithEvents")
 
         configurationsWithEvents?.forEachIndexed {
             index, it ->
+            log(Logger.Level.INFO, "Processing configurationWithEvent at index $index: $it")
             //Skip updating configuration if inactive
             if(!it.configuration.isActive){
+                log(Logger.Level.INFO, "Configuration at index $index is inactive, skipping.")
                 return@forEachIndexed
             }
 
@@ -80,6 +88,7 @@ data class Core(
                 configurationWithEvent.event?.log(this)
             }
             catch (e: WakeUpCalculatorException.NoRoutesFound){
+                log(Logger.Level.INFO, "NoRoutesFound exception caught for configuration at index $index")
                 if(it.configuration.enforceStartBuffer){
                     try {
                         configurationWithEvent = ConfigurationWithEvent(
@@ -105,6 +114,7 @@ data class Core(
             }
             //If course suddenly disappeared -> No school? -> Do not wake up and delete Event
             catch (e: WakeUpCalculatorException.NoCoursesFound){
+                log(Logger.Level.INFO, "NoCoursesFound exception caught for configuration at index $index")
                 configurationWithEvent = ConfigurationWithEvent(
                     it.configuration, null
                 )
@@ -113,18 +123,21 @@ data class Core(
             }
             //Course URL suddenly not valid anymore? -> Continue with previously assumed wake up time
             catch (e: WakeUpCalculatorException.CoursesInvalidDataFormatError){
+                log(Logger.Level.INFO, "CoursesInvalidDataFormatError exception caught for configuration at index $index")
                 configurationWithEvent = it
                 log(Logger.Level.SEVERE, e.message.toString())
                 log(Logger.Level.SEVERE, e.stackTraceToString())
             }
             //Internet connection error -> Continue with previously assumed wake up time
             catch (e: WakeUpCalculatorException.CoursesConnectionError){
+                log(Logger.Level.INFO, "CoursesConnectionError exception caught for configuration at index $index")
                 configurationWithEvent = it
                 log(Logger.Level.SEVERE, e.message.toString())
                 log(Logger.Level.SEVERE, e.stackTraceToString())
             }
             //Something bad happened -> Continue with previously assumed wake up time
             catch (e: Exception){
+                log(Logger.Level.INFO, "Generic exception caught for configuration at index $index: ${e.message}")
                 configurationWithEvent = it
                 log(Logger.Level.SEVERE, e.message.toString())
                 log(Logger.Level.SEVERE, e.stackTraceToString())
@@ -134,6 +147,7 @@ data class Core(
             //Save updated event to database
             if(configurationWithEvent.event != null){
                 try {
+                    log(Logger.Level.INFO, "Saving or updating event: ${configurationWithEvent.event}")
                     eventHandler.saveOrUpdate(configurationWithEvent.event)
                 }
                 catch (e: PersistenceException){
@@ -147,53 +161,49 @@ data class Core(
         var earliestEvent: Event? = null
         configurationsWithEvents?.forEach {
             val eventDateTime = it.event?.date?.atTime(it.event.wakeUpTime)
+            log(Logger.Level.INFO, "Checking eventDateTime: $eventDateTime for configuration: ${it.configuration}")
             if(it.configuration.isActive &&
                 eventDateTime?.isBefore(LocalDateTime.now()) == false
                 && eventDateTime.isBefore(earliestEventDate) == true){
                 earliestEventDate = eventDateTime
                 earliestEvent = it.event
+                log(Logger.Level.INFO, "New earliestEventDate: $earliestEventDate, earliestEvent: $earliestEvent")
             }
         }
         log(Logger.Level.INFO, "Earliest Event is at " + earliestEventDate.format(DateTimeFormatter.ofPattern("MM-dd HH:mm:ss")))
-        if (Duration.between(
-                LocalDateTime.now(),
-                earliestEventDate
-            ).seconds > 28800 // 8 hours
+        val secondsUntilEarliestEvent = Duration.between(LocalDateTime.now(), earliestEventDate).seconds
+        log(Logger.Level.INFO, "Seconds until earliest event: $secondsUntilEarliestEvent")
+        if (secondsUntilEarliestEvent > 28800 // 8 hours
         ) {
+            log(Logger.Level.INFO, "Scheduling update in 7 hours")
             startUpdateScheduler(25200) // 7 hours
-        }else if (Duration.between(
-                LocalDateTime.now(),
-                earliestEventDate
-            ).seconds > 14400 //4 hours
+        }else if (secondsUntilEarliestEvent > 14400 //4 hours
         ) {
+            log(Logger.Level.INFO, "Scheduling update in 3.5 hours")
             startUpdateScheduler(12600) // 3.5 hours
         }
-        else if (Duration.between(
-                LocalDateTime.now(),
-                earliestEventDate
-            ).seconds > 3600 // 1 hour
+        else if (secondsUntilEarliestEvent > 3600 // 1 hour
         ) {
+            log(Logger.Level.INFO, "Scheduling update in 30 minutes")
             startUpdateScheduler(1800) // 30 minutes
         }
-        else if (Duration.between(
-                LocalDateTime.now(),
-                earliestEventDate
-            ).seconds > 1800 // 30 minutes
+        else if (secondsUntilEarliestEvent > 1800 // 30 minutes
         ) {
+            log(Logger.Level.INFO, "Scheduling update in 15 minutes")
             startUpdateScheduler(900) // 15 minutes
         }
-        else if (Duration.between(
-                LocalDateTime.now(),
-                earliestEventDate
-            ).seconds > 600 // 10 minutes
+        else if (secondsUntilEarliestEvent > 600 // 10 minutes
         ) {
+            log(Logger.Level.INFO, "Scheduling update in 4 minutes")
             startUpdateScheduler(240) // 4 minutes
         } else {
+            log(Logger.Level.INFO, "Running wake up logic for earliestEvent: $earliestEvent")
             runWakeUpLogic(earliestEvent!!)
         }
     }
 
     override fun runWakeUpLogic(earliestEvent: Event) {
+        log(Logger.Level.INFO, "runWakeUpLogic called with earliestEvent: $earliestEvent")
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val alarmIntent = Intent(context, AlarmEvent::class.java)
         alarmIntent.putExtra("configID", earliestEvent.configID)
@@ -212,11 +222,13 @@ data class Core(
         )
 
         if (!alarmManager.canScheduleExactAlarms()) {
+            log(Logger.Level.INFO, "Requesting permission to schedule exact alarms")
             val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(intent)
         }
         val alarmDate = earliestEvent.date.atTime(earliestEvent.wakeUpTime)
+        log(Logger.Level.INFO, "Setting alarm for date: $alarmDate")
         val alarmClockInfo = AlarmManager.AlarmClockInfo(alarmDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
             pendingEditIntent)
         log(Logger.Level.INFO, "Alarm ringing at ${earliestEvent.wakeUpTime}!")
@@ -224,6 +236,7 @@ data class Core(
     }
 
     override fun startUpdateScheduler(delay: Int) {
+        log(Logger.Level.INFO, "startUpdateScheduler called with delay: $delay")
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val alarmIntent = Intent(context, AlarmUpdater::class.java)
         val pendingIntent = PendingIntent.getBroadcast(
@@ -241,12 +254,15 @@ data class Core(
         )
 
         if (!alarmManager.canScheduleExactAlarms()) {
+            log(Logger.Level.INFO, "Requesting permission to schedule exact alarms for update scheduler")
             val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(intent)
         }
+        val triggerTime = LocalDateTime.now().plusSeconds(delay.toLong())
+        log(Logger.Level.INFO, "Scheduling update alarm for: $triggerTime")
         val alarmClockInfo = AlarmManager.AlarmClockInfo(
-            LocalDateTime.now().plusSeconds(delay.toLong()).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+            triggerTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
             pendingEditIntent)
 
         log(Logger.Level.INFO, "Alarm updating in ${delay/60} minutes")
@@ -254,13 +270,16 @@ data class Core(
     }
 
     override fun generateOrUpdateAlarmConfiguration(configuration: Configuration) {
+        log(Logger.Level.INFO, "generateOrUpdateAlarmConfiguration called with configuration: $configuration")
         try {
             val configurationHandler = ConfigurationHandler(context)
             if (validateConfiguration(configuration)){
+                log(Logger.Level.INFO, "Configuration is valid, saving or updating.")
                 configurationHandler.saveOrUpdate(configuration)
 
                 val eventHandler = EventHandler(context)
                 var url = getRaplaURL()
+                log(Logger.Level.INFO, "Using Rapla URL: $url")
                 val event = WakeUpCalculator(
                     routePlanner = RoutePlanner(),
                     courseFetcher = RaplaFetcher(
@@ -273,12 +292,14 @@ data class Core(
                         )
                     )
                 ).calculateNextEvent(configuration)
+                log(Logger.Level.INFO, "Calculated event: $event")
                 eventHandler.saveOrUpdate(event)
 
                 configuration.log(this)
                 event.log(this)
             }
             else{
+                log(Logger.Level.INFO, "Configuration is not valid")
                 showToast("Configuration is not valid")
             }
         }
@@ -309,9 +330,12 @@ data class Core(
     }
 
     override fun getAllConfigurationAndEvent(): List<ConfigurationWithEvent>? {
+        log(Logger.Level.INFO, "getAllConfigurationAndEvent called")
         try {
             val configurationHandler = ConfigurationHandler(context)
-            return configurationHandler.getAllConfigurationAndEvent()
+            val result = configurationHandler.getAllConfigurationAndEvent()
+            log(Logger.Level.INFO, "getAllConfigurationAndEvent result: $result")
+            return result
         }
         catch (e: PersistenceException){
             log(Logger.Level.SEVERE, e.message.toString())
@@ -322,14 +346,17 @@ data class Core(
     }
 
     override fun saveRaplaURL(urlString : String){
+        log(Logger.Level.INFO, "saveRaplaURL called with urlString: $urlString")
         try {
             if(urlString == "" || isValidCourseURL(urlString)){
                 val applicationSettingsHandler = ApplicationSettingsHandler(context)
                 val settingsEntity = applicationSettingsHandler.getApplicationSettings()
                 settingsEntity.raplaURL = urlString
                 applicationSettingsHandler.saveOrUpdateApplicationSettings(settingsEntity)
+                log(Logger.Level.INFO, "Rapla URL saved: $urlString")
             }
             else{
+                log(Logger.Level.INFO, "Invalid URL provided: $urlString")
                 showToast("Invalid URL")
             }
         }
@@ -341,6 +368,7 @@ data class Core(
     }
 
     override fun isValidCourseURL(urlString : String) : Boolean{
+        log(Logger.Level.INFO, "isValidCourseURL called with urlString: $urlString")
         var isValid = URLUtil.isValidUrl(urlString)
         try {
             RaplaFetcher(URL(urlString)).throwIfInvalidCourseURL()
@@ -350,37 +378,47 @@ data class Core(
             log(Logger.Level.SEVERE, e.stackTraceToString())
             isValid = false
         }
+        log(Logger.Level.INFO, "isValidCourseURL result: $isValid")
         return isValid
     }
 
     override fun validateConfiguration(configuration: Configuration): Boolean {
+        log(Logger.Level.INFO, "validateConfiguration called with configuration: $configuration")
         var validation = true
         // Should contain a name
         if(configuration.name == ""){
+            log(Logger.Level.INFO, "Configuration name is empty")
             validation = false
         }
         // Days should not be empty
         else if(configuration.days.isEmpty()){
+            log(Logger.Level.INFO, "Configuration days are empty")
             validation = false
         }
         if(configuration.startStation != null || configuration.endStation != null){
             // If one station is set but one is null, error
             if(configuration.startStation == null || configuration.endStation == null){
+                log(Logger.Level.INFO, "One of the stations is null")
                 validation = false
             }
             // Station exists if can be found in List of DB similar station names
             else if (!RoutePlanner().deriveValidStationNames(configuration.startStation!!).contains(configuration.startStation!!)
                 || !RoutePlanner().deriveValidStationNames(configuration.endStation!!).contains(configuration.endStation!!)){
+                log(Logger.Level.INFO, "Station names are not valid")
                 validation = false
             }
         }
+        log(Logger.Level.INFO, "validateConfiguration result: $validation")
         return validation
     }
 
     override fun getRaplaURL(): String? {
+        log(Logger.Level.INFO, "getRaplaURL called")
         try {
             val applicationSettingsHandler = ApplicationSettingsHandler(context)
-            return applicationSettingsHandler.getApplicationSettings().raplaURL
+            val url = applicationSettingsHandler.getApplicationSettings().raplaURL
+            log(Logger.Level.INFO, "getRaplaURL result: $url")
+            return url
         }
         catch (e: PersistenceException){
             log(Logger.Level.SEVERE, e.message.toString())
@@ -391,18 +429,29 @@ data class Core(
     }
 
     override fun isInternetAvailable(): Boolean {
+        log(Logger.Level.INFO, "isInternetAvailable called")
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
-        val network = connectivityManager.activeNetwork ?: return false
-        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
-        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+        val network = connectivityManager.activeNetwork ?: run {
+            log(Logger.Level.INFO, "No active network")
+            return false
+        }
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: run {
+            log(Logger.Level.INFO, "No network capabilities")
+            return false
+        }
+        val result = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
                 capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+        log(Logger.Level.INFO, "isInternetAvailable result: $result")
+        return result
     }
 
     override fun log(
         level: Logger.Level,
         text: String
     ) {
+        // Always log to Android logcat for debug as well
+        android.util.Log.d("CoreLog", "[$level] $text")
         try {
             logger.log(level, text)
         }
@@ -416,6 +465,7 @@ data class Core(
     }
 
     override fun getLog(): String {
+        log(Logger.Level.INFO, "getLog called")
         return try {
             logger.getLogs()
         } catch (e: PersistenceException){
@@ -427,9 +477,11 @@ data class Core(
         isActive: Boolean,
         configuration: Configuration
     ) {
+        log(Logger.Level.INFO, "updateConfigurationActive called with isActive: $isActive, configuration: $configuration")
         try {
             val configurationHandler = ConfigurationHandler(context)
             configurationHandler.updateConfigurationActive(isActive, configuration.uid)
+            log(Logger.Level.INFO, "Configuration active state updated")
         }
         catch (e: PersistenceException){
             log(Logger.Level.SEVERE, e.message.toString())
@@ -439,12 +491,14 @@ data class Core(
     }
 
     override fun deleteAlarmConfiguration(uid: Long) {
+        log(Logger.Level.INFO, "deleteAlarmConfiguration called with uid: $uid")
         try {
             val eventHandler = EventHandler(context)
             val configurationHandler = ConfigurationHandler(context)
             //Always remove all associated events when removing an alarm configuration
             eventHandler.removeEvent(uid)
             configurationHandler.removeAlarmConfiguration(uid)
+            log(Logger.Level.INFO, "Alarm configuration and associated events deleted for uid: $uid")
         }
         catch (e: PersistenceException){
             log(Logger.Level.SEVERE, e.message.toString())
@@ -454,11 +508,15 @@ data class Core(
     }
 
     override fun isApplicationOpenedFirstTime(): Boolean {
+        log(Logger.Level.INFO, "isApplicationOpenedFirstTime called")
         val settings = ApplicationSettingsHandler(context)
-        return settings.isApplicationOpenedFirstTime()
+        val result = settings.isApplicationOpenedFirstTime()
+        log(Logger.Level.INFO, "isApplicationOpenedFirstTime result: $result")
+        return result
     }
 
     override fun showToast(message: String) {
+        log(Logger.Level.INFO, "showToast called with message: $message")
         try {
             ContextCompat.getMainExecutor(context).execute( { ->
                 Toast.makeText(context, message, Toast.LENGTH_LONG).show()
