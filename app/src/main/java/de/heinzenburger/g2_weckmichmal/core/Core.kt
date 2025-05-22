@@ -367,19 +367,21 @@ data class Core(
         }
     }
 
-    override fun isValidCourseURL(urlString : String) : Boolean{
+    override fun isValidCourseURL(urlString: String): Boolean {
         log(Logger.Level.INFO, "isValidCourseURL called with urlString: $urlString")
-        var isValid = URLUtil.isValidUrl(urlString)
+        if (!URLUtil.isValidUrl(urlString)) {
+            log(Logger.Level.SEVERE, "Invalid URL format: $urlString")
+            return false
+        }
         try {
             RaplaFetcher(URL(urlString)).throwIfInvalidCourseURL()
-        }
-        catch (e: CourseFetcherException){
+        } catch (e: CourseFetcherException) {
             log(Logger.Level.SEVERE, e.message.toString())
             log(Logger.Level.SEVERE, e.stackTraceToString())
-            isValid = false
+            return false
         }
-        log(Logger.Level.INFO, "isValidCourseURL result: $isValid")
-        return isValid
+        log(Logger.Level.INFO, "Valid Course URL: $urlString")
+        return true
     }
 
     override fun validateConfiguration(configuration: Configuration): Boolean {
