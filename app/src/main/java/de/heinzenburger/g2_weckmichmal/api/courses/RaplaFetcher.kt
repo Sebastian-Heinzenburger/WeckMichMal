@@ -11,6 +11,7 @@ import de.heinzenburger.g2_weckmichmal.specifications.CourseFetcherException
 import de.heinzenburger.g2_weckmichmal.specifications.NotEnoughParameterException
 import java.io.InputStream
 import java.net.URL
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
@@ -35,7 +36,8 @@ fun deriveValidCourseURL(vararg params: String): URL {
 
 class RaplaFetcher(
     private val raplaUrl: URL,
-    private val validCourseCategories: Set<String> = setOf("Prüfung", "Lehrveranstaltung")
+    private val validCourseCategories: Set<String> = setOf("Prüfung", "Lehrveranstaltung"),
+    private val excludedCourseNames: Set<String> = emptySet()
 ) : CourseFetcherSpecification {
 
     @Throws(CourseFetcherException::class)
@@ -46,6 +48,7 @@ class RaplaFetcher(
             Biweekly.parse(icalStream).first()
                 .events
                 .filter { eventInCategory(it, validCourseCategories) }
+                .filter { !eventNameExcluded(it, excludedCourseNames) }
                 .map { expandOccurrences(it) }.flatten()
                 .filter { eventInPeriod(it, period) }
                 .mapNotNull { eventToCourse(it) }
@@ -57,6 +60,23 @@ class RaplaFetcher(
     @Throws(CourseFetcherException::class)
     override fun throwIfInvalidCourseURL() {
         fetchCoursesBetween(Period(LocalDateTime.now(), LocalDateTime.now().plusDays(1)))
+    }
+
+    @Throws(CourseFetcherException::class)
+    override fun getAllCourseNames(): List<String> {
+        val icalStream: InputStream = fetchInputStream(raplaUrl)
+
+        return try {
+            return Biweekly.parse(icalStream).first()
+                .events
+                .filter { eventInCategory(it, validCourseCategories) }
+                .map { expandOccurrences(it) }.flatten()
+                .filter { eventIsNowOrAfter(it, LocalDate.now()) }
+                .map { it.summary.value.trim() }
+                .distinct()
+        } catch (e: Exception) {
+            throw CourseFetcherException.DataFormatError(e)
+        }
     }
 
     private companion object {
@@ -76,6 +96,24 @@ class RaplaFetcher(
                 validCategories.intersect(eventCategories).isNotEmpty()
             } catch (_: Exception) {
                 false
+            }
+        }
+
+        fun eventNameExcluded(event: VEvent, excludedCourseNames: Set<String>): Boolean {
+            return try {
+                val eventName = event.summary.value.trim();
+                return excludedCourseNames.contains(eventName)
+            } catch (_: Exception) {
+                false
+            }
+        }
+
+        fun eventIsNowOrAfter(event: VEvent, now: LocalDate): Boolean {
+            return try {
+                val (eventStart, _) = getTimeRange(event) ?: return false
+                return eventStart.toLocalDate().isAfter(now)
+            } catch (_: Exception){
+                return false
             }
         }
 

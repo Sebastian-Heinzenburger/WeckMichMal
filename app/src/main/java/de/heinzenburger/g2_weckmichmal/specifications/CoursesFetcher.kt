@@ -40,6 +40,13 @@ interface CourseFetcherSpecification {
      */
     @Throws(CourseFetcherException::class)
     fun throwIfInvalidCourseURL()
+
+    /**
+     * Returns a list of all course names, that occur on or after the current date.
+     *
+     * @throws CourseFetcherException If the course URL is invalid or the fetch fails.
+     */
+    fun getAllCourseNames(): List<String>
 }
 
 /**
