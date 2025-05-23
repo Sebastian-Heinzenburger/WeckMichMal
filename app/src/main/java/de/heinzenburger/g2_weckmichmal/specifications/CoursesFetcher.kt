@@ -1,5 +1,6 @@
 package de.heinzenburger.g2_weckmichmal.specifications
 
+import java.net.URL
 import java.time.LocalDateTime
 
 /**
@@ -105,3 +106,6 @@ sealed class CourseFetcherException(message: String?, cause: Exception?) :
      */
     class DataFormatError(cause: Exception?) : CourseFetcherException("Data format error", cause)
 }
+
+class NotEnoughParameterException(): Exception()
+

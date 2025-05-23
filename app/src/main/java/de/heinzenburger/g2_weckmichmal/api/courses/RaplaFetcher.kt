@@ -8,6 +8,7 @@ import biweekly.component.VEvent
 import biweekly.util.Frequency
 import biweekly.util.ICalDate
 import de.heinzenburger.g2_weckmichmal.specifications.CourseFetcherException
+import de.heinzenburger.g2_weckmichmal.specifications.NotEnoughParameterException
 import java.io.InputStream
 import java.net.URL
 import java.time.LocalDateTime
@@ -15,11 +16,22 @@ import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import java.util.Date
 
-/*
-Problem: Wenn URL invalid wird funktioniert gar nichts mehr
-Invalid kann auch bedeuten, es gibt kein Internet mehr
 
- */
+val urlTemplate: (String, String) -> String = { director, course ->
+    "https://rapla.dhbw-karlsruhe.de/rapla?page=ical&user=${director.lowercase()}&file=${course.lowercase()}"
+}
+
+@Throws(CourseFetcherException::class, NotEnoughParameterException::class)
+fun deriveValidCourseURL(vararg params: String): URL {
+    if(params.size < 2) {
+        throw NotEnoughParameterException()
+    }
+
+    val url = URL(urlTemplate(params[0], params[1]));
+    val testFetcher = RaplaFetcher(url);
+    testFetcher.throwIfInvalidCourseURL()
+    return url
+}
 
 class RaplaFetcher(
     private val raplaUrl: URL,
@@ -48,6 +60,7 @@ class RaplaFetcher(
     }
 
     private companion object {
+
         @Throws(CourseFetcherException.ConnectionError::class)
         fun fetchInputStream(url: URL): InputStream {
             return try {
