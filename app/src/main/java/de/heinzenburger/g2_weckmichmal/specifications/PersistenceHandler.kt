@@ -12,6 +12,7 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 /**
  * Interface defining the behavior for the persistence layer.
@@ -117,6 +118,11 @@ interface InterfaceApplicationSettings {
      * @return A boolean that is true, when the application is freshly installed and opened for the first time
      */
     fun isApplicationOpenedFirstTime() : Boolean?
+
+    /**
+     * Update Default Alarm values in the database
+     */
+    fun updateDefaultAlarmValues(defaultAlarmValues: SettingsEntity.DefaultAlarmValues)
 }
 
 /**
@@ -252,8 +258,22 @@ data class ConfigurationWithEvent(
  */
 data class SettingsEntity(
     /** The WebLink leading to the RAPLA schedule. */
-    var raplaURL: String
+    var raplaURL: String? = "",
+    var defaultValues: DefaultAlarmValues = DefaultAlarmValues()
 ){
+    data class DefaultAlarmValues(
+            //Static
+            val name: String = "",
+            val manuallySetArrivalTime: String = LocalTime.of(9,0).format(DateTimeFormatter.ofPattern("HH:mm")),
+            val days: Set<DayOfWeek> = emptySet<DayOfWeek>(),
+            //Dynamic
+            var manuallySetTravelTime: Int = 30,
+            var setStartBufferTime: Int = 45,
+            var enforceStartBuffer: Boolean = false,
+            var setEndBufferTime: Int = 5,
+            var startStation: String = "Startbahnhof",
+            var endStation: String = "Endbahnhof"
+        )
     @Suppress("unused")
     fun log(core: Core){
         core.log(Logger.Level.INFO,"Logging SettingsEntity:\n$raplaURL")
@@ -262,6 +282,11 @@ data class SettingsEntity(
 
 sealed class PersistenceException(message: String?, cause: Exception?) :
     Exception(message, cause) {
+
+    /**
+     * Thrown when updating settings.json fails
+     */
+    class UpdateSettingsException(cause: Exception?): PersistenceException("Error updating settings file", cause)
 
     /**
      * Thrown when writing to settings.json fails

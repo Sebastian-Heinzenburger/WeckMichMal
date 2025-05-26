@@ -8,6 +8,7 @@ import de.heinzenburger.g2_weckmichmal.specifications.Event
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
 import de.heinzenburger.g2_weckmichmal.specifications.Route
 import de.heinzenburger.g2_weckmichmal.specifications.RouteSection
+import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -161,6 +162,13 @@ class MockupCore : I_Core {
 
     override fun isValidCourseURL(urlString : String) : Boolean {
         return true
+    }
+
+    override fun getDefaultAlarmValues(): SettingsEntity.DefaultAlarmValues {
+        return SettingsEntity.DefaultAlarmValues()
+    }
+
+    override fun updateDefaultAlarmValues(defaultAlarmValues: SettingsEntity.DefaultAlarmValues) {
     }
 
 

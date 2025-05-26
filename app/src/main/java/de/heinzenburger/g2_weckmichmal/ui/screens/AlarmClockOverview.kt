@@ -110,7 +110,10 @@ class AlarmClockOverviewScreen : ComponentActivity(){
         }
 
         private fun setEditScreen(context: Context, configuration: Configuration?){
+            val core = Core(context)
+            AlarmClockEditScreen.defaultAlarmValues = core.getDefaultAlarmValues()
             AlarmClockEditScreen.reset(configuration)
+
             val intent = Intent(context, AlarmClockEditScreen::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
             context.startActivity(intent)

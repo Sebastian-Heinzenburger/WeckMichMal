@@ -91,6 +91,17 @@ interface I_Core{
      */
     fun isValidCourseURL(urlString : String) : Boolean
 
+
+    /**
+     * Reads the default alarm values from the database
+     */
+    fun getDefaultAlarmValues() : SettingsEntity.DefaultAlarmValues
+
+    /**
+     * Update default alarm values in database
+     */
+    fun updateDefaultAlarmValues(defaultAlarmValues: SettingsEntity.DefaultAlarmValues)
+
     /**
      * If configuration entity contains only valid attributes
      */

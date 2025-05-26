@@ -32,6 +32,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity
 
 data class Core(
     val context: Context,
@@ -108,7 +109,14 @@ data class Core(
                     log(Logger.Level.SEVERE, "No Routes found and not enforcing start buffer. Wake up now!")
                     log(Logger.Level.SEVERE, e.message.toString())
                     log(Logger.Level.SEVERE, e.stackTraceToString())
-                    runWakeUpLogic(it.event!!)
+                    try {
+                        runWakeUpLogic(it.event!!)
+                    }
+                    catch (e: Exception){
+                        log(Logger.Level.SEVERE, "HELP THE RUN WAKEUPLOGIC FAILED OHNO!")
+                        log(Logger.Level.SEVERE, e.message.toString())
+                        log(Logger.Level.SEVERE, e.stackTraceToString())
+                    }
                     return
                 }
             }
@@ -203,70 +211,86 @@ data class Core(
     }
 
     override fun runWakeUpLogic(earliestEvent: Event) {
-        log(Logger.Level.INFO, "runWakeUpLogic called with earliestEvent: $earliestEvent")
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val alarmIntent = Intent(context, AlarmEvent::class.java)
-        alarmIntent.putExtra("configID", earliestEvent.configID)
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            0,
-            alarmIntent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
+        try {
+            log(Logger.Level.INFO, "runWakeUpLogic called with earliestEvent: $earliestEvent")
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val alarmIntent = Intent(context, AlarmEvent::class.java)
+            alarmIntent.putExtra("configID", earliestEvent.configID)
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                0,
+                alarmIntent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
 
-        val pendingEditIntent = PendingIntent.getBroadcast(
-            context,
-            0,
-            alarmIntent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
+            val pendingEditIntent = PendingIntent.getBroadcast(
+                context,
+                0,
+                alarmIntent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
 
-        if (!alarmManager.canScheduleExactAlarms()) {
-            log(Logger.Level.INFO, "Requesting permission to schedule exact alarms")
-            val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(intent)
+            if (!alarmManager.canScheduleExactAlarms()) {
+                log(Logger.Level.INFO, "Requesting permission to schedule exact alarms")
+                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(intent)
+            }
+            val alarmDate = earliestEvent.date.atTime(earliestEvent.wakeUpTime)
+            log(Logger.Level.INFO, "Setting alarm for date: $alarmDate")
+            val alarmClockInfo = AlarmManager.AlarmClockInfo(alarmDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                pendingEditIntent)
+            log(Logger.Level.INFO, "Alarm ringing at ${earliestEvent.wakeUpTime}!")
+            alarmManager.setAlarmClock(alarmClockInfo, pendingIntent)
         }
-        val alarmDate = earliestEvent.date.atTime(earliestEvent.wakeUpTime)
-        log(Logger.Level.INFO, "Setting alarm for date: $alarmDate")
-        val alarmClockInfo = AlarmManager.AlarmClockInfo(alarmDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
-            pendingEditIntent)
-        log(Logger.Level.INFO, "Alarm ringing at ${earliestEvent.wakeUpTime}!")
-        alarmManager.setAlarmClock(alarmClockInfo, pendingIntent)
+        catch (e: Exception){
+            log(Logger.Level.INFO, "HILFEEEE DER RUN WAKEUPLOGIC IST ABGESTÜRZT!!!")
+            log(Logger.Level.SEVERE, e.message.toString())
+            log(Logger.Level.SEVERE, e.stackTraceToString())
+            runUpdateLogic()
+        }
     }
 
     override fun startUpdateScheduler(delay: Int) {
-        log(Logger.Level.INFO, "startUpdateScheduler called with delay: $delay")
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val alarmIntent = Intent(context, AlarmUpdater::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            0,
-            alarmIntent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
+        try {
+            log(Logger.Level.INFO, "startUpdateScheduler called with delay: $delay")
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val alarmIntent = Intent(context, AlarmUpdater::class.java)
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                0,
+                alarmIntent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
 
-        val pendingEditIntent = PendingIntent.getBroadcast(
-            context,
-            0,
-            alarmIntent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
+            val pendingEditIntent = PendingIntent.getBroadcast(
+                context,
+                0,
+                alarmIntent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
 
-        if (!alarmManager.canScheduleExactAlarms()) {
-            log(Logger.Level.INFO, "Requesting permission to schedule exact alarms for update scheduler")
-            val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(intent)
+            if (!alarmManager.canScheduleExactAlarms()) {
+                log(Logger.Level.INFO, "Requesting permission to schedule exact alarms for update scheduler")
+                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(intent)
+            }
+            val triggerTime = LocalDateTime.now().plusSeconds(delay.toLong())
+            log(Logger.Level.INFO, "Scheduling update alarm for: $triggerTime")
+            val alarmClockInfo = AlarmManager.AlarmClockInfo(
+                triggerTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                pendingEditIntent)
+
+            log(Logger.Level.INFO, "Alarm updating in ${delay/60} minutes")
+            alarmManager.setAlarmClock(alarmClockInfo, pendingIntent)
         }
-        val triggerTime = LocalDateTime.now().plusSeconds(delay.toLong())
-        log(Logger.Level.INFO, "Scheduling update alarm for: $triggerTime")
-        val alarmClockInfo = AlarmManager.AlarmClockInfo(
-            triggerTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
-            pendingEditIntent)
-
-        log(Logger.Level.INFO, "Alarm updating in ${delay/60} minutes")
-        alarmManager.setAlarmClock(alarmClockInfo, pendingIntent)
+        catch (e : Exception){
+            log(Logger.Level.INFO, "HILFEEEE DER START UPDATE SCHEDULER IST ABGESTÜRZT!!!")
+            log(Logger.Level.SEVERE, e.message.toString())
+            log(Logger.Level.SEVERE, e.stackTraceToString())
+            runUpdateLogic()
+        }
     }
 
     override fun generateOrUpdateAlarmConfiguration(configuration: Configuration) {
@@ -384,16 +408,35 @@ data class Core(
         return true
     }
 
+    override fun getDefaultAlarmValues(): SettingsEntity.DefaultAlarmValues {
+        try{
+            val applicationSettingsHandler = ApplicationSettingsHandler(context)
+            return applicationSettingsHandler.getApplicationSettings().defaultValues
+        }
+        catch (e: PersistenceException.ReadSettingsException){
+            log(Logger.Level.SEVERE, e.message.toString())
+            log(Logger.Level.SEVERE, e.stackTraceToString())
+            return SettingsEntity.DefaultAlarmValues()
+        }
+    }
+
+    override fun updateDefaultAlarmValues(defaultAlarmValues: SettingsEntity.DefaultAlarmValues) {
+        try {
+            val applicationSettingsHandler = ApplicationSettingsHandler(context)
+            applicationSettingsHandler.updateDefaultAlarmValues(defaultAlarmValues)
+        }
+        catch (e: PersistenceException.UpdateSettingsException){
+            log(Logger.Level.SEVERE, e.message.toString())
+            log(Logger.Level.SEVERE, e.stackTraceToString())
+        }
+    }
+
     override fun validateConfiguration(configuration: Configuration): Boolean {
         log(Logger.Level.INFO, "validateConfiguration called with configuration: $configuration")
         var validation = true
         // Should contain a name
-        if(configuration.name == ""){
-            log(Logger.Level.INFO, "Configuration name is empty")
-            validation = false
-        }
         // Days should not be empty
-        else if(configuration.days.isEmpty()){
+        if(configuration.days.isEmpty()){
             log(Logger.Level.INFO, "Configuration days are empty")
             validation = false
         }

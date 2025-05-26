@@ -48,6 +48,7 @@ import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurButtonInEditAlarm
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.components.NavBar
@@ -104,22 +105,25 @@ class AlarmClockEditScreen : ComponentActivity() {
         private lateinit var selectedDays: MutableState<List<Boolean>> //All days where this alarm applies to
         private lateinit var configuration : Configuration //The configuration stored in the database
 
+        //Also static and has to be set
+        lateinit var defaultAlarmValues: SettingsEntity.DefaultAlarmValues
+
         fun reset(configuration: Configuration?){
             if(configuration == null){
                 //All default values
-                alarmName = mutableStateOf("")
-                manuallySetArrivalTime = mutableStateOf(LocalTime.NOON)
-                manuallySetTravelTime = mutableIntStateOf(15)
-                setStartBufferTime = mutableIntStateOf(30)
-                setEndBufferTime = mutableIntStateOf(5)
-                startStation = mutableStateOf("Startbahnhof")
-                endStation = mutableStateOf("Endbahnhof")
-                selectedDays = mutableStateOf(listOf(true,true,true,true,true,false,false))
+                alarmName = mutableStateOf(defaultAlarmValues.name)
+                manuallySetArrivalTime = mutableStateOf(LocalTime.parse(defaultAlarmValues.manuallySetArrivalTime))
+                manuallySetTravelTime = mutableIntStateOf(defaultAlarmValues.manuallySetTravelTime)
+                setStartBufferTime = mutableIntStateOf(defaultAlarmValues.setStartBufferTime)
+                setEndBufferTime = mutableIntStateOf(defaultAlarmValues.setEndBufferTime)
+                startStation = mutableStateOf(defaultAlarmValues.startStation)
+                endStation = mutableStateOf(defaultAlarmValues.endStation)
+                selectedDays = mutableStateOf(listOf(false,false,false,false,false,false,false))
                 isManualArrivalTime = mutableStateOf(false)
                 isManualTravelTime = mutableStateOf(false)
-                enforceStartBuffer = mutableStateOf(true)
+                enforceStartBuffer = mutableStateOf(defaultAlarmValues.enforceStartBuffer)
                 AlarmClockEditScreen.configuration = Configuration(
-                    name = "Wecker",
+                    name = defaultAlarmValues.name,
                     days = setOf(),
                     fixedArrivalTime = null,
                     fixedTravelBuffer = null,
@@ -161,12 +165,12 @@ class AlarmClockEditScreen : ComponentActivity() {
                 manuallySetTravelTime = if(isManualTravelTime.value){
                     mutableIntStateOf(configuration.fixedTravelBuffer!!)
                 } else{
-                    mutableIntStateOf(15)
+                    mutableIntStateOf(defaultAlarmValues.manuallySetTravelTime)
                 }
                 //Stations if needed
                 if(isManualTravelTime.value){
-                    startStation = mutableStateOf("Startbahnhof")
-                    endStation = mutableStateOf("Endbahnhof")
+                    startStation = mutableStateOf(defaultAlarmValues.startStation)
+                    endStation = mutableStateOf(defaultAlarmValues.endStation)
                 }
                 else{
                     startStation = mutableStateOf(configuration.startStation!!)
@@ -175,7 +179,7 @@ class AlarmClockEditScreen : ComponentActivity() {
 
                 AlarmClockEditScreen.configuration = Configuration(
                     uid = configuration.uid, //Use the same uid as the configuration that is changed
-                    name = "Wecker",
+                    name = defaultAlarmValues.name,
                     days = setOf(),
                     fixedArrivalTime = null,
                     fixedTravelBuffer = null,
@@ -193,13 +197,8 @@ class AlarmClockEditScreen : ComponentActivity() {
             thread{
                 var validation = true
                 //Name of Alarm
-                if(alarmName.value == ""){
-                    validation = false
-                    core.showToast("Wecker Name fehlt")
-                }
-                else{
-                    configuration.name = alarmName.value
-                }
+                configuration.name = alarmName.value
+
                 //fixed arrival time if selected, else null
                 if(isManualArrivalTime.value){
                     configuration.fixedArrivalTime = manuallySetArrivalTime.value
@@ -214,6 +213,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                 }
                 //fixed travel time if selected, else null
                 if(isManualTravelTime.value){
+                    defaultAlarmValues.manuallySetTravelTime = manuallySetTravelTime.intValue
                     configuration.fixedTravelBuffer = manuallySetTravelTime.intValue
                 }
                 else if(!core.isInternetAvailable()){
@@ -233,13 +233,18 @@ class AlarmClockEditScreen : ComponentActivity() {
                     else{
                         configuration.startStation = startStation.value
                         configuration.endStation = endStation.value
+                        defaultAlarmValues.startStation = startStation.value
+                        defaultAlarmValues.endStation = endStation.value
                     }
                 }
                 //set required start and endbuffer
                 configuration.startBuffer = setStartBufferTime.intValue
                 configuration.endBuffer = setEndBufferTime.intValue
+                defaultAlarmValues.setStartBufferTime = setStartBufferTime.intValue
+                defaultAlarmValues.setEndBufferTime = setEndBufferTime.intValue
 
                 configuration.enforceStartBuffer = enforceStartBuffer.value
+                defaultAlarmValues.enforceStartBuffer = enforceStartBuffer.value
 
                 //Setting days parameter
                 var days = mutableSetOf<DayOfWeek>()
@@ -255,6 +260,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                 }
                 if(validation){
                     core.generateOrUpdateAlarmConfiguration(configuration)
+                    core.updateDefaultAlarmValues(defaultAlarmValues)
                     core.runUpdateLogic()
 
                     val intent = Intent(context, AlarmClockOverviewScreen::class.java)
