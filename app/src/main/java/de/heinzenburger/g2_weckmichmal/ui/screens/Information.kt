@@ -16,6 +16,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,9 +26,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
+import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.components.NavBar
+import de.heinzenburger.g2_weckmichmal.ui.components.PickerDialogs.Companion.ConfirmDialog
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -38,6 +41,9 @@ import java.io.IOException
 import kotlin.concurrent.thread
 
 class InformationScreen : ComponentActivity() {
+
+    val showConfirmDialog = mutableStateOf(false)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -57,96 +63,116 @@ class InformationScreen : ComponentActivity() {
         }
     }
 
-    companion object {
-        //When text is clicked, platypus mode in AlarmClockOverviewScreen is activated hehe
-        val innerInformationComposable: @Composable (PaddingValues, I_Core) -> Unit =
-            { innerPadding: PaddingValues, core: I_Core ->
-                val context = LocalContext.current
-                Column {
-                    Button(
-                        modifier = Modifier.padding(0.dp, 20.dp, 0.dp, 0.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                        onClick = {
-                            AlarmClockOverviewScreen.aPlatypus = !AlarmClockOverviewScreen.aPlatypus
-                        }
-                    ) {
-                        Text(
-                            style = MaterialTheme.typography.titleSmall,
-                            text = "Datenschutzerklärung unter fzuerner.com/privacy",
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.padding(10.dp)
-                        )
-                    }
-                    Button(
-                        onClick = {
+    //When text is clicked, platypus mode in AlarmClockOverviewScreen is activated hehe
+    val innerInformationComposable: @Composable (PaddingValues, I_Core) -> Unit =
+        { innerPadding: PaddingValues, core: I_Core ->
+            val context = LocalContext.current
+            when {
+                showConfirmDialog.value -> {
+                    ConfirmDialog(
+                        onConfirm = {
                             if(core.isInternetAvailable()){
                                 thread {
-                                    val file = File(context.filesDir, "log")
+                                    try {
+                                        val file = File(context.filesDir, "log")
 
-                                    val requestBody = MultipartBody.Builder()
-                                        .setType(MultipartBody.FORM)
-                                        .addFormDataPart("logFile", "file", file.asRequestBody())
-                                        .build()
+                                        val requestBody = MultipartBody.Builder()
+                                            .setType(MultipartBody.FORM)
+                                            .addFormDataPart("logFile", "file", file.asRequestBody())
+                                            .build()
 
-                                    val request = Request.Builder()
-                                        .url("https://log.heinzenburger.de/submit")
-                                        .post(requestBody)
-                                        .build()
+                                        val request = Request.Builder()
+                                            .url("https://log.heinzenburger.de/submit")
+                                            .post(requestBody)
+                                            .build()
 
-                                    OkHttpClient().newCall(request).execute().use { response ->
-                                        if (!response.isSuccessful) throw IOException("Unexpected code $response")
-                                        val responseText = response.body?.string()
-                                        core.showToast(responseText!!)
+                                        OkHttpClient().newCall(request).execute().use { response ->
+                                            if (!response.isSuccessful) throw IOException("Unexpected code $response")
+                                            val responseText = response.body?.string()
+                                            core.showToast(responseText!!)
+                                        }
+                                    }
+                                    catch (e: Exception){
+                                        core.log(Logger.Level.SEVERE, e.message.toString())
+                                        core.showToast("Das hat nicht geklappt")
                                     }
                                 }
                             }
                             else{
                                 core.showToast("Dafür ist eine Internetverbindung nötig")
                             }
+                            showConfirmDialog.value = false
                         },
-                        modifier = Modifier
-                            .padding(top = 10.dp, bottom = 10.dp).align(Alignment.CenterHorizontally),
-                        contentPadding = PaddingValues(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondary
-                        )
-                    ) {
-                        OurText(text="Logs zur Analyse an Server senden", modifier = Modifier.padding(16.dp))
-                    }
-                    innerLogComposable(innerPadding, core)
-                }
-            }
-        val innerLogComposable: @Composable (PaddingValues, I_Core) -> Unit =
-            { innerPadding: PaddingValues, core: I_Core ->
-                Column(
-                    Modifier
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    OurText(
-                        text = core.getLog(),
-                        modifier = Modifier,
+                        onDismiss = {
+                            showConfirmDialog.value = false
+                        }
                     )
                 }
             }
+            Column {
+                Button(
+                    modifier = Modifier.padding(0.dp, 20.dp, 0.dp, 0.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                    onClick = {
+                        AlarmClockOverviewScreen.aPlatypus = !AlarmClockOverviewScreen.aPlatypus
+                    }
+                ) {
+                    Text(
+                        style = MaterialTheme.typography.titleSmall,
+                        text = "Datenschutzerklärung unter fzuerner.com/privacy",
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.padding(10.dp)
+                    )
+                }
+                Button(
+                    onClick = {
+                        showConfirmDialog.value = true
+                    },
+                    modifier = Modifier
+                        .padding(top = 10.dp, bottom = 10.dp)
+                        .align(Alignment.CenterHorizontally),
+                    contentPadding = PaddingValues(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary
+                    )
+                ) {
+                    OurText(text="Logs zur Analyse an Server senden", modifier = Modifier.padding(16.dp))
+                }
+                innerLogComposable(innerPadding, core)
+            }
+        }
+    val innerLogComposable: @Composable (PaddingValues, I_Core) -> Unit =
+        { innerPadding: PaddingValues, core: I_Core ->
+            Column(
+                Modifier
+                    .verticalScroll(rememberScrollState())
+            ) {
+                OurText(
+                    text = core.getLog(),
+                    modifier = Modifier,
+                )
+            }
+        }
+    @Composable
+    fun InformationComposable(modifier: Modifier, core: I_Core) {
+        NavBar.Companion.NavigationBar(
+            modifier,
+            core,
+            innerInformationComposable,
+            caller = InformationScreen::class
+        )
     }
 }
 
-@Composable
-fun InformationComposable(modifier: Modifier, core: I_Core) {
-    NavBar.Companion.NavigationBar(
-        modifier,
-        core,
-        InformationScreen.innerInformationComposable,
-        caller = InformationScreen::class
-    )
-}
+
 
 @Preview(showBackground = true)
 @Composable
 fun InformationPreview() {
+    val informationScreen = InformationScreen()
     G2_WeckMichMalTheme {
-        InformationComposable(
+        informationScreen.InformationComposable(
             modifier = Modifier,
             core = MockupCore()
         )

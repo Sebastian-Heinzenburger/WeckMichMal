@@ -259,6 +259,35 @@ class PickerDialogs {
                 ) }
             )
         }
+        @OptIn(ExperimentalMaterial3Api::class)
+        @Composable
+        fun ConfirmDialog(
+            onConfirm: () -> Unit,
+            onDismiss: () -> Unit,
+        ) {
+            AlertDialog(
+                containerColor = MaterialTheme.colorScheme.background,
+                onDismissRequest = onDismiss,
+                dismissButton = {
+                    TextButton(
+                        onClick = { onDismiss() }
+                    ) {
+                        Text("Abbrechen", color = MaterialTheme.colorScheme.secondary)
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { onConfirm() }) {
+                        Text("Bestätigen", color = MaterialTheme.colorScheme.secondary)
+                    }
+                },
+                text = {
+                    OurText(
+                        text = "Bist du sicher, dass du diese Daten mit den Entwicklern teilen möchtest? Sie könnten sensible Daten enthalten, z.B. deine Startstation, deine Kurse und Aufwachzeiten. Es werden keine Daten weitergegeben, jedoch kann kein vollständiger Schutz vor unbefugtem Zugriff gewährt werden.",
+                        modifier = Modifier
+                    )
+                }
+            )
+        }
     }
 }
 
