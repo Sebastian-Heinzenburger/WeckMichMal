@@ -20,12 +20,37 @@ interface MensaFetcherSpecification {
  * Represents a meal in the Mensa.
  * @param name The name of the meal.
  * @param price The price of the meal.
- * @param isVegetarian Indicates if the meal is vegetarian.
- * @param isVegan Indicates if the meal is vegan.
+ * @param type The MealType of the meal
  */
 data class MensaMeal(
-    val name: String,
-    val price: Double,
-    val isVegetarian: Boolean,
-    val isVegan: Boolean
+    val name: String, val price: Double, val type: MealType
 )
+
+/**
+ * Enum representing the type of meal (vegetarian, vegan, or meat).
+ */
+enum class MealType {
+    VEGETARIAN, VEGAN, MEAT;
+
+    companion object {
+    }
+}
+
+/**
+ * Sealed class representing exceptions that can occur during Mensa fetching.
+ */
+sealed class MensaFetcherException(message: String, cause: Throwable?) : Exception(message, cause) {
+    /**
+     * Exception for network errors.
+     * @param cause The cause of the exception.
+     */
+    class NetworkException(cause: Throwable?) :
+        MensaFetcherException("Network error occurred while fetching Mensa meals!", cause)
+
+    /**
+     * Exception for invalid response format.
+     * @param expected The expected format description.
+     */
+    class InvalidResponseFormatException(expected: String) :
+        MensaFetcherException("The response format is invalid! Expected: $expected", null)
+}
