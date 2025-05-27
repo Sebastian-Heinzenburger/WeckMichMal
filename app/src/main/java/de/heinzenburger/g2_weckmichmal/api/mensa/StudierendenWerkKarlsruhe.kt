@@ -50,7 +50,7 @@ class StudierendenWerkKarlsruhe(
         return meals
     }
 
-    fun fetchMensaPage(): Document {
+    private fun fetchMensaPage(): Document {
         val htmlText = fetchMensaPageContent()
         return Jsoup.parse(htmlText)
     }
