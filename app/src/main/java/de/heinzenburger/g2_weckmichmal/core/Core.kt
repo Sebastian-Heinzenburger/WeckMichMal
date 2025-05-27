@@ -246,7 +246,7 @@ data class Core(
             log(Logger.Level.INFO, "Setting alarm for date: $alarmDate")
 
             log(Logger.Level.INFO, "Alarm ringing at ${earliestEvent.wakeUpTime}!")
-            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,alarmDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(), pendingIntent)
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,alarmDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(), pendingIntent)
         }
         catch (e: Exception){
             log(Logger.Level.INFO, "HILFEEEE DER RUN WAKEUPLOGIC IST ABGESTÜRZT!!!")
@@ -285,7 +285,7 @@ data class Core(
             log(Logger.Level.INFO, "Scheduling update alarm for: $triggerTime")
 
             log(Logger.Level.INFO, "Alarm updating in ${delay/60} minutes")
-            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(), pendingIntent)
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(), pendingIntent)
         }
         catch (e : Exception){
             log(Logger.Level.INFO, "HILFEEEE DER START UPDATE SCHEDULER IST ABGESTÜRZT!!!")
@@ -317,7 +317,7 @@ data class Core(
                             }
                         )
                     )
-                ).calculateNextEvent(configuration)
+                ).calculateNextEvent(configuration, skipIfToday = true)
                 log(Logger.Level.INFO, "Calculated event: $event")
                 eventHandler.saveOrUpdate(event)
 
