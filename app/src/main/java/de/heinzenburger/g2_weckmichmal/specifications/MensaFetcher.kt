@@ -31,9 +31,6 @@ data class MensaMeal(
  */
 enum class MealType {
     VEGETARIAN, VEGAN, MEAT;
-
-    companion object {
-    }
 }
 
 /**
