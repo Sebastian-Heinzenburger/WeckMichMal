@@ -21,13 +21,13 @@ interface WakeUpCalculationSpecification {
      *               will be considered. If `false`, routes will be selected with a *best effort* approach
      *               to arrive before the target time, potentially excluding early connections
      *               due to current time constraints.
-     * @param skipToday If `false` (default) the next valid event date including today is chosen. If `true` today will be skipped
+     * @param skipIfToday If `false` (default) the next valid event date including today is chosen. If `true` today will be skipped
      * @return An [Event] containing the calculated wake-up time, associated date,
      * relevant courses, and route details.
      * @throws WakeUpCalculatorException if the calculation fails due to invalid or missing data.
      */
     @Throws(WakeUpCalculatorException::class)
-    fun calculateNextEvent(configuration: Configuration, strict: Boolean = true, skipToday: Boolean = false): Event
+    fun calculateNextEvent(configuration: Configuration, strict: Boolean = true, skipIfToday: Boolean = false): Event
 
 }
 

@@ -15,11 +15,11 @@ class WakeUpCalculator(
 ) : WakeUpCalculationSpecification {
 
     @Throws(WakeUpCalculatorException::class)
-    override fun calculateNextEvent(configuration: Configuration, strict: Boolean, skipToday: Boolean): Event {
-        val eventDate = if (skipToday)
-            deriveNextValidDate(configuration.days, LocalDate.now().plusDays(1))
-        else
-            deriveNextValidDate(configuration.days)
+    override fun calculateNextEvent(configuration: Configuration, strict: Boolean, skipIfToday: Boolean): Event {
+        var eventDate = deriveNextValidDate(configuration.days)
+        if (skipIfToday && eventDate.isEqual(LocalDate.now())) {
+            eventDate = deriveNextValidDate(configuration.days, LocalDate.now().plusDays(1))
+        }
 
         return calculateEventForDate(configuration, eventDate, strict)
     }
