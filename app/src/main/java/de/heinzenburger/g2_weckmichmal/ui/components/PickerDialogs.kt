@@ -41,6 +41,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
+import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.NumberField
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
@@ -171,7 +172,14 @@ class PickerDialogs {
                                 station.value = it
                                 thread{
                                     if(station.value.length > 2){
-                                        stationPredictions.value = core.deriveStationName(it)
+                                        try {
+                                            stationPredictions.value = core.deriveStationName(it)
+                                        }
+                                        catch (e: Exception){
+                                            core.log(Logger.Level.SEVERE, e.message.toString())
+                                            core.log(Logger.Level.SEVERE, e.stackTraceToString())
+                                            core.showToast("Da hat etwas nicht geklappt")
+                                        }
                                     }
                                 } },
                             modifier = Modifier.fillMaxWidth(0.8f),

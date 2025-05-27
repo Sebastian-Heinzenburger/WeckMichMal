@@ -35,6 +35,7 @@ import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.Our
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
 import android.provider.Settings
 import android.app.AlarmManager
+import android.os.PowerManager
 import androidx.core.net.toUri
 
 class AllowNotificationsScreen : ComponentActivity() {
@@ -66,9 +67,22 @@ class AllowNotificationsScreen : ComponentActivity() {
     @Composable
     fun InnerComposable(modifier: Modifier) {
         val context = LocalContext.current
-        val allowNotifications = remember { mutableStateOf(false) }
-        val allowNoBatteryOptimization = remember { mutableStateOf(false) }
-        val allowSheduleAlarm = remember { mutableStateOf(false) }
+        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+        val powerManager = context.getSystemService(POWER_SERVICE) as PowerManager
+        val allowNotifications = remember { mutableStateOf(true) }
+        val allowNoBatteryOptimization = remember { mutableStateOf(true) }
+        val allowSheduleAlarm = remember { mutableStateOf(true) }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            allowNotifications.value = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+        allowSheduleAlarm.value = alarmManager.canScheduleExactAlarms()
+        allowNoBatteryOptimization.value = powerManager.isIgnoringBatteryOptimizations(packageName)
+
+
         Column(modifier
             .background(MaterialTheme.colorScheme.background)
             .fillMaxSize(),
@@ -79,11 +93,11 @@ class AllowNotificationsScreen : ComponentActivity() {
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.titleSmall,
                 text =
-                    if(!allowNotifications.value){
-                        "WeckMichMal benötigt die Berechtigung, Benachrichtigungen zu senden. Nur so kann der Alarm dich zuverlässig wecken.\nKeine Sorge, es gibt keine Werbung oder störende Nachrichten."
+                    if(!allowNoBatteryOptimization.value){
+                        "Um zu garantieren, dass sich der Wecker in deinem Schlaf aktualisieren kann, muss die App mögliche Batterie-Optimisierungen umgehen. Dein Akku-Verbrauch wird sich dabei nicht wirklich erhöhen. Drücke auf 'Weiter' und durchsuche die Liste nach G2-WeckMichMal um uneingeschränkte Hintergrundnutzung zu erlauben."
                     }
-                    else if(!allowNoBatteryOptimization.value){
-                        "Um zu garantieren, dass sich der Wecker in deinem Schlaf aktualisieren kann, muss die App mögliche Batterie-Optimisierungen umgehen. Dein Akku-Verbrauch wird sich dabei nicht wirklich erhöhen."
+                    else if(!allowNotifications.value){
+                        "WeckMichMal benötigt die Berechtigung, Benachrichtigungen zu senden. Nur so kann der Alarm dich zuverlässig wecken.\nKeine Sorge, es gibt keine Werbung oder störende Nachrichten."
                     }
                     else if(!allowSheduleAlarm.value){
                         "Außerdem benötigt WeckMichMal die Berechtigung, Alarme in deinem System zu setzen. Ansonsten verschläfst du jeden morgen."
@@ -101,40 +115,39 @@ class AllowNotificationsScreen : ComponentActivity() {
                         containerColor = MaterialTheme.colorScheme.onBackground
                     ),
                     onClick = {
-                        var temp = false
-                        var temp2 = false
-                        if (ContextCompat.checkSelfPermission(
+
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            allowNotifications.value = ContextCompat.checkSelfPermission(
                                 context,
                                 Manifest.permission.POST_NOTIFICATIONS
-                            ) != PackageManager.PERMISSION_GRANTED
-                        ) {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                                allowNotifications.value = true
-                                temp = true
-                            }
+                            ) == PackageManager.PERMISSION_GRANTED
                         }
-                        if(!temp && !allowNoBatteryOptimization.value){
+                        allowSheduleAlarm.value = alarmManager.canScheduleExactAlarms()
+                        allowNoBatteryOptimization.value = powerManager.isIgnoringBatteryOptimizations(packageName)
+
+                        if(!allowNoBatteryOptimization.value){
                             val intent = Intent()
                             intent.action = Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS
                             startActivity(intent)
                             allowNoBatteryOptimization.value = true
-                            temp2 = true
                         }
-                        if (!temp2 && !temp && !allowSheduleAlarm.value){
-                            val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
-                            if (!alarmManager.canScheduleExactAlarms()) {
-                                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                                    data = "package:$packageName".toUri()
-                                }
-                                startActivity(intent)
+
+                        else if (!allowNotifications.value && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            allowNotifications.value = true
+                        }
+
+                        else if (!allowSheduleAlarm.value){
+                            val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                                data = "package:$packageName".toUri()
                             }
+                            startActivity(intent)
                             allowSheduleAlarm.value = true
                         }
                     }
                 ) {
                     OurText(
-                        text = "Berechtigung erteilen",
+                        text = "Weiter",
                         modifier = Modifier
                     )
                 }
@@ -142,7 +155,14 @@ class AllowNotificationsScreen : ComponentActivity() {
 
             Button(
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.onBackground
+                    containerColor =
+                        if(allowNotifications.value && allowSheduleAlarm.value){
+                            MaterialTheme.colorScheme.onBackground
+                        }
+                        else{
+                            MaterialTheme.colorScheme.error
+                        },
+
                 ),
                 onClick = {
                     val intent = Intent(context, AlarmClockOverviewScreen::class.java)

@@ -426,7 +426,12 @@ class AlarmClockEditScreen : ComponentActivity() {
                                         .fillMaxWidth()
                                         .padding(48.dp, 0.dp),
                                     onClick = {
-                                        openStartStationDialog.value = true
+                                        if(core.isInternetAvailable()){
+                                            openStartStationDialog.value = true
+                                        }
+                                        else{
+                                            core.showToast("Dafür ist eine Internetverbindung nötig")
+                                        }
                                     },
                                     text = startStation.value,
                                     enabled = rideSelectedOption == rideOptions[0]
@@ -436,7 +441,12 @@ class AlarmClockEditScreen : ComponentActivity() {
                                         .fillMaxWidth()
                                         .padding(48.dp, 0.dp),
                                     onClick = {
-                                        openEndStationDialog.value = true
+                                        if(core.isInternetAvailable()){
+                                            openEndStationDialog.value = true
+                                        }
+                                        else{
+                                            core.showToast("Dafür ist eine Internetverbindung nötig")
+                                        }
                                     },
                                     text = endStation.value,
                                     enabled = rideSelectedOption == rideOptions[0]

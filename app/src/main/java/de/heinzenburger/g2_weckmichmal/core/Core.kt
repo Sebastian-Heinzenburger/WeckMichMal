@@ -54,8 +54,39 @@ data class Core(
         return StudierendenWerkKarlsruhe().nextMeals()
     }
 
+    fun getEarliestEvent(configurationsWithEvents: List<ConfigurationWithEvent>?) : Pair<LocalDateTime, Event?>{
+        var earliestEventDate = LocalDateTime.MAX
+        var earliestEvent: Event? = null
+        configurationsWithEvents?.forEach {
+            val eventDateTime = it.event?.date?.atTime(it.event.wakeUpTime)
+            log(Logger.Level.INFO, "Checking eventDateTime: $eventDateTime for configuration: ${it.configuration}")
+            if(it.configuration.isActive &&
+                eventDateTime?.isBefore(LocalDateTime.now()) == false
+                && eventDateTime.isBefore(earliestEventDate) == true){
+                earliestEventDate = eventDateTime
+                earliestEvent = it.event
+                log(Logger.Level.INFO, "New earliestEventDate: $earliestEventDate, earliestEvent: $earliestEvent")
+            }
+        }
+        return Pair(earliestEventDate, earliestEvent)
+    }
+
     override fun runUpdateLogic() {
         log(Logger.Level.INFO, "runUpdateLogic started")
+
+        var configurationsWithEvents = getAllConfigurationAndEvent()?.toMutableList()
+        log(Logger.Level.INFO, "ConfigurationsWithEvents loaded: $configurationsWithEvents")
+
+        log(Logger.Level.INFO, "Starting safety alarm scheduler")
+        var earliest = getEarliestEvent(configurationsWithEvents)
+        var earliestEventDate = earliest.first
+        var earliestEvent: Event? = earliest.second
+        log(Logger.Level.INFO, "Earliest Event is at " + earliestEventDate.format(DateTimeFormatter.ofPattern("MM-dd HH:mm:ss")))
+        if(earliestEvent != null){
+            runWakeUpLogic(earliestEvent)
+        }
+
+        log(Logger.Level.INFO, "Starting regular alarm scheduler")
         val url = getRaplaURL()
         log(Logger.Level.INFO, "Rapla URL: $url")
         val wakeUpCalculator = WakeUpCalculator(
@@ -71,8 +102,6 @@ data class Core(
             )
         )
 
-        var configurationsWithEvents = getAllConfigurationAndEvent()?.toMutableList()
-        log(Logger.Level.INFO, "ConfigurationsWithEvents loaded: $configurationsWithEvents")
 
         configurationsWithEvents?.forEachIndexed {
             index, it ->
@@ -162,7 +191,7 @@ data class Core(
             if(configurationWithEvent.event != null){
                 try {
                     log(Logger.Level.INFO, "Saving or updating event: ${configurationWithEvent.event}")
-                    eventHandler.saveOrUpdate(configurationWithEvent.event!!) // TODO check if !! is safe here
+                    eventHandler.saveOrUpdate(configurationWithEvent.event)
                 }
                 catch (e: PersistenceException){
                     log(Logger.Level.SEVERE, e.message.toString())
@@ -171,19 +200,10 @@ data class Core(
             }
         }
 
-        var earliestEventDate = LocalDateTime.MAX
-        var earliestEvent: Event? = null
-        configurationsWithEvents?.forEach {
-            val eventDateTime = it.event?.date?.atTime(it.event.wakeUpTime)
-            log(Logger.Level.INFO, "Checking eventDateTime: $eventDateTime for configuration: ${it.configuration}")
-            if(it.configuration.isActive &&
-                eventDateTime?.isBefore(LocalDateTime.now()) == false
-                && eventDateTime.isBefore(earliestEventDate) == true){
-                earliestEventDate = eventDateTime
-                earliestEvent = it.event
-                log(Logger.Level.INFO, "New earliestEventDate: $earliestEventDate, earliestEvent: $earliestEvent")
-            }
-        }
+        earliest = getEarliestEvent(configurationsWithEvents)
+        earliestEventDate = earliest.first
+        earliestEvent = earliest.second
+
         log(Logger.Level.INFO, "Earliest Event is at " + earliestEventDate.format(DateTimeFormatter.ofPattern("MM-dd HH:mm:ss")))
         val secondsUntilEarliestEvent = Duration.between(LocalDateTime.now(), earliestEventDate).seconds
         log(Logger.Level.INFO, "Seconds until earliest event: $secondsUntilEarliestEvent")
@@ -245,8 +265,10 @@ data class Core(
             val alarmDate = earliestEvent.date.atTime(earliestEvent.wakeUpTime)
             log(Logger.Level.INFO, "Setting alarm for date: $alarmDate")
 
+            val alarmClockInfo = AlarmManager.AlarmClockInfo(alarmDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                pendingEditIntent)
             log(Logger.Level.INFO, "Alarm ringing at ${earliestEvent.wakeUpTime}!")
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,alarmDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(), pendingIntent)
+            alarmManager.setAlarmClock(alarmClockInfo, pendingIntent)
         }
         catch (e: Exception){
             log(Logger.Level.INFO, "HILFEEEE DER RUN WAKEUPLOGIC IST ABGESTÜRZT!!!")
@@ -284,8 +306,12 @@ data class Core(
             val triggerTime = LocalDateTime.now().plusSeconds(delay.toLong())
             log(Logger.Level.INFO, "Scheduling update alarm for: $triggerTime")
 
+            val alarmClockInfo = AlarmManager.AlarmClockInfo(
+                triggerTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                pendingEditIntent)
+
             log(Logger.Level.INFO, "Alarm updating in ${delay/60} minutes")
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(), pendingIntent)
+            alarmManager.setAlarmClock(alarmClockInfo, pendingIntent)
         }
         catch (e : Exception){
             log(Logger.Level.INFO, "HILFEEEE DER START UPDATE SCHEDULER IST ABGESTÜRZT!!!")
