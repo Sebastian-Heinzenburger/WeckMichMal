@@ -246,7 +246,7 @@ data class Core(
             log(Logger.Level.INFO, "Setting alarm for date: $alarmDate")
 
             log(Logger.Level.INFO, "Alarm ringing at ${earliestEvent.wakeUpTime}!")
-            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,alarmDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(), pendingIntent)
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,alarmDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(), pendingIntent)
         }
         catch (e: Exception){
             log(Logger.Level.INFO, "HILFEEEE DER RUN WAKEUPLOGIC IST ABGESTÜRZT!!!")
@@ -285,7 +285,7 @@ data class Core(
             log(Logger.Level.INFO, "Scheduling update alarm for: $triggerTime")
 
             log(Logger.Level.INFO, "Alarm updating in ${delay/60} minutes")
-            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(), pendingIntent)
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(), pendingIntent)
         }
         catch (e : Exception){
             log(Logger.Level.INFO, "HILFEEEE DER START UPDATE SCHEDULER IST ABGESTÜRZT!!!")
@@ -334,15 +334,37 @@ data class Core(
             log(Logger.Level.SEVERE, e.stackTraceToString())
             showToast("Error communicating with database. Try reinstalling the app.")
         }
-        catch (e: WakeUpCalculatorException.NoRoutesFound){
-            showToast("Event will be updated this night.")
-            log(Logger.Level.SEVERE, e.message.toString())
-            log(Logger.Level.SEVERE, e.stackTraceToString())
-        }
         catch (e: WakeUpCalculatorException){
             log(Logger.Level.SEVERE, e.message.toString())
             log(Logger.Level.SEVERE, e.stackTraceToString())
-            showToast("Error calculating next Event.")
+            try {
+                val eventHandler = EventHandler(context)
+                var url = getRaplaURL()
+                log(Logger.Level.INFO, "Using Rapla URL: $url")
+                val event = WakeUpCalculator(
+                    routePlanner = DBRoutePlanner(),
+                    courseFetcher = RaplaFetcher(
+                        URL(
+                            if(url == ""){
+                                "http://example.com"
+                            }else{
+                                url
+                            }
+                        )
+                    )
+                ).calculateNextEvent(configuration, skipToday = true)
+                log(Logger.Level.INFO, "Calculated event: $event")
+                eventHandler.saveOrUpdate(event)
+
+                configuration.log(this)
+                event.log(this)
+            }
+            catch (e: Exception){
+                log(Logger.Level.SEVERE, e.message.toString())
+                log(Logger.Level.SEVERE, e.stackTraceToString())
+                showToast("Error calculating next Event.")
+            }
+
         }
         catch (e: MalformedURLException){
             log(Logger.Level.SEVERE, e.message.toString())
