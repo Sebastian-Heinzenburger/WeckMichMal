@@ -15,8 +15,12 @@ class WakeUpCalculator(
 ) : WakeUpCalculationSpecification {
 
     @Throws(WakeUpCalculatorException::class)
-    override fun calculateNextEvent(configuration: Configuration, strict: Boolean): Event {
-        val eventDate = deriveNextValidDate(configuration.days)
+    override fun calculateNextEvent(configuration: Configuration, strict: Boolean, skipToday: Boolean): Event {
+        val eventDate = if (skipToday)
+            deriveNextValidDate(configuration.days, LocalDate.now().plusDays(1))
+        else
+            deriveNextValidDate(configuration.days)
+
         return calculateEventForDate(configuration, eventDate, strict)
     }
 
@@ -50,8 +54,8 @@ class WakeUpCalculator(
     private companion object {
 
         @Throws(WakeUpCalculatorException.InvalidStateException::class)
-        fun deriveNextValidDate(daySelection: Set<DayOfWeek>): LocalDate {
-            val today = LocalDate.now()
+        fun deriveNextValidDate(daySelection: Set<DayOfWeek>, referenceDay: LocalDate = LocalDate.now()): LocalDate {
+            val today = referenceDay
             return (0..6)
                 .map { today.plusDays(it.toLong()) }
                 .firstOrNull { it.dayOfWeek in daySelection }
