@@ -238,10 +238,9 @@ data class Core(
             }
             val alarmDate = earliestEvent.date.atTime(earliestEvent.wakeUpTime)
             log(Logger.Level.INFO, "Setting alarm for date: $alarmDate")
-            val alarmClockInfo = AlarmManager.AlarmClockInfo(alarmDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
-                pendingEditIntent)
+
             log(Logger.Level.INFO, "Alarm ringing at ${earliestEvent.wakeUpTime}!")
-            alarmManager.setAlarmClock(alarmClockInfo, pendingIntent)
+            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,alarmDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(), pendingIntent)
         }
         catch (e: Exception){
             log(Logger.Level.INFO, "HILFEEEE DER RUN WAKEUPLOGIC IST ABGESTÜRZT!!!")
@@ -278,12 +277,9 @@ data class Core(
             }
             val triggerTime = LocalDateTime.now().plusSeconds(delay.toLong())
             log(Logger.Level.INFO, "Scheduling update alarm for: $triggerTime")
-            val alarmClockInfo = AlarmManager.AlarmClockInfo(
-                triggerTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
-                pendingEditIntent)
 
             log(Logger.Level.INFO, "Alarm updating in ${delay/60} minutes")
-            alarmManager.setAlarmClock(alarmClockInfo, pendingIntent)
+            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(), pendingIntent)
         }
         catch (e : Exception){
             log(Logger.Level.INFO, "HILFEEEE DER START UPDATE SCHEDULER IST ABGESTÜRZT!!!")

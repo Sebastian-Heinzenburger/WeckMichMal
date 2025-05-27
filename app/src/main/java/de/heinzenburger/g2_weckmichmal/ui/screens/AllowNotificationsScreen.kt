@@ -67,6 +67,7 @@ class AllowNotificationsScreen : ComponentActivity() {
     fun InnerComposable(modifier: Modifier) {
         val context = LocalContext.current
         val allowNotifications = remember { mutableStateOf(false) }
+        val allowNoBatteryOptimization = remember { mutableStateOf(false) }
         val allowSheduleAlarm = remember { mutableStateOf(false) }
         Column(modifier
             .background(MaterialTheme.colorScheme.background)
@@ -81,6 +82,9 @@ class AllowNotificationsScreen : ComponentActivity() {
                     if(!allowNotifications.value){
                         "WeckMichMal benötigt die Berechtigung, Benachrichtigungen zu senden. Nur so kann der Alarm dich zuverlässig wecken.\nKeine Sorge, es gibt keine Werbung oder störende Nachrichten."
                     }
+                    else if(!allowNoBatteryOptimization.value){
+                        "Um zu garantieren, dass sich der Wecker in deinem Schlaf aktualisieren kann, muss die App mögliche Batterie-Optimisierungen umgehen. Dein Akku-Verbrauch wird sich dabei nicht wirklich erhöhen."
+                    }
                     else if(!allowSheduleAlarm.value){
                         "Außerdem benötigt WeckMichMal die Berechtigung, Alarme in deinem System zu setzen. Ansonsten verschläfst du jeden morgen."
                     }
@@ -91,25 +95,33 @@ class AllowNotificationsScreen : ComponentActivity() {
                 modifier = modifier.padding(16.dp)
             )
 
-            if(!(allowNotifications.value && allowSheduleAlarm.value)){
+            if(!(allowNotifications.value && allowNoBatteryOptimization.value && allowSheduleAlarm.value)){
                 Button(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.onBackground
                     ),
                     onClick = {
                         var temp = false
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            if (ContextCompat.checkSelfPermission(
-                                    context,
-                                    Manifest.permission.POST_NOTIFICATIONS
-                                ) != PackageManager.PERMISSION_GRANTED
-                            ) {
+                        var temp2 = false
+                        if (ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.POST_NOTIFICATIONS
+                            ) != PackageManager.PERMISSION_GRANTED
+                        ) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                                 requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                                 allowNotifications.value = true
                                 temp = true
                             }
                         }
-                        if (!temp && !allowSheduleAlarm.value){
+                        if(!temp && !allowNoBatteryOptimization.value){
+                            val intent = Intent()
+                            intent.action = Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS
+                            startActivity(intent)
+                            allowNoBatteryOptimization.value = true
+                            temp2 = true
+                        }
+                        if (!temp2 && !temp && !allowSheduleAlarm.value){
                             val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
                             if (!alarmManager.canScheduleExactAlarms()) {
                                 val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
