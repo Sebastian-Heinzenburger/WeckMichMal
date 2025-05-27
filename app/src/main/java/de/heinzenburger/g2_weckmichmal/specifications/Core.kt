@@ -17,6 +17,12 @@ interface I_Core{
 
 
     /**
+     * Returns the meals for the next day
+     * @return A list of MensaMeal objects representing today's meals.
+     */
+    fun nextMensaMeals() : List<MensaMeal>
+
+    /**
      * Update all events depending on current train and rapla status
      */
     fun runUpdateLogic()

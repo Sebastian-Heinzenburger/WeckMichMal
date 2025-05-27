@@ -10,7 +10,7 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import de.heinzenburger.g2_weckmichmal.background.AlarmEvent
 import de.heinzenburger.g2_weckmichmal.background.AlarmUpdater
-import de.heinzenburger.g2_weckmichmal.api.db.RoutePlanner
+import de.heinzenburger.g2_weckmichmal.api.routes.DBRoutePlanner
 import de.heinzenburger.g2_weckmichmal.api.courses.RaplaFetcher
 import de.heinzenburger.g2_weckmichmal.calculation.WakeUpCalculator
 import de.heinzenburger.g2_weckmichmal.persistence.ConfigurationHandler
@@ -32,6 +32,8 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import de.heinzenburger.g2_weckmichmal.api.mensa.StudierendenWerkKarlsruhe
+import de.heinzenburger.g2_weckmichmal.specifications.MensaMeal
 import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity
 
 data class Core(
@@ -42,10 +44,14 @@ data class Core(
     //For description of each method, see I_Core in specifications
     override fun deriveStationName(input: String): List<String> {
         log(Logger.Level.INFO, "deriveStationName called with input: $input")
-        val routePlanner = RoutePlanner()
+        val routePlanner = DBRoutePlanner()
         val result = routePlanner.deriveValidStationNames(input)
         log(Logger.Level.INFO, "deriveStationName result: $result")
         return result
+    }
+
+    override fun nextMensaMeals(): List<MensaMeal> {
+        return StudierendenWerkKarlsruhe().nextMeals()
     }
 
     override fun runUpdateLogic() {
@@ -53,7 +59,7 @@ data class Core(
         val url = getRaplaURL()
         log(Logger.Level.INFO, "Rapla URL: $url")
         val wakeUpCalculator = WakeUpCalculator(
-            routePlanner = RoutePlanner(),
+            routePlanner = DBRoutePlanner(),
             courseFetcher = RaplaFetcher(
                 URL(
                     if(url == ""){
@@ -156,7 +162,7 @@ data class Core(
             if(configurationWithEvent.event != null){
                 try {
                     log(Logger.Level.INFO, "Saving or updating event: ${configurationWithEvent.event}")
-                    eventHandler.saveOrUpdate(configurationWithEvent.event)
+                    eventHandler.saveOrUpdate(configurationWithEvent.event!!) // TODO check if !! is safe here
                 }
                 catch (e: PersistenceException){
                     log(Logger.Level.SEVERE, e.message.toString())
@@ -301,7 +307,7 @@ data class Core(
                 var url = getRaplaURL()
                 log(Logger.Level.INFO, "Using Rapla URL: $url")
                 val event = WakeUpCalculator(
-                    routePlanner = RoutePlanner(),
+                    routePlanner = DBRoutePlanner(),
                     courseFetcher = RaplaFetcher(
                         URL(
                             if(url == ""){
@@ -443,8 +449,8 @@ data class Core(
                 validation = false
             }
             // Station exists if can be found in List of DB similar station names
-            else if (!RoutePlanner().deriveValidStationNames(configuration.startStation!!).contains(configuration.startStation!!)
-                || !RoutePlanner().deriveValidStationNames(configuration.endStation!!).contains(configuration.endStation!!)){
+            else if (!DBRoutePlanner().deriveValidStationNames(configuration.startStation!!).contains(configuration.startStation!!)
+                || !DBRoutePlanner().deriveValidStationNames(configuration.endStation!!).contains(configuration.endStation!!)){
                 log(Logger.Level.INFO, "Station names are not valid")
                 validation = false
             }

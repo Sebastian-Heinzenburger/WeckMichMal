@@ -6,8 +6,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -17,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,6 +32,7 @@ import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import de.heinzenburger.g2_weckmichmal.specifications.MensaMeal
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.components.NavBar
 import de.heinzenburger.g2_weckmichmal.ui.components.PickerDialogs.Companion.ConfirmDialog
@@ -110,6 +115,7 @@ class InformationScreen : ComponentActivity() {
                 }
             }
             Column {
+                // Datenschutzerklärungsbutton
                 Button(
                     modifier = Modifier.padding(0.dp, 20.dp, 0.dp, 0.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
@@ -125,6 +131,7 @@ class InformationScreen : ComponentActivity() {
                         modifier = Modifier.padding(10.dp)
                     )
                 }
+                // Log Analysis Button
                 Button(
                     onClick = {
                         showConfirmDialog.value = true
@@ -139,7 +146,44 @@ class InformationScreen : ComponentActivity() {
                 ) {
                     OurText(text="Logs zur Analyse an Server senden", modifier = Modifier.padding(16.dp))
                 }
-                innerLogComposable(innerPadding, core)
+                // innerLogComposable(innerPadding, core)
+                innerMensaComposable(innerPadding, core)
+            }
+        }
+    val innerMensaComposable: @Composable (PaddingValues, I_Core) -> Unit =
+        { innerPadding: PaddingValues, core: I_Core ->
+            val mensaMeals = remember { mutableStateOf(emptyList<MensaMeal>()) }
+            thread {
+                mensaMeals.value = core.nextMensaMeals()
+            }
+            Column(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Text(
+                    style = MaterialTheme.typography.titleSmall,
+                    text = "Mensa Essensplan",
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(10.dp)
+                )
+                Column {
+                    mensaMeals.value.forEach { meal ->
+                        Row(horizontalArrangement = Arrangement.SpaceBetween) {
+                            OurText(
+                                text = meal.name,
+                                textAlign = TextAlign.Left,
+                                modifier = Modifier.padding(16.dp).fillMaxWidth(0.75f),
+                            )
+                            OurText(
+                                text = String.format("%.2f €", meal.price),
+                                textAlign = TextAlign.Left,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
+                    }
+                }
             }
         }
     val innerLogComposable: @Composable (PaddingValues, I_Core) -> Unit =

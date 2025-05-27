@@ -1,4 +1,4 @@
-package de.heinzenburger.g2_weckmichmal.api.db
+package de.heinzenburger.g2_weckmichmal.api.routes
 
 import de.heinzenburger.g2_weckmichmal.specifications.RoutePlannerSpecification
 import de.heinzenburger.g2_weckmichmal.specifications.Route
@@ -21,7 +21,7 @@ import kotlin.jvm.Throws
 
 typealias StationID = String
 
-class RoutePlanner : RoutePlannerSpecification {
+class DBRoutePlanner : RoutePlannerSpecification {
 
     var DB_API_BASE_URL_WITHOUT_SLASH_IN_THE_END = "https://www.bahn.de/web/api"
 

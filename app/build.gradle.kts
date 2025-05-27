@@ -68,6 +68,9 @@ dependencies {
     // ICS parsing lib
     implementation(libs.biweekly)
 
+    // HTML parsing lib
+    implementation(libs.jsoup)
+
     // web requests for uploading the log file
     implementation(libs.okhttp)
 
@@ -86,6 +89,7 @@ dependencies {
     // for JSON parsing
     testImplementation(libs.json)
     implementation(libs.gson)
+
 
 
 }

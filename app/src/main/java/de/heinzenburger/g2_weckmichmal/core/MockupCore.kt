@@ -1,11 +1,13 @@
 package de.heinzenburger.g2_weckmichmal.core
 
+import de.heinzenburger.g2_weckmichmal.api.mensa.StudierendenWerkKarlsruhe
 import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationWithEvent
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.Course
 import de.heinzenburger.g2_weckmichmal.specifications.Event
 import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import de.heinzenburger.g2_weckmichmal.specifications.MensaMeal
 import de.heinzenburger.g2_weckmichmal.specifications.Route
 import de.heinzenburger.g2_weckmichmal.specifications.RouteSection
 import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity
@@ -20,6 +22,10 @@ import java.time.LocalTime
 class MockupCore : I_Core {
     override fun deriveStationName(input: String): List<String> {
         return listOf("Europaplatz","Europaplatz U", "Europaplatz Berlin","Europaplatz München", "Europaplatz Dortmund")
+    }
+
+    override fun nextMensaMeals(): List<MensaMeal> {
+        return StudierendenWerkKarlsruhe().nextMeals()
     }
 
     companion object{

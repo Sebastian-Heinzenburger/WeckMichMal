@@ -5,6 +5,7 @@ fuel = "3.0.0-alpha04"
 gson = "2.10.1"
 ical4j = "4.1.1"
 json = "20210307"
+jsoup = "1.14.3"
 junitJupiterApi = "5.10.0"
 junitJupiterEngine = "5.10.0"
 kotlin = "2.0.0"
@@ -38,6 +39,7 @@ biweekly = { module = "net.sf.biweekly:biweekly", version.ref = "biweekly" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 ical4j = { module = "org.mnode.ical4j:ical4j", version.ref = "ical4j" }
 json = { module = "org.json:json", version.ref = "json" }
+jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
