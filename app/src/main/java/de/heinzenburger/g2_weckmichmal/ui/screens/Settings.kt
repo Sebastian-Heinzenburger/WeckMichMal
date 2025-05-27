@@ -22,7 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
-import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.components.NavBar
 import de.heinzenburger.g2_weckmichmal.ui.components.SaveURL
@@ -55,7 +55,7 @@ class SettingsScreen : ComponentActivity() {
         private var url = mutableStateOf("https://") //At the moment, only possible configuration
 
         //Main component
-        val innerSettingsComposable : @Composable (PaddingValues, I_Core) -> Unit = { innerPadding: PaddingValues, core: I_Core ->
+        val innerSettingsComposable : @Composable (PaddingValues, CoreSpecification) -> Unit = { innerPadding: PaddingValues, core: CoreSpecification ->
             val context = LocalContext.current
             Column(
                 Modifier
@@ -85,7 +85,7 @@ class SettingsScreen : ComponentActivity() {
 }
 
 @Composable
-fun SettingsComposable(modifier: Modifier, uiActions: I_Core) {
+fun SettingsComposable(modifier: Modifier, uiActions: CoreSpecification) {
     NavBar.Companion.NavigationBar(modifier, uiActions, SettingsScreen.innerSettingsComposable, SettingsScreen::class)
 }
 

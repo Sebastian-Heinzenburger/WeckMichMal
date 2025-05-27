@@ -36,7 +36,7 @@ import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.Event
-import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
 import java.time.LocalDateTime
@@ -123,7 +123,7 @@ class AlarmRingingScreen : ComponentActivity(){
 
     var event = mutableStateOf(Event.emptyEvent)
     var configuration = mutableStateOf(Configuration.emptyConfiguration)
-    val innerAlarmRingingScreenComposable : @Composable (I_Core) -> Unit = {core: I_Core ->
+    val innerAlarmRingingScreenComposable : @Composable (CoreSpecification) -> Unit = { core: CoreSpecification ->
         Box{
             Column (
                 modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxSize()

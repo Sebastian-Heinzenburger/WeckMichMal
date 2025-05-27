@@ -21,7 +21,7 @@ import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationWithEvent
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.CourseFetcherException
 import de.heinzenburger.g2_weckmichmal.specifications.Event
-import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
 import de.heinzenburger.g2_weckmichmal.specifications.PersistenceException
 import de.heinzenburger.g2_weckmichmal.specifications.WakeUpCalculatorException
 import java.net.MalformedURLException
@@ -38,7 +38,7 @@ import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity
 
 data class Core(
     val context: Context,
-) : I_Core {
+) : CoreSpecification {
     val logger = Logger(context)
 
     //For description of each method, see I_Core in specifications

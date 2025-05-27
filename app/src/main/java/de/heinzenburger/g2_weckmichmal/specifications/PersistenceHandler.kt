@@ -17,7 +17,7 @@ import java.time.format.DateTimeFormatter
 /**
  * Interface defining the behavior for the persistence layer.
  */
-interface InterfaceConfigurationHandler{
+interface ConfigurationHandlerSpecification {
     /**
      * Saves or updates the alarm configuration in the persistence layer.
      *

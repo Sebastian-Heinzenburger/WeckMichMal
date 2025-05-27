@@ -6,7 +6,7 @@ import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationWithEvent
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.Course
 import de.heinzenburger.g2_weckmichmal.specifications.Event
-import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
 import de.heinzenburger.g2_weckmichmal.specifications.MensaMeal
 import de.heinzenburger.g2_weckmichmal.specifications.Route
 import de.heinzenburger.g2_weckmichmal.specifications.RouteSection
@@ -19,7 +19,7 @@ import java.time.LocalTime
 //Is a mockup version of real core, in order to keep UI preview functionality
 //Most methods do nothing, only those that cause something in UI are relevant
 //For description of each method, see I_Core in specifications
-class MockupCore : I_Core {
+class MockupCore : CoreSpecification {
     override fun deriveStationName(input: String): List<String> {
         return listOf("Europaplatz","Europaplatz U", "Europaplatz Berlin","Europaplatz München", "Europaplatz Dortmund")
     }

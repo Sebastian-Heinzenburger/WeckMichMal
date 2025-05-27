@@ -55,7 +55,7 @@ import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationWithEvent
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.Event
-import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.components.NavBar
 import de.heinzenburger.g2_weckmichmal.ui.screens.AlarmClockOverviewScreen.Companion.configurationAndEventEntities
@@ -95,7 +95,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
 
     companion object{
         private fun deleteConfiguration(
-            core: I_Core,
+            core: CoreSpecification,
             properties: ConfigurationWithEvent,
             context: Context
         ){
@@ -138,8 +138,8 @@ class AlarmClockOverviewScreen : ComponentActivity(){
 
         //Elements in Configuration Component that stay the same, regardless of Platypus
         private val innerSingleAlarmConfiguration:
-                @Composable (PaddingValues, I_Core, ConfigurationWithEvent)
-                -> Unit = { innerPadding: PaddingValues, core: I_Core, properties: ConfigurationWithEvent ->
+                @Composable (PaddingValues, CoreSpecification, ConfigurationWithEvent)
+                -> Unit = { innerPadding: PaddingValues, core: CoreSpecification, properties: ConfigurationWithEvent ->
             var userActivated by remember { mutableStateOf(properties.configuration.isActive) }
             val context = LocalContext.current
 
@@ -219,8 +219,8 @@ class AlarmClockOverviewScreen : ComponentActivity(){
 
         //UI Arrangement for Components when Platypus mode is off
         private val SingleAlarmConfiguration :
-                @Composable (PaddingValues, I_Core, ConfigurationWithEvent)
-                -> Unit = { innerPadding: PaddingValues, core: I_Core, properties: ConfigurationWithEvent ->
+                @Composable (PaddingValues, CoreSpecification, ConfigurationWithEvent)
+                -> Unit = { innerPadding: PaddingValues, core: CoreSpecification, properties: ConfigurationWithEvent ->
             val context = LocalContext.current
             Box(
                 contentAlignment = Alignment.TopEnd
@@ -252,8 +252,8 @@ class AlarmClockOverviewScreen : ComponentActivity(){
         }
 
         //UI Arrangement for Components when Platypus mode is activated
-        private val APlatypus : @Composable (PaddingValues, I_Core, ConfigurationWithEvent)
-                -> Unit = { innerPadding: PaddingValues, core: I_Core, properties: ConfigurationWithEvent ->
+        private val APlatypus : @Composable (PaddingValues, CoreSpecification, ConfigurationWithEvent)
+                -> Unit = { innerPadding: PaddingValues, core: CoreSpecification, properties: ConfigurationWithEvent ->
             val context = LocalContext.current
             Column(
                 verticalArrangement = Arrangement.spacedBy((-18).dp),
@@ -346,7 +346,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
         }
 
         //Main Component, is passed to Navbar. Contains all configuration components and plus icon
-        val innerAlarmClockOverviewComposable : @Composable (PaddingValues, I_Core) -> Unit = { innerPadding: PaddingValues, core: I_Core ->
+        val innerAlarmClockOverviewComposable : @Composable (PaddingValues, CoreSpecification) -> Unit = { innerPadding: PaddingValues, core: CoreSpecification ->
             val context = LocalContext.current
 
             Box {
@@ -416,7 +416,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
 }
 
 @Composable
-fun AlarmClockOverviewComposable(modifier: Modifier, core: I_Core) {
+fun AlarmClockOverviewComposable(modifier: Modifier, core: CoreSpecification) {
     NavBar.Companion.NavigationBar(modifier, core, AlarmClockOverviewScreen.innerAlarmClockOverviewComposable,
         AlarmClockOverviewScreen::class)
 }

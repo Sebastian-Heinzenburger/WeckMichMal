@@ -1,6 +1,6 @@
 package de.heinzenburger.g2_weckmichmal.api.mensa
 
-import de.heinzenburger.g2_weckmichmal.specifications.I_MensaFetcher
+import de.heinzenburger.g2_weckmichmal.specifications.MensaFetcherSpecification
 import de.heinzenburger.g2_weckmichmal.specifications.MensaMeal
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -10,7 +10,7 @@ typealias HTMLString = String
 
 class StudierendenWerkKarlsruhe(
     private val mensaUrl: URL = URL("https://www.sw-ka.de/de/hochschulgastronomie/speiseplan/mensa_erzberger/?view=ok&c=erzberger&STYLE=popup_plain")
-) : I_MensaFetcher {
+) : MensaFetcherSpecification {
 
     /**
      * Fetches the meals for the next available day from the Mensa's HTML page from the given `mensaUrl`.

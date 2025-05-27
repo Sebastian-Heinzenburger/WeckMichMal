@@ -4,7 +4,7 @@ package de.heinzenburger.g2_weckmichmal.specifications
  * Interface for fetching meals from a Mensa (university cafeteria).
  * This interface defines the contract for fetching meals for the next available day.
  */
-interface I_MensaFetcher {
+interface MensaFetcherSpecification {
 
     /**
      * Fetches the meals for the next available day from the Mensa's API, HTML page or database.

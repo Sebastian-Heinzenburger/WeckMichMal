@@ -14,7 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
 import de.heinzenburger.g2_weckmichmal.ui.screens.AlarmClockEditScreen
 import de.heinzenburger.g2_weckmichmal.ui.screens.AlarmClockOverviewScreen
 import de.heinzenburger.g2_weckmichmal.ui.screens.InformationScreen
@@ -30,7 +30,7 @@ class NavBar : ComponentActivity() {
         //Navbar Component at the bottom of the screen. All other components should be displayed inside of this component.
         //Therefore, the components shall be passed as function parameter (callback)
         @Composable
-        fun <T> NavigationBar(modifier: Modifier, core: I_Core, callback: @Composable ((PaddingValues, I_Core) -> Unit), caller : T) {
+        fun <T> NavigationBar(modifier: Modifier, core: CoreSpecification, callback: @Composable ((PaddingValues, CoreSpecification) -> Unit), caller : T) {
             val iconSize = 35.dp
             val iconColor = MaterialTheme.colorScheme.primary
             val iconSelectedColor = MaterialTheme.colorScheme.secondary

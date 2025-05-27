@@ -47,7 +47,7 @@ import androidx.compose.ui.unit.dp
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
-import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
 import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurButtonInEditAlarm
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
@@ -193,7 +193,7 @@ class AlarmClockEditScreen : ComponentActivity() {
             }
         }
 
-        fun saveConfiguration(core: I_Core, context: Context){
+        fun saveConfiguration(core: CoreSpecification, context: Context){
             thread{
                 var validation = true
                 //Name of Alarm
@@ -272,8 +272,8 @@ class AlarmClockEditScreen : ComponentActivity() {
         }
 
         //All components are stored as variables so they can be used as callbacks if needed
-        private val innerDatengrundlageComposable : @Composable (PaddingValues, I_Core) -> Unit =
-        { innerPadding: PaddingValues, core: I_Core ->
+        private val innerDatengrundlageComposable : @Composable (PaddingValues, CoreSpecification) -> Unit =
+        { innerPadding: PaddingValues, core: CoreSpecification ->
             val arrivalOptions = listOf("Manuelle Ankuftszeit", "Ankuftszeit nach Vorlesungsplan")
             //Dont really know what this is doing
             val (arrivalSelectedOption, onArrivalOptionSelected) = remember {
@@ -369,8 +369,8 @@ class AlarmClockEditScreen : ComponentActivity() {
 
             }
         }
-        private val innerFahrtwegComposable : @Composable (PaddingValues, I_Core) -> Unit =
-            { innerPadding: PaddingValues, core: I_Core ->
+        private val innerFahrtwegComposable : @Composable (PaddingValues, CoreSpecification) -> Unit =
+            { innerPadding: PaddingValues, core: CoreSpecification ->
                 val rideOptions = listOf("Bahnverbindung", "Manuelle Fahrtzeit")
                 val (rideSelectedOption, onRideOptionSelected) = remember {
                     if(isManualTravelTime.value){
@@ -483,8 +483,8 @@ class AlarmClockEditScreen : ComponentActivity() {
                     }
                 }
             }
-        private val innerZeitaufwandComposable : @Composable (PaddingValues, I_Core) -> Unit =
-            { innerPadding: PaddingValues, core: I_Core ->
+        private val innerZeitaufwandComposable : @Composable (PaddingValues, CoreSpecification) -> Unit =
+            { innerPadding: PaddingValues, core: CoreSpecification ->
                 OurText(
                     text = "Zeitaufwand",
                     modifier = Modifier.padding(top = 24.dp, start = 24.dp)
@@ -548,8 +548,8 @@ class AlarmClockEditScreen : ComponentActivity() {
                     )
                 }
             }
-        private val innerGueltigkeitComposable : @Composable (PaddingValues, I_Core) -> Unit =
-            { innerPadding: PaddingValues, core: I_Core ->
+        private val innerGueltigkeitComposable : @Composable (PaddingValues, CoreSpecification) -> Unit =
+            { innerPadding: PaddingValues, core: CoreSpecification ->
                 OurText(
                     text = "Gültig für",
                     modifier = Modifier.padding(top = 24.dp, start = 24.dp)
@@ -597,8 +597,8 @@ class AlarmClockEditScreen : ComponentActivity() {
 
         //Main component that is sent as navbar as callback
         @OptIn(ExperimentalMaterial3Api::class) //Needed because Time Picker is yet experimental
-        val innerEditComposable : @Composable (PaddingValues, I_Core) -> Unit =
-        { innerPadding: PaddingValues, core: I_Core ->
+        val innerEditComposable : @Composable (PaddingValues, CoreSpecification) -> Unit =
+        { innerPadding: PaddingValues, core: CoreSpecification ->
             val context = LocalContext.current
             //Open time picker dialogs when corresponding boolean set to true
             when {
@@ -744,7 +744,7 @@ class AlarmClockEditScreen : ComponentActivity() {
 }
 
 @Composable
-fun EditComposable(modifier: Modifier, core: I_Core) {
+fun EditComposable(modifier: Modifier, core: CoreSpecification) {
     NavBar.Companion.NavigationBar(modifier, core, AlarmClockEditScreen.innerEditComposable, caller = AlarmClockEditScreen::class)
 }
 

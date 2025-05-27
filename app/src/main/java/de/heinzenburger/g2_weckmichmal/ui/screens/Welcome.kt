@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
-import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.components.SaveURL
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
@@ -50,7 +50,7 @@ class WelcomeScreen : ComponentActivity() {
     }
 
     @Composable
-    fun Greeting(modifier: Modifier, core: I_Core) {
+    fun Greeting(modifier: Modifier, core: CoreSpecification) {
         val context = LocalContext.current
         Column(modifier
             .background(MaterialTheme.colorScheme.background)

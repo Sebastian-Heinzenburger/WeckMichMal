@@ -10,7 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurTextField
 import kotlin.concurrent.thread
@@ -18,7 +18,7 @@ import kotlin.concurrent.thread
 
 class SaveURL {
     companion object{
-        val innerSettingsComposable : @Composable (PaddingValues, I_Core, () -> Unit) -> Unit = { innerPadding, core, onSave ->
+        val innerSettingsComposable : @Composable (PaddingValues, CoreSpecification, () -> Unit) -> Unit = { innerPadding, core, onSave ->
             var tempURL = core.getRaplaURL()
             var url = remember { mutableStateOf(tempURL ?: "") }
 
@@ -48,7 +48,7 @@ class SaveURL {
             }
         }
 
-        fun onclickSaveButton(core: I_Core, onSave: () -> Unit, url: String){
+        fun onclickSaveButton(core: CoreSpecification, onSave: () -> Unit, url: String){
             if(core.isInternetAvailable()){
                 thread {
                     //very very dirty aber was soll man machen...

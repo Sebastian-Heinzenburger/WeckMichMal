@@ -41,7 +41,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
-import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.NumberField
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurTextField
@@ -145,7 +145,7 @@ class PickerDialogs {
         fun StationPickerDialog(
             onConfirm: (String) -> Unit,
             onDismiss: () -> Unit,
-            core: I_Core
+            core: CoreSpecification
         ) {
             Dialog(onDismissRequest = { onDismiss() }) {
                 var station = remember { mutableStateOf("") }

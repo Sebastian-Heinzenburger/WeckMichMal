@@ -8,12 +8,12 @@ import androidx.room.Query
 import androidx.room.Transaction
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationWithEvent
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
-import de.heinzenburger.g2_weckmichmal.specifications.InterfaceConfigurationHandler
+import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationHandlerSpecification
 import de.heinzenburger.g2_weckmichmal.specifications.PersistenceException
 
 data class ConfigurationHandler(
     val context: Context,
-): InterfaceConfigurationHandler {
+): ConfigurationHandlerSpecification {
     val logger = Logger(context)
     @Dao
     interface ConfigurationDao{

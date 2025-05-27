@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.persistence.Logger
-import de.heinzenburger.g2_weckmichmal.specifications.I_Core
+import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
 import de.heinzenburger.g2_weckmichmal.specifications.MensaMeal
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.components.NavBar
@@ -69,8 +69,8 @@ class InformationScreen : ComponentActivity() {
     }
 
     //When text is clicked, platypus mode in AlarmClockOverviewScreen is activated hehe
-    val innerInformationComposable: @Composable (PaddingValues, I_Core) -> Unit =
-        { innerPadding: PaddingValues, core: I_Core ->
+    val innerInformationComposable: @Composable (PaddingValues, CoreSpecification) -> Unit =
+        { innerPadding: PaddingValues, core: CoreSpecification ->
             val context = LocalContext.current
             when {
                 showConfirmDialog.value -> {
@@ -150,8 +150,8 @@ class InformationScreen : ComponentActivity() {
                 innerMensaComposable(innerPadding, core)
             }
         }
-    val innerMensaComposable: @Composable (PaddingValues, I_Core) -> Unit =
-        { innerPadding: PaddingValues, core: I_Core ->
+    val innerMensaComposable: @Composable (PaddingValues, CoreSpecification) -> Unit =
+        { innerPadding: PaddingValues, core: CoreSpecification ->
             val mensaMeals = remember { mutableStateOf(emptyList<MensaMeal>()) }
             thread {
                 mensaMeals.value = core.nextMensaMeals()
@@ -186,8 +186,8 @@ class InformationScreen : ComponentActivity() {
                 }
             }
         }
-    val innerLogComposable: @Composable (PaddingValues, I_Core) -> Unit =
-        { innerPadding: PaddingValues, core: I_Core ->
+    val innerLogComposable: @Composable (PaddingValues, CoreSpecification) -> Unit =
+        { innerPadding: PaddingValues, core: CoreSpecification ->
             Column(
                 Modifier
                     .verticalScroll(rememberScrollState())
@@ -199,7 +199,7 @@ class InformationScreen : ComponentActivity() {
             }
         }
     @Composable
-    fun InformationComposable(modifier: Modifier, core: I_Core) {
+    fun InformationComposable(modifier: Modifier, core: CoreSpecification) {
         NavBar.Companion.NavigationBar(
             modifier,
             core,

@@ -5,7 +5,7 @@ import de.heinzenburger.g2_weckmichmal.persistence.Logger
 /**
  * Interface defining the core
  */
-interface I_Core{
+interface CoreSpecification {
     /*
     To be implemented: Does not have any state, needs context as parameter
      */
