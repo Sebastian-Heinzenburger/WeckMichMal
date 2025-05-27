@@ -317,7 +317,7 @@ data class Core(
                             }
                         )
                     )
-                ).calculateNextEvent(configuration)
+                ).calculateNextEvent(configuration, skipIfToday = true)
                 log(Logger.Level.INFO, "Calculated event: $event")
                 eventHandler.saveOrUpdate(event)
 
@@ -334,37 +334,15 @@ data class Core(
             log(Logger.Level.SEVERE, e.stackTraceToString())
             showToast("Error communicating with database. Try reinstalling the app.")
         }
+        catch (e: WakeUpCalculatorException.NoRoutesFound){
+            showToast("Event will be updated this night.")
+            log(Logger.Level.SEVERE, e.message.toString())
+            log(Logger.Level.SEVERE, e.stackTraceToString())
+        }
         catch (e: WakeUpCalculatorException){
             log(Logger.Level.SEVERE, e.message.toString())
             log(Logger.Level.SEVERE, e.stackTraceToString())
-            try {
-                val eventHandler = EventHandler(context)
-                var url = getRaplaURL()
-                log(Logger.Level.INFO, "Using Rapla URL: $url")
-                val event = WakeUpCalculator(
-                    routePlanner = DBRoutePlanner(),
-                    courseFetcher = RaplaFetcher(
-                        URL(
-                            if(url == ""){
-                                "http://example.com"
-                            }else{
-                                url
-                            }
-                        )
-                    )
-                ).calculateNextEvent(configuration, skipToday = true)
-                log(Logger.Level.INFO, "Calculated event: $event")
-                eventHandler.saveOrUpdate(event)
-
-                configuration.log(this)
-                event.log(this)
-            }
-            catch (e: Exception){
-                log(Logger.Level.SEVERE, e.message.toString())
-                log(Logger.Level.SEVERE, e.stackTraceToString())
-                showToast("Error calculating next Event.")
-            }
-
+            showToast("Error calculating next Event.")
         }
         catch (e: MalformedURLException){
             log(Logger.Level.SEVERE, e.message.toString())
