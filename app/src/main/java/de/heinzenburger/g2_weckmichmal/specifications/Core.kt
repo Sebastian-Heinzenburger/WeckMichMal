@@ -1,20 +1,16 @@
 package de.heinzenburger.g2_weckmichmal.specifications
 
 import de.heinzenburger.g2_weckmichmal.persistence.Logger
+import java.time.LocalDate
 
 /**
  * Interface defining the core
  */
 interface CoreSpecification {
-    /*
-    To be implemented: Does not have any state, needs context as parameter
-     */
-
     /**
      * Update all events depending on current train and rapla status
      */
     fun deriveStationName(input: String) : List<String>
-
 
     /**
      * Returns the meals for the next day
@@ -69,6 +65,14 @@ interface CoreSpecification {
      * @param configuration the [Configuration] to be updated
      */
     fun updateConfigurationActive(isActive: Boolean, configuration: Configuration)
+
+    /**
+     * Update attribute ichHabGeringt in a [Configuration]
+     * @param date stores the date when the configuration rang last time
+     * @param uid of the [Configuration] to be updated
+     */
+    fun updateConfigurationIchHabGeringt(date: LocalDate, uid: Long)
+
     /**
      * @return Returns true if application is opened for the first time since installation
      */

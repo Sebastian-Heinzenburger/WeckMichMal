@@ -10,6 +10,7 @@ import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationWithEvent
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationHandlerSpecification
 import de.heinzenburger.g2_weckmichmal.specifications.PersistenceException
+import java.time.LocalDate
 
 data class ConfigurationHandler(
     val context: Context,
@@ -25,6 +26,9 @@ data class ConfigurationHandler(
 
         @Query("UPDATE configuration SET isActive = :isActive WHERE uid = :uid")
         fun updateActiveById(uid: Long, isActive: Boolean)
+
+        @Query("UPDATE configuration SET ichHabGeringt = :date WHERE uid = :uid")
+        fun updateIchHabGeringtById(uid: Long, date: LocalDate)
 
         @Query("DELETE FROM configuration WHERE uid = :uid")
         fun deleteById(uid: Long)
@@ -61,6 +65,16 @@ data class ConfigurationHandler(
         try {
             //Updating means deleting and inserting again
             database.alarmConfigurationDao().updateActiveById(uid, isActive)
+        }
+        catch (e: Exception){
+            throw PersistenceException.UpdateConfigurationException(e)
+        }
+    }
+
+    override fun updateConfigurationIchHabGeringt(date: LocalDate, uid: Long) {
+        try {
+            //Updating means deleting and inserting again
+            database.alarmConfigurationDao().updateIchHabGeringtById(uid, date)
         }
         catch (e: Exception){
             throw PersistenceException.UpdateConfigurationException(e)

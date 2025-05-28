@@ -1,11 +1,13 @@
 package de.heinzenburger.g2_weckmichmal.ui.screens
 
 import android.Manifest
+import android.app.AlarmManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -71,13 +73,23 @@ class AlarmClockOverviewScreen : ComponentActivity(){
             configurationAndEventEntities.value = core.getAllConfigurationAndEvent()!!
         }
 
+
+        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+        val powerManager = getSystemService(POWER_SERVICE) as PowerManager
+
+        if(!alarmManager.canScheduleExactAlarms()){
+            core.showToast("Bitte erlaube Alarm Erstellung in den Systemeinstellungen")
+        }
+        if(!powerManager.isIgnoringBatteryOptimizations(packageName)){
+            core.showToast("Bitte erlaube uneingeschränkte Hintergrundnutzung in den battery optimization Einstellungen")
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(
                     this,
                     Manifest.permission.POST_NOTIFICATIONS
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
-                core.showToast("Please allow Notifications in System Settings")
+                core.showToast("Bitte erlaube Notifications in den Systemeinstellungen")
             }
         }
 

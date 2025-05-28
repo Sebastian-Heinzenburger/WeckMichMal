@@ -35,6 +35,14 @@ interface ConfigurationHandlerSpecification {
     fun updateConfigurationActive(isActive: Boolean, uid: Long)
 
     /**
+     * Update attribute ichHabGeringt in a [Configuration]
+     * @param date stores the last date the configuration was active
+     * @param uid of the [Configuration] to be updated
+     */
+    @Throws(PersistenceException.UpdateConfigurationException::class)
+    fun updateConfigurationIchHabGeringt(date: LocalDate, uid: Long)
+
+    /**
      * Returns the alarm configuration from the persistence layer.
      *
      * @return A ConfigurationEntity object representing the saved alarm configuration.
@@ -164,8 +172,8 @@ data class Configuration(
     @ColumnInfo(name = "isActive") var isActive: Boolean,
     /** Strict means, that the application has to do its best to let the user be on time. No matter the cost*/
     @ColumnInfo(name = "enforceStartBuffer") var enforceStartBuffer: Boolean,
-    // TODO: @flo bitte richtig machen undso, haben keine Ahnung von dem ORM
-    @ColumnInfo(name = "lastAlarmDate") var lastAlarmDate: LocalDate?,
+    /** The date where this alarm rang the last time.*/
+    @ColumnInfo(name = "ichHabGeringt") var ichHabGeringt: LocalDate = LocalDate.MIN,
 ){
     @Suppress("unused")
     fun log(core : Core){
@@ -184,7 +192,6 @@ data class Configuration(
             startStation = "",
             endStation = "",
             isActive = true,
-            lastAlarmDate = null,
             enforceStartBuffer = true
         )
     }
@@ -222,6 +229,9 @@ data class Event(
                 DataConverter().fromListOfCourses(courses)
             }, routes=${DataConverter().fromListOfRoutes(routes)}"
         )
+    }
+    fun getLocalDateTime() : LocalDateTime{
+        return date.atTime(wakeUpTime)
     }
     companion object{
         val emptyEvent = Event(

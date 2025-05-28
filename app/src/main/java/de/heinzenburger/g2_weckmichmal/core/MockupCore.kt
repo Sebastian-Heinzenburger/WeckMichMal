@@ -1,12 +1,12 @@
 package de.heinzenburger.g2_weckmichmal.core
 
-import de.heinzenburger.g2_weckmichmal.api.mensa.StudierendenWerkKarlsruhe
 import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationWithEvent
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.Course
 import de.heinzenburger.g2_weckmichmal.specifications.Event
 import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
+import de.heinzenburger.g2_weckmichmal.specifications.MealType
 import de.heinzenburger.g2_weckmichmal.specifications.MensaMeal
 import de.heinzenburger.g2_weckmichmal.specifications.Route
 import de.heinzenburger.g2_weckmichmal.specifications.RouteSection
@@ -25,7 +25,22 @@ class MockupCore : CoreSpecification {
     }
 
     override fun nextMensaMeals(): List<MensaMeal> {
-        return StudierendenWerkKarlsruhe().nextMeals()
+        return listOf(MensaMeal(
+                name = "Lecker lecker",
+                price = 2.5,
+                type = MealType.VEGETARIAN
+            ),
+            MensaMeal(
+                name = "Nich so lecker",
+                price = 12.5,
+                type = MealType.MEAT
+            ),
+            MensaMeal(
+                name = "Bombastisch",
+                price = 0.5,
+                type = MealType.VEGAN
+            )
+        )
     }
 
     companion object{
@@ -41,7 +56,6 @@ class MockupCore : CoreSpecification {
                 startStation = "Wiesloch",
                 endStation = "Duale Folter",
                 isActive = true,
-                lastAlarmDate = null,
                 enforceStartBuffer = true
             )
         )
@@ -152,6 +166,13 @@ class MockupCore : CoreSpecification {
     override fun updateConfigurationActive(
         isActive: Boolean,
         configuration: Configuration
+    ) {
+
+    }
+
+    override fun updateConfigurationIchHabGeringt(
+        date: LocalDate,
+        configuration: Long
     ) {
 
     }

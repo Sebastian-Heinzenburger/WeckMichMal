@@ -36,6 +36,7 @@ import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
 import android.provider.Settings
 import android.app.AlarmManager
 import android.os.PowerManager
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.core.net.toUri
 
 class AllowNotificationsScreen : ComponentActivity() {
@@ -103,16 +104,18 @@ class AllowNotificationsScreen : ComponentActivity() {
                         "Außerdem benötigt WeckMichMal die Berechtigung, Alarme in deinem System zu setzen. Ansonsten verschläfst du jeden morgen."
                     }
                     else{
-                        "Danke!"
+                        "Hinweis: Lasse dein Smartphone nachts am Strom angesteckt! Ansonsten ist das aktualisieren eines Weckers anhand von Bahn und Vorlesungsplan stark eingeschränkt!"
                     },
-                color = MaterialTheme.colorScheme.error,
-                modifier = modifier.padding(16.dp)
+                color = MaterialTheme.colorScheme.primary,
+                modifier = modifier.padding(16.dp).background(MaterialTheme.colorScheme.onBackground,
+                    RoundedCornerShape(16.dp)
+                ).padding(16.dp)
             )
 
             if(!(allowNotifications.value && allowNoBatteryOptimization.value && allowSheduleAlarm.value)){
                 Button(
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.onBackground
+                        containerColor = MaterialTheme.colorScheme.secondary
                     ),
                     onClick = {
 
@@ -157,7 +160,7 @@ class AllowNotificationsScreen : ComponentActivity() {
                 colors = ButtonDefaults.buttonColors(
                     containerColor =
                         if(allowNotifications.value && allowSheduleAlarm.value){
-                            MaterialTheme.colorScheme.onBackground
+                            MaterialTheme.colorScheme.secondary
                         }
                         else{
                             MaterialTheme.colorScheme.error

@@ -6,6 +6,8 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.google.gson.Gson
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.Course
@@ -194,13 +196,19 @@ class DataConverter {
 //Definition of the database. It consists of ConfigurationEntity Table and EventEntity Table
 //eportSchema doesn't work... I don't know why but I want to keep it anyways, hoping the schema will be randomly exported to the project directory anytime soon
 //Version needs to be updated everytime something changes in the table structure. This will destroy all data because of fallbackToDestructiveMigration
-@Database(entities = [Configuration::class, Event::class], version = 19,exportSchema = true)
+@Database(entities = [Configuration::class, Event::class], version = 20,exportSchema = true)
 @TypeConverters(DataConverter::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun alarmConfigurationDao(): ConfigurationHandler.ConfigurationDao
     abstract fun eventConfigurationDao(): EventHandler.ConfigurationDao
 
     companion object{
+        val MIGRATION_19_20 = object : Migration(19, 20) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE configuration ADD COLUMN ichHabGeringt TEXT NOT NULL DEFAULT ${DataConverter().fromLocalDate(
+                    LocalDate.MIN)}")
+            }
+        }
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
@@ -210,7 +218,7 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "database"
-                ).fallbackToDestructiveMigration().build()
+                ).addMigrations(MIGRATION_19_20).fallbackToDestructiveMigration().build()
                 INSTANCE = instance
                 instance
             }
@@ -234,3 +242,5 @@ abstract class AppDatabase : RoomDatabase() {
         }
     }
 }
+
+

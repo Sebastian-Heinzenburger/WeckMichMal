@@ -10,8 +10,10 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -26,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -121,93 +124,128 @@ class AlarmRingingScreen : ComponentActivity(){
         }
     }
 
-    var event = mutableStateOf(Event.emptyEvent)
-    var configuration = mutableStateOf(Configuration.emptyConfiguration)
-    val innerAlarmRingingScreenComposable : @Composable (CoreSpecification) -> Unit = { core: CoreSpecification ->
-        Box{
-            Column (
-                modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxSize()
-            )
-            {
-                Text(
-                    text = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")),
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.titleLarge,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth().padding(top = 32.dp)
-                )
-                var text =
-                    if(!event.value.courses.isNullOrEmpty()){
-                        "Mental vorbereiten auf: \n"
-                    }
-                     else{
-                        "Hallo :D"
-                    }
-                event.value.courses?.forEachIndexed {
-                        index, it ->
-                    text += it.name + " - " + it.startDate.format(DateTimeFormatter.ofPattern("HH:mm"))
-                    if(event.value.courses!!.size-1 != index){
-                        text += "\n"
-                    }
-                }
-                Text(
-                    text = text,
+    @Composable fun OverviewComposable(){
+        Text(
+            text = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")),
+            color = MaterialTheme.colorScheme.primary,
+            style = MaterialTheme.typography.titleLarge,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth().padding(top = 32.dp)
+        )
+        var text =
+            if (!event.value.courses.isNullOrEmpty()) {
+                "Mental vorbereiten auf: \n"
+            } else {
+                "Hallo :D"
+            }
+        event.value.courses?.forEachIndexed { index, it ->
+            text += it.name + " - " + it.startDate.format(DateTimeFormatter.ofPattern("HH:mm"))
+            if (event.value.courses!!.size - 1 != index) {
+                text += "\n"
+            }
+        }
+        Text(
+            text = text,
+            modifier = Modifier
+                .padding(top = 20.dp, start = 20.dp, end = 20.dp)
+                .background(MaterialTheme.colorScheme.onPrimary, RoundedCornerShape(20))
+                .fillMaxWidth()
+                .padding(10.dp),
+            color = MaterialTheme.colorScheme.primary,
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Column(
+            modifier = Modifier.verticalScroll(rememberScrollState())
+        ) {
+            event.value.routes?.fastForEachReversed {
+                val bestRoute =
+                    it.startTime.minusMinutes(configuration.value.startBuffer.toLong())
+                        .format(DateTimeFormatter.ofPattern("HH:mm")) == event.value.wakeUpTime
+                        .format(DateTimeFormatter.ofPattern(("HH:mm")))
+                Column(
                     modifier = Modifier
-                        .padding(top = 20.dp, start = 20.dp, end = 20.dp)
-                        .background(MaterialTheme.colorScheme.onPrimary, RoundedCornerShape(20))
+                        .padding(top = 20.dp, start = 40.dp, end = 40.dp)
+                        .background(
+                            if (bestRoute) {
+                                MaterialTheme.colorScheme.onBackground
+                            } else {
+                                MaterialTheme.colorScheme.onPrimary
+                            }, RoundedCornerShape(20)
+                        )
                         .fillMaxWidth()
                         .padding(10.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-                Column(modifier = Modifier.verticalScroll(rememberScrollState())
-                ){
-                    event.value.routes?.fastForEachReversed {
-                        val bestRoute = it.startTime.minusMinutes(configuration.value.startBuffer.toLong())
-                            .format(DateTimeFormatter.ofPattern("HH:mm")) == event.value.wakeUpTime
-                            .format(DateTimeFormatter.ofPattern(("HH:mm")))
-                        Column(
-                            modifier = Modifier
-                                .padding(top = 20.dp, start = 40.dp, end = 40.dp)
-                                .background(
-                                    if(bestRoute){
-                                        MaterialTheme.colorScheme.onBackground
-                                    }
-                                    else {
-                                        MaterialTheme.colorScheme.onPrimary
-                                    }
-                                    ,RoundedCornerShape(20))
-                                .fillMaxWidth()
-                                .padding(10.dp),
-                        ){
-                            OurText(
-                                text = it.startTime.format(DateTimeFormatter.ofPattern("HH:mm ")) + it.startStation,
-                                modifier = Modifier.fillMaxWidth(),
-                            )
+                ) {
+                    OurText(
+                        text = it.startTime.format(DateTimeFormatter.ofPattern("HH:mm ")) + it.startStation,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
 
-                            for(i in 0..1){
-                                i
-                                Text(
-                                    text = "|",
-                                    color =
-                                        if(bestRoute){
-                                            MaterialTheme.colorScheme.secondary
-                                        }else{
-                                            MaterialTheme.colorScheme.onBackground
-                                        },
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
+                    for (i in 0..1) {
+                        i
+                        Text(
+                            text = "|",
+                            color =
+                                if (bestRoute) {
+                                    MaterialTheme.colorScheme.secondary
+                                } else {
+                                    MaterialTheme.colorScheme.onBackground
+                                },
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
 
-                            OurText(
-                                text = it.endTime.format(DateTimeFormatter.ofPattern("HH:mm ")) + it.endStation,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
+                    OurText(
+                        text = it.endTime.format(DateTimeFormatter.ofPattern("HH:mm ")) + it.endStation,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        }
+    }
+
+    var event = mutableStateOf(Event.emptyEvent)
+    var configuration = mutableStateOf(Configuration.emptyConfiguration)
+    var swipedLeft = mutableStateOf(false)
+    val innerAlarmRingingScreenComposable : @Composable (CoreSpecification) -> Unit = { core: CoreSpecification ->
+        Box(
+            modifier = Modifier.pointerInput(Unit) {
+                detectDragGestures { change, dragAmount ->
+                    val (x, y) = dragAmount
+                    when {
+                        x > 50 -> swipedLeft.value = false
+                        x < -50 -> swipedLeft.value = true
                     }
                 }
             }
+        ){
+            Column(
+                modifier = Modifier.background(MaterialTheme.colorScheme.background)
+                    .fillMaxSize()
+            )
+            {
+                if(!swipedLeft.value) {
+                    OverviewComposable()
+                }
+                else{
+                    if(core.isInternetAvailable()){
+                        InformationScreen().innerMensaComposable(PaddingValues(top = 32.dp),core)
+                    }
+                    else{
+                        core.showToast("Mensa Essensplan kann nur bei aktiver Internetverbindung angezeigt werden.")
+                        swipedLeft.value = false
+                    }
+                }
+            }
+            OurText(
+                text = if(!swipedLeft.value){
+                    "Nach links swipen für Mensaplan"
+                }else{
+                    "Nach rechts swipen für Übersicht"
+                },
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.align(BiasAlignment(0f, 0.75f))
+            )
             if(!isPreview){
                 val context = LocalContext.current
                 Button(

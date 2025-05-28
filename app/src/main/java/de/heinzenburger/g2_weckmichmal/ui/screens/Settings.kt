@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -51,48 +53,69 @@ class SettingsScreen : ComponentActivity() {
             }
         }
     }
-    companion object{
-        private var url = mutableStateOf("https://") //At the moment, only possible configuration
 
-        //Main component
-        val innerSettingsComposable : @Composable (PaddingValues, CoreSpecification) -> Unit = { innerPadding: PaddingValues, core: CoreSpecification ->
-            val context = LocalContext.current
-            Column(
-                Modifier
-                    .padding(innerPadding)
-                    .background(MaterialTheme.colorScheme.background)) {
-                OurText(
-                    text = "Einstellungen",
-                    modifier = Modifier.padding(16.dp)
-                )
-                Column(Modifier
-                    .background(MaterialTheme.colorScheme.background).fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ){
-                    SaveURL.innerSettingsComposable(innerPadding, core,
-                        fun () {
-                            val intent = Intent(context, AlarmClockOverviewScreen::class.java)
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-                            context.startActivity(intent)
-                            (context as ComponentActivity).finish()
-                        }
+    @Composable
+    fun SettingsComposable(modifier: Modifier, uiActions: CoreSpecification) {
+        NavBar.Companion.NavigationBar(modifier, uiActions, innerSettingsComposable, SettingsScreen::class)
+    }
+
+    private var url = mutableStateOf("https://") //At the moment, only possible configuration
+
+    //Main component
+    val innerSettingsComposable : @Composable (PaddingValues, CoreSpecification) -> Unit = { innerPadding: PaddingValues, core: CoreSpecification ->
+        val context = LocalContext.current
+
+        Column(
+            Modifier
+                .padding(innerPadding)
+                .background(MaterialTheme.colorScheme.background)) {
+            OurText(
+                text = "Einstellungen",
+                modifier = Modifier.padding(16.dp)
+            )
+            Column(Modifier
+                .background(MaterialTheme.colorScheme.background).fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ){
+
+                Button(
+                    onClick = {
+                        val intent = Intent(context, LogScreen::class.java)
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                        context.startActivity(intent)
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    OurText(
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier,
+                        text = "Logs ansehen"
                     )
                 }
+
+                SaveURL.innerSettingsComposable(innerPadding, core,
+                    fun () {
+                        val intent = Intent(context, AlarmClockOverviewScreen::class.java)
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                        context.startActivity(intent)
+                        (context as ComponentActivity).finish()
+                    }
+                )
             }
         }
     }
 }
 
-@Composable
-fun SettingsComposable(modifier: Modifier, uiActions: CoreSpecification) {
-    NavBar.Companion.NavigationBar(modifier, uiActions, SettingsScreen.innerSettingsComposable, SettingsScreen::class)
-}
+
 
 @Preview(showBackground = true)
 @Composable
 fun SettingsScreenPreview() {
+    val settingsScreen = SettingsScreen()
     G2_WeckMichMalTheme {
-        SettingsComposable(modifier = Modifier, uiActions = MockupCore())
+        settingsScreen.SettingsComposable(modifier = Modifier, uiActions = MockupCore())
     }
 }

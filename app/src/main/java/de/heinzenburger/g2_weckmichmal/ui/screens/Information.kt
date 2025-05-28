@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -21,34 +23,23 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
+import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
-import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
 import de.heinzenburger.g2_weckmichmal.specifications.MensaMeal
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.components.NavBar
-import de.heinzenburger.g2_weckmichmal.ui.components.PickerDialogs.Companion.ConfirmDialog
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
-import okhttp3.MultipartBody
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.asRequestBody
-import java.io.File
-import java.io.IOException
 import kotlin.concurrent.thread
+import androidx.core.net.toUri
 
 class InformationScreen : ComponentActivity() {
-
-    val showConfirmDialog = mutableStateOf(false)
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -71,83 +62,55 @@ class InformationScreen : ComponentActivity() {
     //When text is clicked, platypus mode in AlarmClockOverviewScreen is activated hehe
     val innerInformationComposable: @Composable (PaddingValues, CoreSpecification) -> Unit =
         { innerPadding: PaddingValues, core: CoreSpecification ->
-            val context = LocalContext.current
-            when {
-                showConfirmDialog.value -> {
-                    ConfirmDialog(
-                        onConfirm = {
-                            if(core.isInternetAvailable()){
-                                thread {
-                                    try {
-                                        val file = File(context.filesDir, "log")
-
-                                        val requestBody = MultipartBody.Builder()
-                                            .setType(MultipartBody.FORM)
-                                            .addFormDataPart("logFile", "file", file.asRequestBody())
-                                            .build()
-
-                                        val request = Request.Builder()
-                                            .url("https://log.heinzenburger.de/submit")
-                                            .post(requestBody)
-                                            .build()
-
-                                        OkHttpClient().newCall(request).execute().use { response ->
-                                            if (!response.isSuccessful) throw IOException("Unexpected code $response")
-                                            val responseText = response.body?.string()
-                                            core.showToast(responseText!!)
-                                        }
-                                    }
-                                    catch (e: Exception){
-                                        core.log(Logger.Level.SEVERE, e.message.toString())
-                                        core.showToast("Das hat nicht geklappt")
-                                    }
-                                }
-                            }
-                            else{
-                                core.showToast("Dafür ist eine Internetverbindung nötig")
-                            }
-                            showConfirmDialog.value = false
-                        },
-                        onDismiss = {
-                            showConfirmDialog.value = false
-                        }
-                    )
-                }
-            }
-            Column {
-                // Datenschutzerklärungsbutton
+            var context = LocalContext.current
+            Column(modifier = Modifier.padding(innerPadding).fillMaxWidth()) {
+                OurText(
+                    text = "Info",
+                    modifier = Modifier.padding(16.dp)
+                )
                 Button(
-                    modifier = Modifier.padding(0.dp, 20.dp, 0.dp, 0.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                    onClick = {
-                        AlarmClockOverviewScreen.aPlatypus = !AlarmClockOverviewScreen.aPlatypus
-                    }
-                ) {
-                    Text(
-                        style = MaterialTheme.typography.titleSmall,
-                        text = "Datenschutzerklärung unter fzuerner.com/privacy",
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.padding(10.dp)
-                    )
-                }
-                // Log Analysis Button
-                Button(
-                    onClick = {
-                        showConfirmDialog.value = true
-                    },
-                    modifier = Modifier
-                        .padding(top = 10.dp, bottom = 10.dp)
-                        .align(Alignment.CenterHorizontally),
-                    contentPadding = PaddingValues(),
+                    modifier = Modifier.align(BiasAlignment.Horizontal(0f)).padding(top = 16.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondary
-                    )
+                    ),
+                    onClick = {
+                        var url = core.getRaplaURL()
+                        if (url != null && url != ""){
+                            url = url.replace("page=ical","page=calendar")
+                            if(!url.startsWith("http://") && !url.startsWith("https://")) {
+                                url = "http://$url"
+                            }
+                            val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+                            intent.flags =
+                                Intent.FLAG_ACTIVITY_NEW_TASK
+                            context.startActivity(intent)
+                        }
+                    }
                 ) {
-                    OurText(text="Logs zur Analyse an Server senden", modifier = Modifier.padding(16.dp))
+                    OurText(text = "Vorlesungsplan im Browser öffnen", modifier = Modifier)
                 }
-                // innerLogComposable(innerPadding, core)
-                innerMensaComposable(innerPadding, core)
+                Button(
+                    modifier = Modifier.align(BiasAlignment.Horizontal(0f)).padding(top = 8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary
+                    ),
+                    onClick = {
+                        var url = "https://www.sw-ka.de/de/hochschulgastronomie/speiseplan/mensa_erzberger/?view=ok&c=erzberger&STYLE=popup_plain"
+                        val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+                        intent.flags =
+                            Intent.FLAG_ACTIVITY_NEW_TASK
+                        context.startActivity(intent)
+                    }
+                ) {
+                    OurText(text = "Mensaplan im Browser öffnen", modifier = Modifier)
+                }
+                if(core.isInternetAvailable()){
+                    innerMensaComposable(innerPadding, core)
+                }
+                else{
+                    core.showToast("Mensa Essensplan kann nur bei aktiver Internetverbindung angezeigt werden.")
+                }
+
             }
         }
     val innerMensaComposable: @Composable (PaddingValues, CoreSpecification) -> Unit =
@@ -159,14 +122,20 @@ class InformationScreen : ComponentActivity() {
             Column(
                 modifier = Modifier
                     .padding(innerPadding)
+                    .padding(16.dp)
+                    .fillMaxWidth()
+                    .background(color = MaterialTheme.colorScheme.onBackground,
+                        RoundedCornerShape(16.dp)
+                    )
+                    .padding(top = 8.dp, start = 8.dp, end = 8.dp)
                     .verticalScroll(rememberScrollState())
             ) {
                 Text(
                     style = MaterialTheme.typography.titleSmall,
                     text = "Mensa Essensplan",
                     textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(10.dp)
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(10.dp).align(BiasAlignment.Horizontal(0f))
                 )
                 Column {
                     mensaMeals.value.forEach { meal ->
@@ -174,28 +143,16 @@ class InformationScreen : ComponentActivity() {
                             OurText(
                                 text = meal.name,
                                 textAlign = TextAlign.Left,
-                                modifier = Modifier.padding(16.dp).fillMaxWidth(0.75f),
+                                modifier = Modifier.padding(16.dp).fillMaxWidth(0.65f),
                             )
                             OurText(
                                 text = String.format("%.2f €", meal.price),
-                                textAlign = TextAlign.Left,
-                                modifier = Modifier.padding(16.dp)
+                                textAlign = TextAlign.Right,
+                                modifier = Modifier.padding(top=16.dp, bottom = 16.dp, end = 16.dp).fillMaxWidth()
                             )
                         }
                     }
                 }
-            }
-        }
-    val innerLogComposable: @Composable (PaddingValues, CoreSpecification) -> Unit =
-        { innerPadding: PaddingValues, core: CoreSpecification ->
-            Column(
-                Modifier
-                    .verticalScroll(rememberScrollState())
-            ) {
-                OurText(
-                    text = core.getLog(),
-                    modifier = Modifier,
-                )
             }
         }
     @Composable

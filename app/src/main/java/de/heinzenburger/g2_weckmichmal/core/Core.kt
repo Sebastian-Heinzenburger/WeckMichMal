@@ -35,6 +35,8 @@ import de.heinzenburger.g2_weckmichmal.api.mensa.StudierendenWerkKarlsruhe
 import de.heinzenburger.g2_weckmichmal.specifications.MensaMeal
 import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity
 import java.time.Duration
+import java.time.LocalDate
+import java.time.LocalTime
 
 data class Core(
     val context: Context,
@@ -58,11 +60,10 @@ data class Core(
         var earliestEventDate = LocalDateTime.MAX
         var earliestEvent: Event? = null
         configurationsWithEvents?.forEach {
-            val eventDateTime = it.event?.date?.atTime(it.event.wakeUpTime)
+            val eventDateTime = it.event?.getLocalDateTime()
             log(Logger.Level.INFO, "Checking eventDateTime: $eventDateTime for configuration: ${it.configuration}")
-            if(it.configuration.isActive &&
-                eventDateTime?.isBefore(LocalDateTime.now()) == false
-                && eventDateTime.isBefore(earliestEventDate) == true){
+            if(it.configuration.isActive && it.configuration.ichHabGeringt.isBefore(LocalDate.now())
+                && eventDateTime?.isBefore(earliestEventDate) == true){
                 earliestEventDate = eventDateTime
                 earliestEvent = it.event
                 log(Logger.Level.INFO, "New earliestEventDate: $earliestEventDate, earliestEvent: $earliestEvent")
@@ -100,6 +101,92 @@ data class Core(
         }
     }
 
+    fun calculateNextEventForConfiguration(it: ConfigurationWithEvent, wakeUpCalculator: WakeUpCalculator) : ConfigurationWithEvent{
+        log(Logger.Level.INFO, "Processing configurationWithEvent with index ${it.configuration.uid}: $it")
+        //Skip updating configuration if inactive
+        if(!it.configuration.isActive){
+            log(Logger.Level.INFO, "Configuration with index ${it.configuration.uid} is inactive, skipping.")
+            return it
+        }
+
+        var configurationWithEvent = it
+        try {
+            log(Logger.Level.INFO, "Updating Event. Before:")
+            it.event?.log(this)
+            configurationWithEvent = ConfigurationWithEvent(
+                it.configuration,
+                wakeUpCalculator.calculateNextEvent(it.configuration, strict = true)
+            )
+            log(Logger.Level.INFO, "Updating Event. After:")
+            configurationWithEvent.event?.log(this)
+        }
+        catch (e: WakeUpCalculatorException.NoRoutesFound){
+            log(Logger.Level.INFO, "NoRoutesFound exception caught for configuration with index ${it.configuration.uid}")
+            if(it.configuration.enforceStartBuffer){
+                try {
+                    configurationWithEvent = ConfigurationWithEvent(
+                        it.configuration,
+                        wakeUpCalculator.calculateNextEvent(it.configuration, strict = false)
+                    )
+                    log(Logger.Level.SEVERE, "No Routes found and enforcing start buffer.")
+                }
+                catch (e: Exception){
+                    configurationWithEvent = it
+                    log(Logger.Level.SEVERE, "No Routes found and enforcing start buffer but another exception.")
+                    log(Logger.Level.SEVERE, e.message.toString())
+                    log(Logger.Level.SEVERE, e.stackTraceToString())
+                }
+            }
+            else{
+                log(Logger.Level.SEVERE, "No Routes found and not enforcing start buffer. Wake up now!")
+                log(Logger.Level.SEVERE, e.message.toString())
+                log(Logger.Level.SEVERE, e.stackTraceToString())
+                try {
+                    if(it.event != null){
+                        configurationWithEvent = it
+                        configurationWithEvent.event.wakeUpTime = LocalTime.now()
+                    }
+                }
+                catch (e: Exception){
+                    log(Logger.Level.SEVERE, "HELP THE RUN WAKEUPLOGIC FAILED OHNO!")
+                    log(Logger.Level.SEVERE, e.message.toString())
+                    log(Logger.Level.SEVERE, e.stackTraceToString())
+                }
+            }
+        }
+        //If course suddenly disappeared -> No school? -> Do not wake up and delete Event
+        catch (e: WakeUpCalculatorException.EventDoesNotYetExist){
+            log(Logger.Level.INFO, "NoCoursesFound exception caught for configuration with index ${it.configuration.uid}")
+            configurationWithEvent = ConfigurationWithEvent(
+                it.configuration, null
+            )
+            log(Logger.Level.SEVERE, e.message.toString())
+            log(Logger.Level.SEVERE, e.stackTraceToString())
+        }
+        //Course URL suddenly not valid anymore? -> Continue with previously assumed wake up time
+        catch (e: WakeUpCalculatorException.CoursesInvalidDataFormatError){
+            log(Logger.Level.INFO, "CoursesInvalidDataFormatError exception caught for configuration with index ${it.configuration.uid}")
+            configurationWithEvent = it
+            log(Logger.Level.SEVERE, e.message.toString())
+            log(Logger.Level.SEVERE, e.stackTraceToString())
+        }
+        //Internet connection error -> Continue with previously assumed wake up time
+        catch (e: WakeUpCalculatorException.CoursesConnectionError){
+            log(Logger.Level.INFO, "CoursesConnectionError exception caught for configuration with index ${it.configuration.uid}")
+            configurationWithEvent = it
+            log(Logger.Level.SEVERE, e.message.toString())
+            log(Logger.Level.SEVERE, e.stackTraceToString())
+        }
+        //Something bad happened -> Continue with previously assumed wake up time
+        catch (e: Exception){
+            log(Logger.Level.INFO, "Generic exception caught for configuration with index ${it.configuration.uid}: ${e.message}")
+            configurationWithEvent = it
+            log(Logger.Level.SEVERE, e.message.toString())
+            log(Logger.Level.SEVERE, e.stackTraceToString())
+        }
+        return configurationWithEvent
+    }
+
     override fun runUpdateLogic() {
         log(Logger.Level.INFO, "runUpdateLogic started")
 
@@ -129,86 +216,8 @@ data class Core(
 
         configurationsWithEvents?.forEachIndexed {
             index, it ->
-            log(Logger.Level.INFO, "Processing configurationWithEvent at index $index: $it")
-            //Skip updating configuration if inactive
-            if(!it.configuration.isActive){
-                log(Logger.Level.INFO, "Configuration at index $index is inactive, skipping.")
-                return@forEachIndexed
-            }
 
-            var configurationWithEvent : ConfigurationWithEvent
-            try {
-                log(Logger.Level.INFO, "Updating Event. Before:")
-                it.event?.log(this)
-                configurationWithEvent = ConfigurationWithEvent(
-                    it.configuration,
-                    wakeUpCalculator.calculateNextEvent(it.configuration, strict = true)
-                )
-                log(Logger.Level.INFO, "Updating Event. After:")
-                configurationWithEvent.event?.log(this)
-            }
-            catch (e: WakeUpCalculatorException.NoRoutesFound){
-                log(Logger.Level.INFO, "NoRoutesFound exception caught for configuration at index $index")
-                if(it.configuration.enforceStartBuffer){
-                    try {
-                        configurationWithEvent = ConfigurationWithEvent(
-                            it.configuration,
-                            wakeUpCalculator.calculateNextEvent(it.configuration, strict = false)
-                        )
-                        log(Logger.Level.SEVERE, "No Routes found and enforcing start buffer.")
-                    }
-                    catch (e: Exception){
-                        configurationWithEvent = it
-                        log(Logger.Level.SEVERE, "No Routes found and enforcing start buffer but another exception.")
-                        log(Logger.Level.SEVERE, e.message.toString())
-                        log(Logger.Level.SEVERE, e.stackTraceToString())
-                    }
-                }
-                else{
-                    log(Logger.Level.SEVERE, "No Routes found and not enforcing start buffer. Wake up now!")
-                    log(Logger.Level.SEVERE, e.message.toString())
-                    log(Logger.Level.SEVERE, e.stackTraceToString())
-                    try {
-                        runWakeUpLogic(it.event!!)
-                    }
-                    catch (e: Exception){
-                        log(Logger.Level.SEVERE, "HELP THE RUN WAKEUPLOGIC FAILED OHNO!")
-                        log(Logger.Level.SEVERE, e.message.toString())
-                        log(Logger.Level.SEVERE, e.stackTraceToString())
-                    }
-                    return
-                }
-            }
-            //If course suddenly disappeared -> No school? -> Do not wake up and delete Event
-            catch (e: WakeUpCalculatorException.EventDoesNotYetExist){
-                log(Logger.Level.INFO, "NoCoursesFound exception caught for configuration at index $index")
-                configurationWithEvent = ConfigurationWithEvent(
-                    it.configuration, null
-                )
-                log(Logger.Level.SEVERE, e.message.toString())
-                log(Logger.Level.SEVERE, e.stackTraceToString())
-            }
-            //Course URL suddenly not valid anymore? -> Continue with previously assumed wake up time
-            catch (e: WakeUpCalculatorException.CoursesInvalidDataFormatError){
-                log(Logger.Level.INFO, "CoursesInvalidDataFormatError exception caught for configuration at index $index")
-                configurationWithEvent = it
-                log(Logger.Level.SEVERE, e.message.toString())
-                log(Logger.Level.SEVERE, e.stackTraceToString())
-            }
-            //Internet connection error -> Continue with previously assumed wake up time
-            catch (e: WakeUpCalculatorException.CoursesConnectionError){
-                log(Logger.Level.INFO, "CoursesConnectionError exception caught for configuration at index $index")
-                configurationWithEvent = it
-                log(Logger.Level.SEVERE, e.message.toString())
-                log(Logger.Level.SEVERE, e.stackTraceToString())
-            }
-            //Something bad happened -> Continue with previously assumed wake up time
-            catch (e: Exception){
-                log(Logger.Level.INFO, "Generic exception caught for configuration at index $index: ${e.message}")
-                configurationWithEvent = it
-                log(Logger.Level.SEVERE, e.message.toString())
-                log(Logger.Level.SEVERE, e.stackTraceToString())
-            }
+            var configurationWithEvent = calculateNextEventForConfiguration(it, wakeUpCalculator)
             configurationsWithEvents[index] = configurationWithEvent
             val eventHandler = EventHandler(context)
             //Save updated event to database
@@ -253,7 +262,7 @@ data class Core(
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(intent)
             }
-            val alarmDate = earliestEvent.date.atTime(earliestEvent.wakeUpTime)
+            val alarmDate = earliestEvent.getLocalDateTime()
             log(Logger.Level.INFO, "Setting alarm for date: $alarmDate")
 
             val alarmClockInfo = AlarmManager.AlarmClockInfo(alarmDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
@@ -318,12 +327,8 @@ data class Core(
             val configurationHandler = ConfigurationHandler(context)
             if (validateConfiguration(configuration)){
                 log(Logger.Level.INFO, "Configuration is valid, saving or updating.")
-                configurationHandler.saveOrUpdate(configuration)
-
-                val eventHandler = EventHandler(context)
                 var url = getRaplaURL()
-                log(Logger.Level.INFO, "Using Rapla URL: $url")
-                val event = WakeUpCalculator(
+                val wakeUpCalculator = WakeUpCalculator(
                     routePlanner = DBRoutePlanner(),
                     courseFetcher = RaplaFetcher(
                         URL(
@@ -334,7 +339,21 @@ data class Core(
                             }
                         )
                     )
-                ).calculateNextEvent(configuration)
+                )
+
+                configuration.ichHabGeringt = LocalDate.MIN
+                if(calculateNextEventForConfiguration(ConfigurationWithEvent(configuration,null),wakeUpCalculator).event?.getLocalDateTime()?.isBefore(
+                        LocalDateTime.now().minusSeconds(5)) == true
+                ){
+                    configuration.ichHabGeringt = LocalDate.now()
+                    showToast("Alarm für heute ausgesetzt")
+                }
+
+                configurationHandler.saveOrUpdate(configuration)
+
+                val eventHandler = EventHandler(context)
+                log(Logger.Level.INFO, "Using Rapla URL: $url")
+                val event = wakeUpCalculator.calculateNextEvent(configuration)
                 log(Logger.Level.INFO, "Calculated event: $event")
                 eventHandler.saveOrUpdate(event)
 
@@ -551,6 +570,23 @@ data class Core(
             log(Logger.Level.SEVERE, e.message.toString())
             log(Logger.Level.SEVERE, e.stackTraceToString())
             showToast("Could not update active state of configuration.")
+        }
+    }
+
+    override fun updateConfigurationIchHabGeringt(
+        date: LocalDate,
+        uid: Long
+    ) {
+        log(Logger.Level.INFO, "updateConfigurationIchHabGeringt called with date: $date, configuration: $uid")
+        try {
+            val configurationHandler = ConfigurationHandler(context)
+            configurationHandler.updateConfigurationIchHabGeringt(date, uid)
+            log(Logger.Level.INFO, "Configuration active state updated")
+        }
+        catch (e: PersistenceException){
+            log(Logger.Level.SEVERE, e.message.toString())
+            log(Logger.Level.SEVERE, e.stackTraceToString())
+            showToast("Could not update ichhabgeringt state of configuration.")
         }
     }
 
