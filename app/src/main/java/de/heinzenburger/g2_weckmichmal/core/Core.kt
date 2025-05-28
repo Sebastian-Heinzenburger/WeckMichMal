@@ -62,7 +62,7 @@ data class Core(
         configurationsWithEvents?.forEach {
             val eventDateTime = it.event?.getLocalDateTime()
             log(Logger.Level.INFO, "Checking eventDateTime: $eventDateTime for configuration: ${it.configuration}")
-            if(it.configuration.isActive && it.configuration.ichHabGeringt.isBefore(LocalDate.now())
+            if(it.configuration.isActive
                 && eventDateTime?.isBefore(earliestEventDate) == true){
                 earliestEventDate = eventDateTime
                 earliestEvent = it.event
