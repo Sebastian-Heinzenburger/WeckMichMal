@@ -26,7 +26,6 @@ import de.heinzenburger.g2_weckmichmal.specifications.PersistenceException
 import de.heinzenburger.g2_weckmichmal.specifications.WakeUpCalculatorException
 import java.net.MalformedURLException
 import java.net.URL
-import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -35,6 +34,7 @@ import android.net.NetworkCapabilities
 import de.heinzenburger.g2_weckmichmal.api.mensa.StudierendenWerkKarlsruhe
 import de.heinzenburger.g2_weckmichmal.specifications.MensaMeal
 import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity
+import java.time.Duration
 
 data class Core(
     val context: Context,
@@ -54,7 +54,7 @@ data class Core(
         return StudierendenWerkKarlsruhe().nextMeals()
     }
 
-    fun getEarliestEvent(configurationsWithEvents: List<ConfigurationWithEvent>?) : Pair<LocalDateTime, Event?>{
+    fun scheduleNextAction(configurationsWithEvents: List<ConfigurationWithEvent>?){
         var earliestEventDate = LocalDateTime.MAX
         var earliestEvent: Event? = null
         configurationsWithEvents?.forEach {
@@ -68,7 +68,36 @@ data class Core(
                 log(Logger.Level.INFO, "New earliestEventDate: $earliestEventDate, earliestEvent: $earliestEvent")
             }
         }
-        return Pair(earliestEventDate, earliestEvent)
+        log(Logger.Level.INFO, "Earliest Event is at " + earliestEventDate.format(DateTimeFormatter.ofPattern("MM-dd HH:mm:ss")))
+        val secondsUntilEarliestEvent = Duration.between(LocalDateTime.now(), earliestEventDate).seconds
+        log(Logger.Level.INFO, "Seconds until earliest event: $secondsUntilEarliestEvent")
+        if (secondsUntilEarliestEvent > 28800 // 8 hours
+        ) {
+            log(Logger.Level.INFO, "Scheduling update in 7 hours")
+            startUpdateScheduler(25200) // 7 hours
+        }else if (secondsUntilEarliestEvent > 14400 //4 hours
+        ) {
+            log(Logger.Level.INFO, "Scheduling update in 3.5 hours")
+            startUpdateScheduler(12600) // 3.5 hours
+        }
+        else if (secondsUntilEarliestEvent > 3600 // 1 hour
+        ) {
+            log(Logger.Level.INFO, "Scheduling update in 30 minutes")
+            startUpdateScheduler(1800) // 30 minutes
+        }
+        else if (secondsUntilEarliestEvent > 1800 // 30 minutes
+        ) {
+            log(Logger.Level.INFO, "Scheduling update in 15 minutes")
+            startUpdateScheduler(900) // 15 minutes
+        }
+        else if (secondsUntilEarliestEvent > 600 // 10 minutes
+        ) {
+            log(Logger.Level.INFO, "Scheduling update in 4 minutes")
+            startUpdateScheduler(240) // 4 minutes
+        } else {
+            log(Logger.Level.INFO, "Running wake up logic for earliestEvent: $earliestEvent")
+            runWakeUpLogic(earliestEvent!!)
+        }
     }
 
     override fun runUpdateLogic() {
@@ -78,13 +107,8 @@ data class Core(
         log(Logger.Level.INFO, "ConfigurationsWithEvents loaded: $configurationsWithEvents")
 
         log(Logger.Level.INFO, "Starting safety alarm scheduler")
-        var earliest = getEarliestEvent(configurationsWithEvents)
-        var earliestEventDate = earliest.first
-        var earliestEvent: Event? = earliest.second
-        log(Logger.Level.INFO, "Earliest Event is at " + earliestEventDate.format(DateTimeFormatter.ofPattern("MM-dd HH:mm:ss")))
-        if(earliestEvent != null){
-            runWakeUpLogic(earliestEvent)
-        }
+        scheduleNextAction(configurationsWithEvents)
+
 
         log(Logger.Level.INFO, "Starting regular alarm scheduler")
         val url = getRaplaURL()
@@ -200,40 +224,7 @@ data class Core(
             }
         }
 
-        earliest = getEarliestEvent(configurationsWithEvents)
-        earliestEventDate = earliest.first
-        earliestEvent = earliest.second
-
-        log(Logger.Level.INFO, "Earliest Event is at " + earliestEventDate.format(DateTimeFormatter.ofPattern("MM-dd HH:mm:ss")))
-        val secondsUntilEarliestEvent = Duration.between(LocalDateTime.now(), earliestEventDate).seconds
-        log(Logger.Level.INFO, "Seconds until earliest event: $secondsUntilEarliestEvent")
-        if (secondsUntilEarliestEvent > 28800 // 8 hours
-        ) {
-            log(Logger.Level.INFO, "Scheduling update in 7 hours")
-            startUpdateScheduler(25200) // 7 hours
-        }else if (secondsUntilEarliestEvent > 14400 //4 hours
-        ) {
-            log(Logger.Level.INFO, "Scheduling update in 3.5 hours")
-            startUpdateScheduler(12600) // 3.5 hours
-        }
-        else if (secondsUntilEarliestEvent > 3600 // 1 hour
-        ) {
-            log(Logger.Level.INFO, "Scheduling update in 30 minutes")
-            startUpdateScheduler(1800) // 30 minutes
-        }
-        else if (secondsUntilEarliestEvent > 1800 // 30 minutes
-        ) {
-            log(Logger.Level.INFO, "Scheduling update in 15 minutes")
-            startUpdateScheduler(900) // 15 minutes
-        }
-        else if (secondsUntilEarliestEvent > 600 // 10 minutes
-        ) {
-            log(Logger.Level.INFO, "Scheduling update in 4 minutes")
-            startUpdateScheduler(240) // 4 minutes
-        } else {
-            log(Logger.Level.INFO, "Running wake up logic for earliestEvent: $earliestEvent")
-            runWakeUpLogic(earliestEvent!!)
-        }
+        scheduleNextAction(configurationsWithEvents)
     }
 
     override fun runWakeUpLogic(earliestEvent: Event) {
