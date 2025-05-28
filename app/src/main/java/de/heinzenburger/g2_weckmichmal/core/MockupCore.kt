@@ -135,6 +135,9 @@ class MockupCore : CoreSpecification {
     override fun runWakeUpLogic(event: Event) {}
     override fun startUpdateScheduler(delay: Int) {}
     override fun saveRaplaURL(url : String){}
+    override fun saveRaplaURL(director: String, course: String) {
+
+    }
 
     override fun isApplicationOpenedFirstTime(): Boolean? {return null}
     override fun generateOrUpdateAlarmConfiguration(configuration: Configuration) {}
@@ -189,6 +192,10 @@ class MockupCore : CoreSpecification {
     }
 
     override fun isValidCourseURL(urlString : String) : Boolean {
+        return true
+    }
+
+    override fun isValidCourseURL(director: String, course: String): Boolean {
         return true
     }
 

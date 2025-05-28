@@ -31,6 +31,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import de.heinzenburger.g2_weckmichmal.api.courses.deriveValidCourseURL
 import de.heinzenburger.g2_weckmichmal.api.mensa.StudierendenWerkKarlsruhe
 import de.heinzenburger.g2_weckmichmal.specifications.MensaMeal
 import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity
@@ -370,8 +371,8 @@ data class Core(
             log(Logger.Level.SEVERE, e.stackTraceToString())
             showToast("Error communicating with database. Try reinstalling the app.")
         }
-        catch (e: WakeUpCalculatorException.NoRoutesFound){
-            showToast("Event will be updated this night.")
+        catch (e: WakeUpCalculatorException.EventDoesNotYetExist){
+            showToast("No Courses found for this configuration.")
             log(Logger.Level.SEVERE, e.message.toString())
             log(Logger.Level.SEVERE, e.stackTraceToString())
         }
@@ -429,6 +430,10 @@ data class Core(
         }
     }
 
+    override fun saveRaplaURL(director: String, course: String) {
+        saveRaplaURL(deriveValidCourseURL(director, course).toString())
+    }
+
     override fun isValidCourseURL(urlString: String): Boolean {
         log(Logger.Level.INFO, "isValidCourseURL called with urlString: $urlString")
         if (!URLUtil.isValidUrl(urlString)) {
@@ -444,6 +449,10 @@ data class Core(
         }
         log(Logger.Level.INFO, "Valid Course URL: $urlString")
         return true
+    }
+
+    override fun isValidCourseURL(director: String, course: String): Boolean {
+        return isValidCourseURL(deriveValidCourseURL(director, course).toString())
     }
 
     override fun getDefaultAlarmValues(): SettingsEntity.DefaultAlarmValues {

@@ -26,8 +26,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
@@ -40,6 +42,7 @@ import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.Event
 import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
+import de.heinzenburger.g2_weckmichmal.specifications.Route
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
 import java.time.LocalDateTime
@@ -125,12 +128,15 @@ class AlarmRingingScreen : ComponentActivity(){
     }
 
     @Composable fun OverviewComposable(){
+        val detailedViewForRoute = remember { mutableStateOf<Route?>(null) }
         Text(
             text = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")),
             color = MaterialTheme.colorScheme.primary,
             style = MaterialTheme.typography.titleLarge,
             textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth().padding(top = 32.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 32.dp)
         )
         var text =
             if (!event.value.courses.isNullOrEmpty()) {
@@ -139,7 +145,7 @@ class AlarmRingingScreen : ComponentActivity(){
                 "Hallo :D"
             }
         event.value.courses?.forEachIndexed { index, it ->
-            text += it.name + " - " + it.startDate.format(DateTimeFormatter.ofPattern("HH:mm"))
+            text += it.name + " - " + it.startDate.format(DateTimeFormatter.ofPattern("HH:mm")) + " bis " + it.endDate.format(DateTimeFormatter.ofPattern("HH:mm"))
             if (event.value.courses!!.size - 1 != index) {
                 text += "\n"
             }
@@ -162,43 +168,86 @@ class AlarmRingingScreen : ComponentActivity(){
                     it.startTime.minusMinutes(configuration.value.startBuffer.toLong())
                         .format(DateTimeFormatter.ofPattern("HH:mm")) == event.value.wakeUpTime
                         .format(DateTimeFormatter.ofPattern(("HH:mm")))
-                Column(
-                    modifier = Modifier
-                        .padding(top = 20.dp, start = 40.dp, end = 40.dp)
-                        .background(
-                            if (bestRoute) {
-                                MaterialTheme.colorScheme.onBackground
-                            } else {
-                                MaterialTheme.colorScheme.onPrimary
-                            }, RoundedCornerShape(20)
-                        )
-                        .fillMaxWidth()
-                        .padding(10.dp),
+                Button(
+                    onClick = {
+                        if(detailedViewForRoute.value == it){
+                            detailedViewForRoute.value = null
+                        }
+                        else{
+                            detailedViewForRoute.value = it
+                        }
+                              },
+                    contentPadding = PaddingValues(),
+                    colors = ButtonDefaults.buttonColors(Color.Transparent)
                 ) {
-                    OurText(
-                        text = it.startTime.format(DateTimeFormatter.ofPattern("HH:mm ")) + it.startStation,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
 
-                    for (i in 0..1) {
-                        i
-                        Text(
-                            text = "|",
-                            color =
+                    Column(
+                        modifier = Modifier
+                            .padding(top = 20.dp, start = 40.dp, end = 40.dp)
+                            .background(
                                 if (bestRoute) {
-                                    MaterialTheme.colorScheme.secondary
-                                } else {
                                     MaterialTheme.colorScheme.onBackground
-                                },
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
+                                } else {
+                                    MaterialTheme.colorScheme.onPrimary
+                                }, RoundedCornerShape(20)
+                            )
+                            .fillMaxWidth()
+                            .padding(10.dp),
+                    ) {
+                        if (detailedViewForRoute.value == it) {
+                            it.sections.forEach { section ->
+                                OurText(
+                                    text = section.startTime.format(DateTimeFormatter.ofPattern("HH:mm ")) + section.startStation,
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                                OurText(
+                                    text = section.vehicleName,
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
 
-                    OurText(
-                        text = it.endTime.format(DateTimeFormatter.ofPattern("HH:mm ")) + it.endStation,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                                Text(
+                                    text = "|",
+                                    color =
+                                        if (bestRoute) {
+                                            MaterialTheme.colorScheme.secondary
+                                        } else {
+                                            MaterialTheme.colorScheme.onBackground
+                                        },
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+
+                                OurText(
+                                    text = section.endTime.format(DateTimeFormatter.ofPattern("HH:mm ")) + section.endStation,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        } else {
+                            OurText(
+                                text = it.startTime.format(DateTimeFormatter.ofPattern("HH:mm ")) + it.startStation,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+
+                            for (i in 0..1) {
+                                Text(
+                                    text = "|",
+                                    color =
+                                        if (bestRoute) {
+                                            MaterialTheme.colorScheme.secondary
+                                        } else {
+                                            MaterialTheme.colorScheme.onBackground
+                                        },
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+
+                            OurText(
+                                text = it.endTime.format(DateTimeFormatter.ofPattern("HH:mm ")) + it.endStation,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -220,7 +269,8 @@ class AlarmRingingScreen : ComponentActivity(){
             }
         ){
             Column(
-                modifier = Modifier.background(MaterialTheme.colorScheme.background)
+                modifier = Modifier
+                    .background(MaterialTheme.colorScheme.background)
                     .fillMaxSize()
             )
             {
@@ -255,7 +305,9 @@ class AlarmRingingScreen : ComponentActivity(){
                         val stopIntent = Intent(context, ForegroundService::class.java)
                         stopService(stopIntent)
                     },
-                    modifier = Modifier.align(BiasAlignment(0.9f, 0.9f)).fillMaxWidth(0.4f),
+                    modifier = Modifier
+                        .align(BiasAlignment(0.9f, 0.9f))
+                        .fillMaxWidth(0.4f),
                     colors = ButtonDefaults.buttonColors(
                         contentColor = MaterialTheme.colorScheme.background,
                         containerColor = MaterialTheme.colorScheme.secondary,
@@ -270,7 +322,9 @@ class AlarmRingingScreen : ComponentActivity(){
                     onClick = {
                         foregroundService.sleepWithPerry(isForeverSleep = false)
                     },
-                    modifier = Modifier.align(BiasAlignment(-0.9f, 0.9f)).fillMaxWidth(0.4f),
+                    modifier = Modifier
+                        .align(BiasAlignment(-0.9f, 0.9f))
+                        .fillMaxWidth(0.4f),
                     colors = ButtonDefaults.buttonColors(
                         contentColor = MaterialTheme.colorScheme.background,
                         containerColor = MaterialTheme.colorScheme.secondary,

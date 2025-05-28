@@ -18,18 +18,23 @@ import java.util.Date
 
 
 val urlTemplate: (String, String) -> String = { director, course ->
-    "https://rapla.dhbw-karlsruhe.de/rapla?page=ical&user=${director.lowercase()}&file=${course.lowercase()}"
+    var realDirector = director
+    var realCourse = course
+    if (course[course.length-2].uppercase() != "N"){
+        realCourse = course.substring(0, course.length-2) + "BN" + course.substring(course.length-1)
+    }
+    realDirector = realDirector.replace(" ", "").lowercase()
+    realCourse = realCourse.replace(" ", "").uppercase()
+    "https://rapla.dhbw-karlsruhe.de/rapla?page=ical&user=${realDirector}&file=${realCourse}"
 }
 
-@Throws(CourseFetcherException::class, NotEnoughParameterException::class)
+@Throws(NotEnoughParameterException::class)
 fun deriveValidCourseURL(vararg params: String): URL {
     if(params.size < 2) {
         throw NotEnoughParameterException()
     }
 
-    val url = URL(urlTemplate(params[0], params[1]));
-    val testFetcher = RaplaFetcher(url);
-    testFetcher.throwIfInvalidCourseURL()
+    val url = URL(urlTemplate(params[0], params[1]))
     return url
 }
 

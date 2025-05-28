@@ -40,6 +40,14 @@ interface CoreSpecification {
     fun saveRaplaURL(url : String)
 
     /**
+     * Save the rapla URL to the settings database
+     * @param director of the course
+     * @param course id
+     */
+    fun saveRaplaURL(director : String, course: String)
+
+
+    /**
      * Get RAPLA URL from settings database
      */
     fun getRaplaURL(): String?
@@ -100,6 +108,11 @@ interface CoreSpecification {
      * Is Valid Course URL
      */
     fun isValidCourseURL(urlString : String) : Boolean
+
+    /**
+     * Is Valid Course URL
+     */
+    fun isValidCourseURL(director : String, course: String) : Boolean
 
 
     /**
