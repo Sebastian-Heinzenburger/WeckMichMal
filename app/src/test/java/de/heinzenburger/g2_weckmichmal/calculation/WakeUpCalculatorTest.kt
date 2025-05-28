@@ -78,7 +78,6 @@ class WakeUpCalculatorTest {
             startStation = "StationA",
             endStation = "StationB",
             isActive = true,
-            lastAlarmDate = null,
             enforceStartBuffer = true
         )
 
@@ -153,7 +152,7 @@ class WakeUpCalculatorTest {
             startStation = "StationA",
             endStation = "StationB",
             isActive = true,
-            lastAlarmDate = todayDate,
+            ichHabGeringt = todayDate,
             enforceStartBuffer = true
         )
 
@@ -180,7 +179,6 @@ class WakeUpCalculatorTest {
             startStation = null,
             endStation = null,
             isActive = true,
-            lastAlarmDate = null,
             enforceStartBuffer = true
         )
 

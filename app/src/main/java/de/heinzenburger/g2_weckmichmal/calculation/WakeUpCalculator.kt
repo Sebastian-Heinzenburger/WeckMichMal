@@ -27,7 +27,7 @@ class WakeUpCalculator(
      */
     @Throws(WakeUpCalculatorException::class)
     override fun calculateNextEvent(configuration: Configuration, strict: Boolean): Event {
-        val eventDate = deriveNextValidDate(configuration.days, configuration.lastAlarmDate)
+        val eventDate = deriveNextValidDate(configuration.days, configuration.ichHabGeringt)
         val (atPlaceTime, courses) = deriveAtPlaceTime(courseFetcher, configuration, eventDate)
         val arrivalTime = atPlaceTime.minusMinutes(configuration.endBuffer.toLong())
         val (departureTime, routes) = deriveDepartureTime(routePlanner, configuration, arrivalTime, strict)
@@ -54,9 +54,9 @@ class WakeUpCalculator(
          * @throws WakeUpCalculatorException.InvalidStateException If no valid day is found.
          */
         @Throws(WakeUpCalculatorException.InvalidStateException::class)
-        fun deriveNextValidDate(daySelection: Set<DayOfWeek>, skipDate: LocalDate?): LocalDate {
+        fun deriveNextValidDate(daySelection: Set<DayOfWeek>, skipDate: LocalDate): LocalDate {
             val today = LocalDate.now()
-            val referenceDate = if (skipDate?.isEqual(today) == true) today.plusDays(1) else today
+            val referenceDate = if (skipDate.isEqual(today)) today.plusDays(1) else today
             return (0..6)
                 .map { referenceDate.plusDays(it.toLong()) }
                 .firstOrNull { it.dayOfWeek in daySelection }

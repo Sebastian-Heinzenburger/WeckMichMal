@@ -132,7 +132,6 @@ class AlarmClockEditScreen : ComponentActivity() {
                     startStation = null,
                     endStation = null,
                     isActive = true,
-                    lastAlarmDate = null,
                     enforceStartBuffer = true
                 )
             }
@@ -189,7 +188,6 @@ class AlarmClockEditScreen : ComponentActivity() {
                     startStation = null,
                     endStation = null,
                     isActive = true, //Even if the alarm was initially inactive, it will be set as active again
-                    lastAlarmDate = null,
                     enforceStartBuffer = true
                 )
             }
