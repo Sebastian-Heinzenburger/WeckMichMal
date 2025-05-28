@@ -41,6 +41,7 @@ class MockupCore : CoreSpecification {
                 startStation = "Wiesloch",
                 endStation = "Duale Folter",
                 isActive = true,
+                lastAlarmDate = null,
                 enforceStartBuffer = true
             )
         )

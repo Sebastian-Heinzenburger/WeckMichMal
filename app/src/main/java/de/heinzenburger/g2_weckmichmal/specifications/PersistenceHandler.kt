@@ -164,6 +164,8 @@ data class Configuration(
     @ColumnInfo(name = "isActive") var isActive: Boolean,
     /** Strict means, that the application has to do its best to let the user be on time. No matter the cost*/
     @ColumnInfo(name = "enforceStartBuffer") var enforceStartBuffer: Boolean,
+    // TODO: @flo bitte richtig machen undso, haben keine Ahnung von dem ORM
+    @ColumnInfo(name = "lastAlarmDate") var lastAlarmDate: LocalDate?,
 ){
     @Suppress("unused")
     fun log(core : Core){
@@ -182,6 +184,7 @@ data class Configuration(
             startStation = "",
             endStation = "",
             isActive = true,
+            lastAlarmDate = null,
             enforceStartBuffer = true
         )
     }

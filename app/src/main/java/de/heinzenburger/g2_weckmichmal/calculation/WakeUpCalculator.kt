@@ -15,27 +15,9 @@ class WakeUpCalculator(
 ) : WakeUpCalculationSpecification {
 
     @Throws(WakeUpCalculatorException::class)
-    override fun calculateNextEvent(configuration: Configuration, strict: Boolean, skipIfToday: Boolean): Event {
-        var eventDate = deriveNextValidDate(configuration.days)
-        if (skipIfToday && eventDate.isEqual(LocalDate.now())) {
-            eventDate = deriveNextValidDate(configuration.days, LocalDate.now().plusDays(1))
-        }
-
-        return calculateEventForDate(configuration, eventDate, strict)
-    }
-
-    @Throws(
-        WakeUpCalculatorException.NoCoursesFound::class,
-        WakeUpCalculatorException.CoursesConnectionError::class,
-        WakeUpCalculatorException.CoursesInvalidDataFormatError::class,
-        WakeUpCalculatorException.RouteConnectionError::class,
-        WakeUpCalculatorException.RouteInvalidConfiguration::class,
-        WakeUpCalculatorException.RouteInvalidResponse::class,
-        WakeUpCalculatorException.NoRoutesFound::class,
-        WakeUpCalculatorException.InvalidConfiguration::class
-    )
-    private fun calculateEventForDate(configuration: Configuration, date: LocalDate, strict: Boolean): Event {
-        val (atPlaceTime, courses) = deriveAtPlaceTime(courseFetcher, configuration, date)
+    override fun calculateNextEvent(configuration: Configuration, strict: Boolean): Event {
+        var eventDate = deriveNextValidDate(configuration.days, configuration.lastAlarmDate)
+        val (atPlaceTime, courses) = deriveAtPlaceTime(courseFetcher, configuration, eventDate)
         val arrivalTime = atPlaceTime.minusMinutes(configuration.endBuffer.toLong())
         val (departureTime, routes) = deriveDepartureTime(routePlanner, configuration, arrivalTime, strict)
         val wakeUpTime = departureTime.minusMinutes(configuration.startBuffer.toLong())
@@ -43,27 +25,27 @@ class WakeUpCalculator(
         return Event(
             configID = configuration.uid,
             wakeUpTime = wakeUpTime.toLocalTime(),
-            date = date,
+            date = eventDate,
             days = setOf(wakeUpTime.dayOfWeek),
             courses = courses,
             routes = routes
         )
     }
 
-
     private companion object {
 
         @Throws(WakeUpCalculatorException.InvalidStateException::class)
-        fun deriveNextValidDate(daySelection: Set<DayOfWeek>, referenceDay: LocalDate = LocalDate.now()): LocalDate {
-            val today = referenceDay
+        fun deriveNextValidDate(daySelection: Set<DayOfWeek>, skipDate: LocalDate?): LocalDate {
+            val today = LocalDate.now()
+            val referenceDate = if (skipDate?.isEqual(today) == true) today.plusDays(1) else today
             return (0..6)
-                .map { today.plusDays(it.toLong()) }
+                .map { referenceDate.plusDays(it.toLong()) }
                 .firstOrNull { it.dayOfWeek in daySelection }
                 ?: throw WakeUpCalculatorException.InvalidStateException()
         }
 
         @Throws(
-            WakeUpCalculatorException.NoCoursesFound::class,
+            WakeUpCalculatorException.EventDoesNotYetExist::class,
             WakeUpCalculatorException.CoursesInvalidDataFormatError::class,
             WakeUpCalculatorException.CoursesConnectionError::class
         )
@@ -79,7 +61,7 @@ class WakeUpCalculator(
                 try {
                     val courses = courseFetcher.fetchCoursesBetween(period)
                     val firstCourse = courses.minByOrNull { it.startDate }
-                        ?: throw WakeUpCalculatorException.NoCoursesFound()
+                        ?: throw WakeUpCalculatorException.EventDoesNotYetExist()
                     firstCourse.startDate to courses
                 } catch (e: CourseFetcherException.ConnectionError) {
                     throw WakeUpCalculatorException.CoursesConnectionError(e)

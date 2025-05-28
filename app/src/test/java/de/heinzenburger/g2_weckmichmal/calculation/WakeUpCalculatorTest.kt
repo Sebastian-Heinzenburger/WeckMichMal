@@ -78,6 +78,7 @@ class WakeUpCalculatorTest {
             startStation = "StationA",
             endStation = "StationB",
             isActive = true,
+            lastAlarmDate = null,
             enforceStartBuffer = true
         )
 
@@ -86,6 +87,81 @@ class WakeUpCalculatorTest {
         assertNotNull("Expected to receive result", result)
         assertEquals("Expected to have same configID", 1L, result.configID)
         assertEquals("Wrong wakeUpTime", eventDate.atTime(8,50).toLocalTime(), result.wakeUpTime)
+    }
+
+    @Test
+    fun `test calculateNextEvent with CourseReference and lastAlarmDate = today `() {
+        val todayDate = LocalDate.now()
+        val tomorrowDate = todayDate.plusDays(1)
+
+        val routePlannerMock: RoutePlannerSpecification = mock()
+        val courseFetcherMock: CourseFetcherSpecification = mock()
+        val wakeUpCalculator = WakeUpCalculator(routePlannerMock, courseFetcherMock)
+
+        val routesMock = listOf(
+            Route(
+                startTime = todayDate.atTime(8, 45),
+                endTime = todayDate.atTime(9, 30),
+                startStation = "",
+                endStation = "",
+                sections = listOf()
+            ),
+            Route(
+                startTime = tomorrowDate.atTime(8, 45),
+                endTime = tomorrowDate.atTime(9, 30),
+                startStation = "",
+                endStation = "",
+                sections = listOf()
+            ),
+            Route(
+                startTime = tomorrowDate.atTime(9, 0),
+                endTime = tomorrowDate.atTime(9, 30),
+                startStation = "",
+                endStation = "",
+                sections = listOf()
+            )
+        )
+
+        val courseMocks = listOf(
+            Course(
+                name = "CourseA",
+                lecturer = "ProfA",
+                room = "Room 101",
+                startDate = tomorrowDate.atTime(10, 0),
+                endDate = tomorrowDate.atTime(12, 0),
+            ),
+            Course(
+                name = "CourseB",
+                lecturer = "ProfB",
+                room = "Room 102",
+                startDate = tomorrowDate.atTime(12, 0),
+                endDate = tomorrowDate.atTime(14, 0),
+            )
+        )
+
+        whenever(courseFetcherMock.fetchCoursesBetween(any())).thenReturn(courseMocks)
+        whenever(routePlannerMock.planRoute(any(), any(), any(), any())).thenReturn(routesMock)
+
+        val config = Configuration(
+            uid = 1L,
+            name = "Test Config",
+            days = setOf(todayDate.dayOfWeek, tomorrowDate.dayOfWeek),
+            fixedArrivalTime = null,
+            fixedTravelBuffer = null,
+            startBuffer = 10,
+            endBuffer = 30,
+            startStation = "StationA",
+            endStation = "StationB",
+            isActive = true,
+            lastAlarmDate = todayDate,
+            enforceStartBuffer = true
+        )
+
+        val result = wakeUpCalculator.calculateNextEvent(config)
+        assertDoesNotThrow {  wakeUpCalculator.calculateNextEvent(config) }
+        assertNotNull("Expected to receive result", result)
+        assertEquals("Expected to have same configID", 1L, result.configID)
+        assertEquals("Wrong wakeUpTime", tomorrowDate.atTime(8,50).toLocalTime(), result.wakeUpTime)
     }
 
     @Test
@@ -104,6 +180,7 @@ class WakeUpCalculatorTest {
             startStation = null,
             endStation = null,
             isActive = true,
+            lastAlarmDate = null,
             enforceStartBuffer = true
         )
 

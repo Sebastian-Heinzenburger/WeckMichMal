@@ -180,7 +180,7 @@ data class Core(
                 }
             }
             //If course suddenly disappeared -> No school? -> Do not wake up and delete Event
-            catch (e: WakeUpCalculatorException.NoCoursesFound){
+            catch (e: WakeUpCalculatorException.EventDoesNotYetExist){
                 log(Logger.Level.INFO, "NoCoursesFound exception caught for configuration at index $index")
                 configurationWithEvent = ConfigurationWithEvent(
                     it.configuration, null
@@ -334,7 +334,7 @@ data class Core(
                             }
                         )
                     )
-                ).calculateNextEvent(configuration, skipIfToday = true)
+                ).calculateNextEvent(configuration)
                 log(Logger.Level.INFO, "Calculated event: $event")
                 eventHandler.saveOrUpdate(event)
 

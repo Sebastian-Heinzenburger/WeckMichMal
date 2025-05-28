@@ -10,10 +10,11 @@ interface WakeUpCalculationSpecification {
      * Calculates the next wake-up event using the specified configuration.
      *
      * The calculation includes:
-     * - Selecting the next applicable date based on active days.
-     * - Determining the expected arrival time (e.g., via course schedules or a fixed arrival time).
-     * - Calculating the departure time using the selected route and estimated travel duration.
-     * - Subtracting the configured wake-up buffer to determine the final wake-up time.
+     * - Selecting the next applicable date based on active days and excluding the lastAlarmDate.
+     * - Determining the expected atPlaceTime (e.g., via course schedules or a fixed arrival time).
+     * - Subtracting the configuration endBuffer to determine the arrivalTime.
+     * - Calculating the departure time using the selected route and estimated travel duration or via fixedTravelBuffer
+     * - Subtracting the configured startBuffer to determine the final wake-up time.
      *
      * @param configuration The [Configuration] object containing alarm parameters,
      * such as active days, buffers, station details, and travel preferences.
@@ -21,14 +22,12 @@ interface WakeUpCalculationSpecification {
      *               will be considered. If `false`, routes will be selected with a *best effort* approach
      *               to arrive before the target time, potentially excluding early connections
      *               due to current time constraints.
-     * @param skipIfToday If `false` (default) the next valid event date including today is chosen. If `true` today will be skipped
      * @return An [Event] containing the calculated wake-up time, associated date,
      * relevant courses, and route details.
-     * @throws WakeUpCalculatorException if the calculation fails due to invalid or missing data.
+     * @throws WakeUpCalculatorException if the calculation fails due to invalid or missing data(for more details see Exception Variants).
      */
     @Throws(WakeUpCalculatorException::class)
-    fun calculateNextEvent(configuration: Configuration, strict: Boolean = true, skipIfToday: Boolean = false): Event
-
+    fun calculateNextEvent(configuration: Configuration, strict: Boolean = true): Event
 }
 
 /**
@@ -38,9 +37,9 @@ sealed class WakeUpCalculatorException(message: String?, cause: Exception?) :
     Exception(message, cause) {
 
     /**
-     * Thrown when no course data is found for the given configuration or date range.
+     * Thrown when no course data is found for the given day and thus, no event is being calculated
      */
-    class NoCoursesFound : WakeUpCalculatorException("No courses found", null)
+    class EventDoesNotYetExist : WakeUpCalculatorException("Currently the next event of the configuration does not exist (no courses at this day)", null)
 
     /**
      * Thrown when a network or server issue occurs while attempting to fetch course data.
