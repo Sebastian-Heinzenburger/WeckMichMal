@@ -212,8 +212,13 @@ data class Event(
     @ColumnInfo(name = "routes") var routes: List<Route>?
 ){
     @Suppress("unused")
-    fun log(core: Core){
-        core.log(Logger.Level.INFO,"Logging Event with id $configID:\n$wakeUpTime\n$days\n$date\n${DataConverter().fromListOfCourses(courses)}\n${DataConverter().fromListOfRoutes(routes)}")
+    fun log(core: Core) {
+        core.log(
+            Logger.Level.INFO,
+            "Logging Event: configID=$configID, wakeUpTime=$wakeUpTime, days=$days, date=$date, courses=${
+                DataConverter().fromListOfCourses(courses)
+            }, routes=${DataConverter().fromListOfRoutes(routes)}"
+        )
     }
     companion object{
         val emptyEvent = Event(
