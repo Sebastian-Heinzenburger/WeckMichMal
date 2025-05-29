@@ -1,8 +1,11 @@
 package de.heinzenburger.g2_weckmichmal.ui.components
 
+import android.inputmethodservice.Keyboard.Row
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,22 +35,24 @@ import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
+import de.heinzenburger.g2_weckmichmal.specifications.Course
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.NumberField
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurTextField
-import de.heinzenburger.g2_weckmichmal.ui.screens.AlarmClockEditScreen
-import de.heinzenburger.g2_weckmichmal.ui.screens.EditComposable
+import de.heinzenburger.g2_weckmichmal.ui.screens.SettingsScreen
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
 import java.util.Calendar
 import kotlin.concurrent.thread
@@ -296,17 +301,133 @@ class PickerDialogs {
                 }
             )
         }
+
+        @OptIn(ExperimentalMaterial3Api::class)
+        @Composable
+        fun ExcludeCourseDialog(
+            onDismiss: () -> Unit,
+            listOfCourses: List<Course>,
+        ) {
+            Dialog(onDismissRequest = { onDismiss() }) {
+                var excludeCourses = remember { mutableStateListOf<Course>() }
+                var excludeCourse = remember { mutableStateOf("") }
+                var proposeCourses = remember { mutableStateOf(listOfCourses) }
+
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.8f)
+                        .padding(16.dp),
+                    shape = RoundedCornerShape(16.dp),
+                ) {
+                    if(excludeCourses.isNotEmpty()){
+                        Text(
+                            text = "Ausgeschlossen:",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.horizontalScroll(rememberScrollState())
+                            .fillMaxWidth(0.95f),
+                    ){
+
+                        excludeCourses.forEach {
+                            Button(
+                                onClick = {
+                                    excludeCourses.remove(it)
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.onBackground
+                                ),
+                                modifier = Modifier.padding(8.dp),
+                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 1.dp)
+                            ){
+                                Text(
+                                    text = it.name.toString(),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        }
+                    }
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        OurTextField(
+                            value = excludeCourse.value,
+                            onValueChange = {
+                                excludeCourse.value = it
+                                var newProposeCourseList = mutableListOf<Course>()
+                                listOfCourses.forEach {
+                                    if(it.name?.lowercase()?.contains(excludeCourse.value.lowercase()) == true){
+                                        newProposeCourseList.add(it)
+                                    }
+                                }
+                                proposeCourses.value = newProposeCourseList
+                                            },
+                            modifier = Modifier.fillMaxWidth(0.8f).padding(top = 24.dp),
+                            placeholderText = "Kursname eingeben"
+                        )
+                        Text(
+                            text = "Vorschläge:",
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(top = 16.dp),
+                        )
+
+                        Column(
+                            modifier = Modifier.verticalScroll(rememberScrollState()),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ){
+                            proposeCourses.value.forEachIndexed {
+                                    index, it ->
+                                Button(
+                                    onClick = {
+                                        var isCourseAlreadyExcluded = false
+                                        excludeCourses.forEach {
+                                            excludeCourse ->
+                                            if(it.name == excludeCourse.name){
+                                                isCourseAlreadyExcluded = true
+                                            }
+                                        }
+                                        if(!isCourseAlreadyExcluded){
+                                            excludeCourses.add(it)
+                                            excludeCourse.value = ""
+                                        }
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.onBackground
+                                    ),
+                                    modifier = Modifier.padding(top = 8.dp)
+                                ){
+                                    OurText(
+                                        text = it.name.toString(),
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun EditPreview() {
-    AlarmClockEditScreen.reset(null)
+fun SettingsScreenPreview() {
+    val settingsScreen = SettingsScreen()
     G2_WeckMichMalTheme {
-        EditComposable(
-            modifier = Modifier,
-            core = MockupCore()
-        )
+        settingsScreen.SettingsComposable(modifier = Modifier, uiActions = MockupCore())
     }
 }

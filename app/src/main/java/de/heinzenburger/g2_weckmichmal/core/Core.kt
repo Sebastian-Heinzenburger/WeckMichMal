@@ -33,7 +33,9 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import de.heinzenburger.g2_weckmichmal.api.courses.deriveValidCourseURL
 import de.heinzenburger.g2_weckmichmal.api.mensa.StudierendenWerkKarlsruhe
+import de.heinzenburger.g2_weckmichmal.specifications.Course
 import de.heinzenburger.g2_weckmichmal.specifications.MensaMeal
+import de.heinzenburger.g2_weckmichmal.specifications.Period
 import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity
 import java.time.Duration
 import java.time.LocalDate
@@ -64,6 +66,7 @@ data class Core(
             val eventDateTime = it.event?.getLocalDateTime()
             log(Logger.Level.INFO, "Checking eventDateTime: $eventDateTime for configuration: ${it.configuration}")
             if(it.configuration.isActive
+                && it.configuration.ichHabGeringt.isBefore(LocalDate.now())
                 && eventDateTime?.isBefore(earliestEventDate) == true){
                 earliestEventDate = eventDateTime
                 earliestEvent = it.event
@@ -453,6 +456,33 @@ data class Core(
 
     override fun isValidCourseURL(director: String, course: String): Boolean {
         return isValidCourseURL(deriveValidCourseURL(director, course).toString())
+    }
+
+    override fun getListOfCourses(): List<Course> {
+        val url = getRaplaURL()
+        if(url != ""){
+            val courseFetcher = RaplaFetcher(
+                URL(
+                    url
+                )
+            )
+            val courses = courseFetcher.fetchCoursesBetween(Period(LocalDateTime.now(), LocalDateTime.now().plusMonths(3)))
+            val distinctCourses = mutableListOf<Course>()
+            courses.forEach { course ->
+                var isAlreadyInDistinctList = false
+                distinctCourses.forEach {
+                    distinctCourse ->
+                    if(distinctCourse.name == course.name){
+                        isAlreadyInDistinctList = true
+                    }
+                }
+                if(isAlreadyInDistinctList == false){
+                    distinctCourses.add(course)
+                }
+            }
+            return distinctCourses
+        }
+        return emptyList()
     }
 
     override fun getDefaultAlarmValues(): SettingsEntity.DefaultAlarmValues {

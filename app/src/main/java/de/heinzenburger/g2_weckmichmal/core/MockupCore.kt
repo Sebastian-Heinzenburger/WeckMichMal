@@ -199,6 +199,25 @@ class MockupCore : CoreSpecification {
         return true
     }
 
+    override fun getListOfCourses(): List<Course> {
+        return listOf(
+            Course(
+                name = "Numerik",
+                lecturer = "",
+                room = "",
+                startDate = LocalDateTime.now(),
+                endDate = LocalDateTime.now()
+            ),
+            Course(
+                name = "Compilerbau",
+                lecturer = "",
+                room = "",
+                startDate = LocalDateTime.now(),
+                endDate = LocalDateTime.now()
+            )
+        )
+    }
+
     override fun getDefaultAlarmValues(): SettingsEntity.DefaultAlarmValues {
         return SettingsEntity.DefaultAlarmValues()
     }

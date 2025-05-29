@@ -32,7 +32,7 @@ class AlarmEvent : BroadcastReceiver() {
         context.startService(serviceIntent)
 
         val core = Core(context)
-        core.log(Logger.Level.SEVERE, "I rang hehe!")
+        core.log(Logger.Level.SEVERE, "I rang hehe! UID: $uid")
 
         thread {
             if(uid != null && uid > -1){

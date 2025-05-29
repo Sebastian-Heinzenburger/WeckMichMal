@@ -12,11 +12,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.Text
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -24,13 +27,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
+import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
+import de.heinzenburger.g2_weckmichmal.specifications.Course
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.components.NavBar
+import de.heinzenburger.g2_weckmichmal.ui.components.PickerDialogs.Companion.ExcludeCourseDialog
 import de.heinzenburger.g2_weckmichmal.ui.components.SaveURL
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
+import kotlin.concurrent.thread
+import kotlin.math.log
 
 class SettingsScreen : ComponentActivity() {
+    var listOfCourses = mutableStateListOf<Course>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -38,6 +47,12 @@ class SettingsScreen : ComponentActivity() {
         val locUrl = core.getRaplaURL()
         if(locUrl != null){
             url.value = locUrl
+        }
+        thread{
+            core.getListOfCourses().forEach { listOfCourses.add(it) }
+            listOfCourses.forEach {
+                core.log(Logger.Level.SEVERE,it. name.toString())
+            }
         }
         setContent {
             val context = LocalContext.current
@@ -59,11 +74,22 @@ class SettingsScreen : ComponentActivity() {
         NavBar.Companion.NavigationBar(modifier, uiActions, innerSettingsComposable, SettingsScreen::class)
     }
 
-    private var url = mutableStateOf("https://") //At the moment, only possible configuration
-
+    private var url = mutableStateOf("https://")
     //Main component
     val innerSettingsComposable : @Composable (PaddingValues, CoreSpecification) -> Unit = { innerPadding: PaddingValues, core: CoreSpecification ->
         val context = LocalContext.current
+        val openExcludeCourseDialog = remember { mutableStateOf(false) }
+
+        when{
+            openExcludeCourseDialog.value ->{
+                ExcludeCourseDialog(
+                    onDismiss = {
+                        openExcludeCourseDialog.value = false
+                    },
+                    listOfCourses = listOfCourses
+                )
+            }
+        }
 
         Column(
             Modifier
@@ -74,7 +100,8 @@ class SettingsScreen : ComponentActivity() {
                 modifier = Modifier.padding(16.dp)
             )
             Column(Modifier
-                .background(MaterialTheme.colorScheme.background).fillMaxSize(),
+                .background(MaterialTheme.colorScheme.background)
+                .fillMaxSize(),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ){
@@ -94,6 +121,35 @@ class SettingsScreen : ComponentActivity() {
                         modifier = Modifier,
                         text = "Logs ansehen"
                     )
+                }
+
+                Text(
+                    text = "Vorlesungsplan",
+                    modifier = Modifier.padding(top = 48.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.titleSmall
+                )
+
+                if(url.value != ""){
+                    Button(
+                        onClick = {
+                            if(listOfCourses.isEmpty()){
+                                core.showToast("Einen Moment, Kurse sind noch nicht geladen")
+                            }
+                            else {
+                                openExcludeCourseDialog.value = true
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.onBackground
+                        ),
+                        modifier = Modifier.padding(top = 16.dp)
+                    ) {
+                        OurText(
+                            text = "Vorlesungen ausschließen",
+                            modifier = Modifier
+                        )
+                    }
                 }
 
                 SaveURL.innerSettingsComposable(innerPadding, core,

@@ -39,6 +39,7 @@ import androidx.compose.ui.util.fastForEachReversed
 import de.heinzenburger.g2_weckmichmal.background.ForegroundService
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
+import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.Event
 import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
@@ -78,7 +79,6 @@ class AlarmRingingScreen : ComponentActivity(){
 
         val id = intent.getLongExtra("configID", -1)
         isPreview = intent.getBooleanExtra("isPreview", false)
-
         if(!isPreview){
             bindService()
         }
@@ -87,15 +87,15 @@ class AlarmRingingScreen : ComponentActivity(){
             thread {
                 var allConfigurationWithEvent = core.getAllConfigurationAndEvent()
                 allConfigurationWithEvent?.forEach {
-                    var wakeUpDate = it.event?.date?.atTime(it.event.wakeUpTime)
+                    var wakeUpDate = it.event?.getLocalDateTime()
                     var endDate = LocalDateTime.now()
                     it.event?.routes?.forEach {
                             route -> if(route.endTime > endDate){
                         endDate = route.endTime
                     }
                     }
-                    if(LocalDateTime.now().isAfter(wakeUpDate) && LocalDateTime.now().isBefore(endDate)){
-                        if(it.event != null){
+                    if(it.event != null){
+                        if(LocalDateTime.now().isAfter(wakeUpDate) && LocalDateTime.now().isBefore(endDate)){
                             event.value = it.event
                             configuration.value = it.configuration
                         }

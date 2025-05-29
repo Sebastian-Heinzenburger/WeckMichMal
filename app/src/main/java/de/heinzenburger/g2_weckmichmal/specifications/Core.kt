@@ -114,7 +114,7 @@ interface CoreSpecification {
      */
     fun isValidCourseURL(director : String, course: String) : Boolean
 
-
+    fun getListOfCourses(): List<Course>
     /**
      * Reads the default alarm values from the database
      */

@@ -277,7 +277,8 @@ data class ConfigurationWithEvent(
 data class SettingsEntity(
     /** The WebLink leading to the RAPLA schedule. */
     var raplaURL: String? = "",
-    var defaultValues: DefaultAlarmValues = DefaultAlarmValues()
+    var defaultValues: DefaultAlarmValues = DefaultAlarmValues(),
+    var excludeCourses: List<Course> = mutableListOf<Course>()
 ){
     data class DefaultAlarmValues(
             //Static
