@@ -131,6 +131,11 @@ interface InterfaceApplicationSettings {
      * Update Default Alarm values in the database
      */
     fun updateDefaultAlarmValues(defaultAlarmValues: SettingsEntity.DefaultAlarmValues)
+
+    /**
+     * Update excluded courses in the database
+     */
+    fun updateExcludedCoursesList(excludedCoursesList: List<Course>)
 }
 
 /**

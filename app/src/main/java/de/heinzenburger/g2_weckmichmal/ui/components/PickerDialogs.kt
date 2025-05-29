@@ -1,6 +1,5 @@
 package de.heinzenburger.g2_weckmichmal.ui.components
 
-import android.inputmethodservice.Keyboard.Row
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,6 +37,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
@@ -305,19 +305,24 @@ class PickerDialogs {
         @OptIn(ExperimentalMaterial3Api::class)
         @Composable
         fun ExcludeCourseDialog(
-            onDismiss: () -> Unit,
+            onDismiss: (List<Course>) -> Unit,
             listOfCourses: List<Course>,
+            listOfExcludedCourses: List<Course>,
         ) {
-            Dialog(onDismissRequest = { onDismiss() }) {
-                var excludeCourses = remember { mutableStateListOf<Course>() }
-                var excludeCourse = remember { mutableStateOf("") }
-                var proposeCourses = remember { mutableStateOf(listOfCourses) }
-
+            var excludeCourses = remember { mutableStateListOf<Course>()}
+            listOfExcludedCourses.forEach {
+                excludeCourses.add(it)
+            }
+            var excludeCourse = remember { mutableStateOf("") }
+            var proposeCourses = remember { mutableStateOf(listOfCourses) }
+            Dialog(
+                onDismissRequest = { onDismiss(excludeCourses) }
+            ) {
                 Card(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .fillMaxHeight(0.8f)
+                        .fillMaxHeight(0.7f)
                         .padding(16.dp),
                     shape = RoundedCornerShape(16.dp),
                 ) {
@@ -341,10 +346,10 @@ class PickerDialogs {
                                     excludeCourses.remove(it)
                                 },
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.onBackground
+                                    containerColor = MaterialTheme.colorScheme.secondary
                                 ),
                                 modifier = Modifier.padding(8.dp),
-                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 1.dp)
+                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp)
                             ){
                                 Text(
                                     text = it.name.toString(),
@@ -400,7 +405,6 @@ class PickerDialogs {
                                         }
                                         if(!isCourseAlreadyExcluded){
                                             excludeCourses.add(it)
-                                            excludeCourse.value = ""
                                         }
                                     },
                                     colors = ButtonDefaults.buttonColors(

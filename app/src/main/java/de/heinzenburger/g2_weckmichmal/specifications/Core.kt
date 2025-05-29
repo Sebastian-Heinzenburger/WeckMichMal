@@ -114,7 +114,21 @@ interface CoreSpecification {
      */
     fun isValidCourseURL(director : String, course: String) : Boolean
 
+    /**
+     * Get all courses that can be found in Course URL within next 3 months
+     */
     fun getListOfCourses(): List<Course>
+
+    /**
+     * Get the list of excluded courses from the database
+     */
+    fun getListOfExcludedCourses() : List<Course>
+
+    /**
+     * Save the list of excluded courses into the database
+     */
+    fun updateListOfExcludedCourses(excludedCoursesList: List<Course>)
+
     /**
      * Reads the default alarm values from the database
      */

@@ -27,7 +27,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
-import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
 import de.heinzenburger.g2_weckmichmal.specifications.Course
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
@@ -36,10 +35,10 @@ import de.heinzenburger.g2_weckmichmal.ui.components.PickerDialogs.Companion.Exc
 import de.heinzenburger.g2_weckmichmal.ui.components.SaveURL
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
 import kotlin.concurrent.thread
-import kotlin.math.log
 
 class SettingsScreen : ComponentActivity() {
     var listOfCourses = mutableStateListOf<Course>()
+    var listOfExcludedCourses = mutableStateListOf<Course>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -50,9 +49,7 @@ class SettingsScreen : ComponentActivity() {
         }
         thread{
             core.getListOfCourses().forEach { listOfCourses.add(it) }
-            listOfCourses.forEach {
-                core.log(Logger.Level.SEVERE,it. name.toString())
-            }
+            core.getListOfExcludedCourses().forEach { listOfExcludedCourses.add(it) }
         }
         setContent {
             val context = LocalContext.current
@@ -83,10 +80,16 @@ class SettingsScreen : ComponentActivity() {
         when{
             openExcludeCourseDialog.value ->{
                 ExcludeCourseDialog(
-                    onDismiss = {
+                    onDismiss = { excludeCoursesList ->
                         openExcludeCourseDialog.value = false
+                        listOfExcludedCourses = mutableStateListOf()
+                        excludeCoursesList.forEach {
+                            listOfExcludedCourses.add(it)
+                        }
+                        core.updateListOfExcludedCourses(excludeCoursesList)
                     },
-                    listOfCourses = listOfCourses
+                    listOfCourses = listOfCourses,
+                    listOfExcludedCourses = listOfExcludedCourses
                 )
             }
         }

@@ -218,6 +218,20 @@ class MockupCore : CoreSpecification {
         )
     }
 
+    override fun getListOfExcludedCourses(): List<Course> {
+        return listOf(Course(
+            name = "Compilerbau",
+            lecturer = "",
+            room = "",
+            startDate = LocalDateTime.now(),
+            endDate = LocalDateTime.now()
+        ))
+    }
+
+    override fun updateListOfExcludedCourses(excludedCoursesList: List<Course>) {
+
+    }
+
     override fun getDefaultAlarmValues(): SettingsEntity.DefaultAlarmValues {
         return SettingsEntity.DefaultAlarmValues()
     }

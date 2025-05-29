@@ -459,30 +459,56 @@ data class Core(
     }
 
     override fun getListOfCourses(): List<Course> {
-        val url = getRaplaURL()
-        if(url != ""){
-            val courseFetcher = RaplaFetcher(
-                URL(
-                    url
+        try {
+            val url = getRaplaURL()
+            if(url != ""){
+                val courseFetcher = RaplaFetcher(
+                    URL(
+                        url
+                    )
                 )
-            )
-            val courses = courseFetcher.fetchCoursesBetween(Period(LocalDateTime.now(), LocalDateTime.now().plusMonths(3)))
-            val distinctCourses = mutableListOf<Course>()
-            courses.forEach { course ->
-                var isAlreadyInDistinctList = false
-                distinctCourses.forEach {
-                    distinctCourse ->
-                    if(distinctCourse.name == course.name){
-                        isAlreadyInDistinctList = true
+                val courses = courseFetcher.fetchCoursesBetween(Period(LocalDateTime.now(), LocalDateTime.now().plusMonths(3)))
+                val distinctCourses = mutableListOf<Course>()
+                courses.forEach { course ->
+                    var isAlreadyInDistinctList = false
+                    distinctCourses.forEach {
+                            distinctCourse ->
+                        if(distinctCourse.name == course.name){
+                            isAlreadyInDistinctList = true
+                        }
+                    }
+                    if(isAlreadyInDistinctList == false){
+                        distinctCourses.add(course)
                     }
                 }
-                if(isAlreadyInDistinctList == false){
-                    distinctCourses.add(course)
-                }
+                return distinctCourses
             }
-            return distinctCourses
+        }
+        catch (e : Exception){
+            log(Logger.Level.SEVERE, e.message.toString())
+            log(Logger.Level.SEVERE, e.stackTraceToString())
         }
         return emptyList()
+    }
+
+    override fun getListOfExcludedCourses(): List<Course> {
+        log(Logger.Level.INFO, "getListOfExcludedCourses called")
+        try {
+            val applicationSettingsHandler = ApplicationSettingsHandler(context)
+            val excludedCoursesList = applicationSettingsHandler.getApplicationSettings().excludeCourses
+            return excludedCoursesList
+        }
+        catch (e: PersistenceException){
+            log(Logger.Level.SEVERE, e.message.toString())
+            log(Logger.Level.SEVERE, e.stackTraceToString())
+            showToast("Error retrieving URL from database. Try reinstalling the app.")
+            return emptyList()
+        }
+    }
+
+    override fun updateListOfExcludedCourses(excludedCoursesList: List<Course>) {
+        val applicationSettingsHandler = ApplicationSettingsHandler(context)
+        applicationSettingsHandler.updateExcludedCoursesList(excludedCoursesList)
     }
 
     override fun getDefaultAlarmValues(): SettingsEntity.DefaultAlarmValues {
