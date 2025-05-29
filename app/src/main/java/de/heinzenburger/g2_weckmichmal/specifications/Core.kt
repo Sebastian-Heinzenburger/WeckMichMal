@@ -117,17 +117,17 @@ interface CoreSpecification {
     /**
      * Get all courses that can be found in Course URL within next 3 months
      */
-    fun getListOfCourses(): List<Course>
+    fun getListOfNameOfCourses(): List<String>
 
     /**
      * Get the list of excluded courses from the database
      */
-    fun getListOfExcludedCourses() : List<Course>
+    fun getListOfExcludedCourses() : List<String>
 
     /**
      * Save the list of excluded courses into the database
      */
-    fun updateListOfExcludedCourses(excludedCoursesList: List<Course>)
+    fun updateListOfExcludedCourses(excludedCoursesList: List<String>)
 
     /**
      * Reads the default alarm values from the database

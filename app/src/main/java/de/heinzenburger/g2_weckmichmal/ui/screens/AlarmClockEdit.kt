@@ -49,6 +49,7 @@ import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
 import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity
+import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.LoadingScreen
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurButtonInEditAlarm
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.components.NavBar
@@ -82,6 +83,8 @@ class AlarmClockEditScreen : ComponentActivity() {
         }
     }
     companion object{
+        private var openLoadingScreen = mutableStateOf(false)
+
         private var openArrivalTimePickerDialog : MutableState<Boolean> = mutableStateOf(false)
         private var openTravelTimePickerDialog : MutableState<Boolean> = mutableStateOf(false)
         private var openStartBufferPickerDialog : MutableState<Boolean> = mutableStateOf(false)
@@ -109,6 +112,7 @@ class AlarmClockEditScreen : ComponentActivity() {
         lateinit var defaultAlarmValues: SettingsEntity.DefaultAlarmValues
 
         fun reset(configuration: Configuration?){
+            openLoadingScreen.value = false
             if(configuration == null){
                 //All default values
                 alarmName = mutableStateOf(defaultAlarmValues.name)
@@ -612,6 +616,11 @@ class AlarmClockEditScreen : ComponentActivity() {
             val context = LocalContext.current
             //Open time picker dialogs when corresponding boolean set to true
             when {
+                openLoadingScreen.value ->{
+                    LoadingScreen()
+                }
+            }
+            when {
                 openArrivalTimePickerDialog.value -> {
                     TimePickerDialogContainer(
                         onConfirm =
@@ -719,6 +728,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                     TextButton(
                         //Save to database when clicked
                         onClick = {
+                            openLoadingScreen.value = true
                             saveConfiguration(core, context)
                         },
                         colors = ButtonDefaults.buttonColors(

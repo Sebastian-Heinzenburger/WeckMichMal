@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Text
+import androidx.compose.material3.Text
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
-import de.heinzenburger.g2_weckmichmal.specifications.Course
+import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.LoadingScreen
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.components.NavBar
 import de.heinzenburger.g2_weckmichmal.ui.components.PickerDialogs.Companion.ExcludeCourseDialog
@@ -37,8 +37,9 @@ import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
 import kotlin.concurrent.thread
 
 class SettingsScreen : ComponentActivity() {
-    var listOfCourses = mutableStateListOf<Course>()
-    var listOfExcludedCourses = mutableStateListOf<Course>()
+    var listOfCourses = mutableStateListOf<String>()
+    var listOfExcludedCourses = mutableStateListOf<String>()
+    private var openLoadingScreen = mutableStateOf(false)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -48,7 +49,7 @@ class SettingsScreen : ComponentActivity() {
             url.value = locUrl
         }
         thread{
-            core.getListOfCourses().forEach { listOfCourses.add(it) }
+            core.getListOfNameOfCourses().forEach { listOfCourses.add(it) }
             core.getListOfExcludedCourses().forEach { listOfExcludedCourses.add(it) }
         }
         setContent {
@@ -87,10 +88,16 @@ class SettingsScreen : ComponentActivity() {
                             listOfExcludedCourses.add(it)
                         }
                         core.updateListOfExcludedCourses(excludeCoursesList)
+                        core.runUpdateLogic()
                     },
                     listOfCourses = listOfCourses,
                     listOfExcludedCourses = listOfExcludedCourses
                 )
+            }
+        }
+        when{
+            openLoadingScreen.value ->{
+                LoadingScreen()
             }
         }
 
@@ -111,6 +118,7 @@ class SettingsScreen : ComponentActivity() {
 
                 Button(
                     onClick = {
+                        openLoadingScreen.value = true
                         val intent = Intent(context, LogScreen::class.java)
                         intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
                         context.startActivity(intent)

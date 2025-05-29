@@ -2,7 +2,6 @@ package de.heinzenburger.g2_weckmichmal.persistence
 
 import android.content.Context
 import com.google.gson.Gson
-import de.heinzenburger.g2_weckmichmal.specifications.Course
 import de.heinzenburger.g2_weckmichmal.specifications.InterfaceApplicationSettings
 import de.heinzenburger.g2_weckmichmal.specifications.PersistenceException
 import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity
@@ -55,7 +54,7 @@ data class ApplicationSettingsHandler (
         }
     }
 
-    override fun updateExcludedCoursesList(excludedCoursesList: List<Course>) {
+    override fun updateExcludedCoursesList(excludedCoursesList: List<String>) {
         try {
             val settings = getApplicationSettings()
             settings.excludeCourses = excludedCoursesList

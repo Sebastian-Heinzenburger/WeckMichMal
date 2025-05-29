@@ -15,6 +15,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
+import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.LoadingScreen
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurTextField
 import de.heinzenburger.g2_weckmichmal.ui.screens.WelcomeScreen
@@ -25,6 +26,13 @@ import kotlin.concurrent.thread
 class SaveURL {
     companion object{
         val innerSettingsComposable : @Composable (PaddingValues, CoreSpecification, () -> Unit) -> Unit = { innerPadding, core, onSave ->
+            var openLoadingScreen = remember { mutableStateOf(false) }
+            when {
+                openLoadingScreen.value ->{
+                    LoadingScreen()
+                }
+            }
+
             var tempURL = core.getRaplaURL()
             var url = remember { mutableStateOf(tempURL ?: "") }
             var director = remember { mutableStateOf("") }
@@ -60,6 +68,7 @@ class SaveURL {
 
             Button(
                 onClick = {
+                    openLoadingScreen.value = true
                     onclickSaveButton(core, onSave, url.value, director.value, course.value)
                 },
                 colors = ButtonColors(

@@ -33,9 +33,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import de.heinzenburger.g2_weckmichmal.api.courses.deriveValidCourseURL
 import de.heinzenburger.g2_weckmichmal.api.mensa.StudierendenWerkKarlsruhe
-import de.heinzenburger.g2_weckmichmal.specifications.Course
 import de.heinzenburger.g2_weckmichmal.specifications.MensaMeal
-import de.heinzenburger.g2_weckmichmal.specifications.Period
 import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity
 import java.time.Duration
 import java.time.LocalDate
@@ -207,13 +205,14 @@ data class Core(
         val wakeUpCalculator = WakeUpCalculator(
             routePlanner = DBRoutePlanner(),
             courseFetcher = RaplaFetcher(
-                URL(
+                raplaUrl = URL(
                     if(url == ""){
                         "http://example.com"
                     }else{
                         url
                     }
-                )
+                ),
+                excludedCourseNames = getListOfExcludedCourses().toSet()
             )
         )
 
@@ -335,13 +334,14 @@ data class Core(
                 val wakeUpCalculator = WakeUpCalculator(
                     routePlanner = DBRoutePlanner(),
                     courseFetcher = RaplaFetcher(
-                        URL(
+                        raplaUrl = URL(
                             if(url == ""){
                                 "http://example.com"
                             }else{
                                 url
                             }
-                        )
+                        ),
+                        excludedCourseNames = getListOfExcludedCourses().toSet()
                     )
                 )
 
@@ -458,40 +458,27 @@ data class Core(
         return isValidCourseURL(deriveValidCourseURL(director, course).toString())
     }
 
-    override fun getListOfCourses(): List<Course> {
+    override fun getListOfNameOfCourses(): List<String> {
         try {
             val url = getRaplaURL()
             if(url != ""){
                 val courseFetcher = RaplaFetcher(
-                    URL(
+                    raplaUrl = URL(
                         url
-                    )
+                    ),
+                    excludedCourseNames = getListOfExcludedCourses().toSet()
                 )
-                val courses = courseFetcher.fetchCoursesBetween(Period(LocalDateTime.now(), LocalDateTime.now().plusMonths(3)))
-                val distinctCourses = mutableListOf<Course>()
-                courses.forEach { course ->
-                    var isAlreadyInDistinctList = false
-                    distinctCourses.forEach {
-                            distinctCourse ->
-                        if(distinctCourse.name == course.name){
-                            isAlreadyInDistinctList = true
-                        }
-                    }
-                    if(isAlreadyInDistinctList == false){
-                        distinctCourses.add(course)
-                    }
-                }
-                return distinctCourses
+                return courseFetcher.getAllCourseNames()
             }
         }
-        catch (e : Exception){
+        catch (e : CourseFetcherException){
             log(Logger.Level.SEVERE, e.message.toString())
             log(Logger.Level.SEVERE, e.stackTraceToString())
         }
         return emptyList()
     }
 
-    override fun getListOfExcludedCourses(): List<Course> {
+    override fun getListOfExcludedCourses(): List<String> {
         log(Logger.Level.INFO, "getListOfExcludedCourses called")
         try {
             val applicationSettingsHandler = ApplicationSettingsHandler(context)
@@ -506,7 +493,7 @@ data class Core(
         }
     }
 
-    override fun updateListOfExcludedCourses(excludedCoursesList: List<Course>) {
+    override fun updateListOfExcludedCourses(excludedCoursesList: List<String>) {
         val applicationSettingsHandler = ApplicationSettingsHandler(context)
         applicationSettingsHandler.updateExcludedCoursesList(excludedCoursesList)
     }

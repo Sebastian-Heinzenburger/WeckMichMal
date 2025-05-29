@@ -135,7 +135,7 @@ interface InterfaceApplicationSettings {
     /**
      * Update excluded courses in the database
      */
-    fun updateExcludedCoursesList(excludedCoursesList: List<Course>)
+    fun updateExcludedCoursesList(excludedCoursesList: List<String>)
 }
 
 /**
@@ -283,7 +283,7 @@ data class SettingsEntity(
     /** The WebLink leading to the RAPLA schedule. */
     var raplaURL: String? = "",
     var defaultValues: DefaultAlarmValues = DefaultAlarmValues(),
-    var excludeCourses: List<Course> = mutableListOf<Course>()
+    var excludeCourses: List<String> = mutableListOf<String>()
 ){
     data class DefaultAlarmValues(
             //Static

@@ -58,6 +58,7 @@ import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationWithEvent
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.Event
 import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
+import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.LoadingScreen
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.components.NavBar
 import de.heinzenburger.g2_weckmichmal.ui.screens.AlarmClockOverviewScreen.Companion.configurationAndEventEntities
@@ -106,6 +107,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
     }
 
     companion object{
+        private var openLoadingScreen = mutableStateOf(false)
         private fun deleteConfiguration(
             core: CoreSpecification,
             properties: ConfigurationWithEvent,
@@ -360,7 +362,11 @@ class AlarmClockOverviewScreen : ComponentActivity(){
         //Main Component, is passed to Navbar. Contains all configuration components and plus icon
         val innerAlarmClockOverviewComposable : @Composable (PaddingValues, CoreSpecification) -> Unit = { innerPadding: PaddingValues, core: CoreSpecification ->
             val context = LocalContext.current
-
+            when {
+                openLoadingScreen.value ->{
+                    LoadingScreen()
+                }
+            }
             Box {
                 Column(
                     Modifier

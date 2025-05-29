@@ -37,7 +37,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
@@ -48,7 +47,6 @@ import androidx.compose.ui.window.Dialog
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
-import de.heinzenburger.g2_weckmichmal.specifications.Course
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.NumberField
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurTextField
@@ -302,14 +300,13 @@ class PickerDialogs {
             )
         }
 
-        @OptIn(ExperimentalMaterial3Api::class)
         @Composable
         fun ExcludeCourseDialog(
-            onDismiss: (List<Course>) -> Unit,
-            listOfCourses: List<Course>,
-            listOfExcludedCourses: List<Course>,
+            onDismiss: (List<String>) -> Unit,
+            listOfCourses: List<String>,
+            listOfExcludedCourses: List<String>,
         ) {
-            var excludeCourses = remember { mutableStateListOf<Course>()}
+            var excludeCourses = remember { mutableStateListOf<String>()}
             listOfExcludedCourses.forEach {
                 excludeCourses.add(it)
             }
@@ -352,7 +349,7 @@ class PickerDialogs {
                                 contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp)
                             ){
                                 Text(
-                                    text = it.name.toString(),
+                                    text = it,
                                     color = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier,
                                     style = MaterialTheme.typography.bodySmall
@@ -370,9 +367,9 @@ class PickerDialogs {
                             value = excludeCourse.value,
                             onValueChange = {
                                 excludeCourse.value = it
-                                var newProposeCourseList = mutableListOf<Course>()
+                                var newProposeCourseList = mutableListOf<String>()
                                 listOfCourses.forEach {
-                                    if(it.name?.lowercase()?.contains(excludeCourse.value.lowercase()) == true){
+                                    if(it.lowercase().contains(excludeCourse.value.lowercase()) == true){
                                         newProposeCourseList.add(it)
                                     }
                                 }
@@ -399,7 +396,7 @@ class PickerDialogs {
                                         var isCourseAlreadyExcluded = false
                                         excludeCourses.forEach {
                                             excludeCourse ->
-                                            if(it.name == excludeCourse.name){
+                                            if(it == excludeCourse){
                                                 isCourseAlreadyExcluded = true
                                             }
                                         }
@@ -413,7 +410,7 @@ class PickerDialogs {
                                     modifier = Modifier.padding(top = 8.dp)
                                 ){
                                     OurText(
-                                        text = it.name.toString(),
+                                        text = it,
                                         color = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier
                                     )
