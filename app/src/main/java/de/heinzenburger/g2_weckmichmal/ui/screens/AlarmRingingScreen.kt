@@ -39,7 +39,6 @@ import androidx.compose.ui.util.fastForEachReversed
 import de.heinzenburger.g2_weckmichmal.background.ForegroundService
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
-import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.Event
 import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
@@ -83,6 +82,7 @@ class AlarmRingingScreen : ComponentActivity(){
             bindService()
         }
 
+        listOfExcludedCourses = core.getListOfExcludedCourses()
         if(id < 0){
             thread {
                 var allConfigurationWithEvent = core.getAllConfigurationAndEvent()
@@ -138,17 +138,21 @@ class AlarmRingingScreen : ComponentActivity(){
                 .fillMaxWidth()
                 .padding(top = 32.dp)
         )
-        var text =
-            if (!event.value.courses.isNullOrEmpty()) {
-                "Mental vorbereiten auf: \n"
-            } else {
-                "Hallo :D"
-            }
+        var text = ""
+        var isCoursesEmpty = true
         event.value.courses?.forEachIndexed { index, it ->
-            text += it.name + " - " + it.startDate.format(DateTimeFormatter.ofPattern("HH:mm")) + " bis " + it.endDate.format(DateTimeFormatter.ofPattern("HH:mm"))
-            if (event.value.courses!!.size - 1 != index) {
-                text += "\n"
+            if(!listOfExcludedCourses.contains(it.name)){
+                text += it.name + " - " + it.startDate.format(DateTimeFormatter.ofPattern("HH:mm")) + " bis " + it.endDate.format(DateTimeFormatter.ofPattern("HH:mm"))
+                if (event.value.courses!!.size - 1 != index) {
+                    text += "\n"
+                }
+                isCoursesEmpty = false
             }
+        }
+        text = if (!isCoursesEmpty) {
+            "Mental vorbereiten auf: \n$text"
+        } else {
+            "Hallo :D"
         }
         Text(
             text = text,
@@ -229,6 +233,7 @@ class AlarmRingingScreen : ComponentActivity(){
                             )
 
                             for (i in 0..1) {
+                                i
                                 Text(
                                     text = "|",
                                     color =
@@ -253,6 +258,7 @@ class AlarmRingingScreen : ComponentActivity(){
         }
     }
 
+    var listOfExcludedCourses = emptyList<String>()
     var event = mutableStateOf(Event.emptyEvent)
     var configuration = mutableStateOf(Configuration.emptyConfiguration)
     var swipedLeft = mutableStateOf(false)
