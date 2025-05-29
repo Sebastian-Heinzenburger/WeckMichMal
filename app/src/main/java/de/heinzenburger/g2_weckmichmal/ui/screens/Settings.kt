@@ -88,7 +88,9 @@ class SettingsScreen : ComponentActivity() {
                             listOfExcludedCourses.add(it)
                         }
                         core.updateListOfExcludedCourses(excludeCoursesList)
-                        core.runUpdateLogic()
+                        thread{
+                            core.runUpdateLogic()
+                        }
                     },
                     listOfCourses = listOfCourses,
                     listOfExcludedCourses = listOfExcludedCourses
