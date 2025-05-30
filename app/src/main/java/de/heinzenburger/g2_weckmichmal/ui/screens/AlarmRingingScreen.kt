@@ -326,7 +326,13 @@ class AlarmRingingScreen : ComponentActivity(){
                 }
                 Button(
                     onClick = {
-                        foregroundService.sleepWithPerry(isForeverSleep = false)
+                        val eventIn5Minutes = event.value
+                        eventIn5Minutes.wakeUpTime = eventIn5Minutes.wakeUpTime.plusMinutes(5)
+                        core.runWakeUpLogic(eventIn5Minutes)
+                        foregroundService.sleepWithPerry(isForeverSleep = true)
+                        unbindService(serviceConnection)
+                        val stopIntent = Intent(context, ForegroundService::class.java)
+                        stopService(stopIntent)
                     },
                     modifier = Modifier
                         .align(BiasAlignment(-0.9f, 0.9f))

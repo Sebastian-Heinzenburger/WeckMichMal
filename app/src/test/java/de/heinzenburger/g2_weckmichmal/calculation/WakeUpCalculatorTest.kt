@@ -14,7 +14,6 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import java.time.DayOfWeek
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.LocalTime
 
 class WakeUpCalculatorTest {
