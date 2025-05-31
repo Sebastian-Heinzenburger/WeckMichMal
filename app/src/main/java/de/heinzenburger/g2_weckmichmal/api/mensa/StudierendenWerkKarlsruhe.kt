@@ -85,16 +85,21 @@ class StudierendenWerkKarlsruhe(
      * @return Elements containing the meal tables.
      */
     private fun fetchMealTablesOfNextAvailableDay(): Elements {
-        val nextDayTable = fetchMultiMealTableOfNextAvalableDay()!!
-        val mealTables = nextDayTable.select("table")
-        return mealTables
+        val nextDayTable = fetchMultiMealTableOfNextAvailableDay()
+        if(nextDayTable != null){
+            val mealTables = nextDayTable.select("table")
+            return mealTables
+        }
+        else{
+            return Elements()
+        }
     }
 
     /**
      * Fetches the main table containing all meals for the next available day.
      * @return The HTML element of the main meal table, or null if not found.
      */
-    private fun fetchMultiMealTableOfNextAvalableDay(): Element? {
+    private fun fetchMultiMealTableOfNextAvailableDay(): Element? {
         val mensaPage = fetchMensaPage()
         val nextDayTable = extractFirstMultiMealTable(mensaPage)
         return nextDayTable
@@ -106,8 +111,13 @@ class StudierendenWerkKarlsruhe(
      * @return The HTML element of the first multi-meal table, or null if not found.
      */
     private fun extractFirstMultiMealTable(mensaPage: Document): Element? {
-        return mensaPage.select("table").first {
-            it.hasAttr("border") && it.hasAttr("width")
+        return try {
+            mensaPage.select("table").first {
+                it.hasAttr("border") && it.hasAttr("width")
+            }
+        }
+        catch (_: NoSuchElementException){
+            return null
         }
     }
 
