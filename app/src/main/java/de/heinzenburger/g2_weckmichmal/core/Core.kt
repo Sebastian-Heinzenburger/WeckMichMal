@@ -212,7 +212,6 @@ data class Core(
 
         configurationsWithEvents?.forEachIndexed {
             index, it ->
-            log(Logger.Level.SEVERE, "HALLO0000")
             var configurationWithEvent = calculateNextEventForConfiguration(it, wakeUpCalculator)
             configurationsWithEvents[index] = configurationWithEvent
             val eventHandler = EventHandler(context)
@@ -339,7 +338,8 @@ data class Core(
                 )
 
                 configuration.ichHabGeringt = LocalDate.MIN
-                if(calculateNextEventForConfiguration(ConfigurationWithEvent(configuration,null),wakeUpCalculator).event?.getLocalDateTime()?.minusMinutes(2)
+                val configurationWithEvent = calculateNextEventForConfiguration(ConfigurationWithEvent(configuration,null),wakeUpCalculator).event
+                if(configurationWithEvent == null || configurationWithEvent.getLocalDateTime().minusMinutes(2)
                         ?.isBefore(
                             LocalDateTime.now()) == true
                 ){

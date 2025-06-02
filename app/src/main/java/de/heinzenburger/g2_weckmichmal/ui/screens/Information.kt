@@ -42,7 +42,7 @@ import kotlin.concurrent.thread
 import androidx.core.net.toUri
 
 class InformationScreen : ComponentActivity() {
-    private lateinit var core: CoreSpecification
+    lateinit var core: CoreSpecification
     private lateinit var context: Context
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -265,7 +265,9 @@ class AlarmRingingScreen : ComponentActivity(){
                 }
                 else{
                     if(core.isInternetAvailable()){
-                        InformationScreen().InnerMensaComposable(PaddingValues(top = 32.dp))
+                        val informationScreen = InformationScreen()
+                        informationScreen.core = core
+                        informationScreen.InnerMensaComposable(PaddingValues(top = 32.dp))
                     }
                     else{
                         core.showToast("Mensa Essensplan kann nur bei aktiver Internetverbindung angezeigt werden.")
