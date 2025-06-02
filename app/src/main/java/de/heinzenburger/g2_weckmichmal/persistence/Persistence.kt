@@ -6,15 +6,11 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
-import androidx.room.migration.Migration
-import androidx.sqlite.db.SupportSQLiteDatabase
-import com.google.gson.Gson
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.Course
 import de.heinzenburger.g2_weckmichmal.specifications.Event
 import de.heinzenburger.g2_weckmichmal.specifications.Route
 import de.heinzenburger.g2_weckmichmal.specifications.RouteSection
-import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity
 import org.json.JSONArray
 import org.json.JSONObject
 import java.time.DayOfWeek
@@ -203,12 +199,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun eventConfigurationDao(): EventHandler.ConfigurationDao
 
     companion object{
-        val MIGRATION_19_20 = object : Migration(19, 20) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE configuration ADD COLUMN ichHabGeringt TEXT NOT NULL DEFAULT ${DataConverter().fromLocalDate(
-                    LocalDate.MIN)}")
-            }
-        }
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
@@ -218,7 +208,7 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "database"
-                ).addMigrations(MIGRATION_19_20).fallbackToDestructiveMigration().build()
+                ).fallbackToDestructiveMigration().build()
                 INSTANCE = instance
                 instance
             }

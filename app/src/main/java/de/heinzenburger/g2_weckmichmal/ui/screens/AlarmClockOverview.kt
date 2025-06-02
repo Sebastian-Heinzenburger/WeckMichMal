@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
 import de.heinzenburger.g2_weckmichmal.core.Core
+import de.heinzenburger.g2_weckmichmal.core.ExceptionHandler
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationWithEvent
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
@@ -78,19 +79,22 @@ class AlarmClockOverviewScreen : ComponentActivity(){
         enableEdgeToEdge()
         context = applicationContext
         core = Core(context = applicationContext)
-        thread {
-            configurationAndEventEntities.value = core.getAllConfigurationAndEvent()!!
-        }
 
-        checkForPermissions()
+        ExceptionHandler(core as Core).runWithUnexpectedExceptionHandler("Error displaying AlarmClockOverview",true) {
+            thread {
+                configurationAndEventEntities.value = core.getAllConfigurationAndEvent()!!
+            }
 
-        setContent {
-            G2_WeckMichMalTheme {
-                BackHandler {
-                    //Finish all and close the app
-                    finishAffinity()
+            checkForPermissions()
+
+            setContent {
+                G2_WeckMichMalTheme {
+                    BackHandler {
+                        //Finish all and close the app
+                        finishAffinity()
+                    }
+                    AlarmClockOverviewComposable(modifier = Modifier, core)
                 }
-                AlarmClockOverviewComposable(modifier = Modifier, core)
             }
         }
     }

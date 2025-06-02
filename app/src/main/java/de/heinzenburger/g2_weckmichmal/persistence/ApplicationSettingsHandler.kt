@@ -64,4 +64,15 @@ data class ApplicationSettingsHandler (
             throw PersistenceException.UpdateSettingsException(e)
         }
     }
+
+    override fun updateCourseURL(url: String) {
+        try {
+            val settings = getApplicationSettings()
+            settings.raplaURL = url
+            saveOrUpdateApplicationSettings(settings)
+        }
+        catch (e: PersistenceException){
+            throw PersistenceException.UpdateSettingsException(e)
+        }
+    }
 }

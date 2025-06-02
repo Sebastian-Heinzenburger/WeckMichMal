@@ -37,8 +37,12 @@ import android.app.AlarmManager
 import android.os.PowerManager
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.core.net.toUri
+import de.heinzenburger.g2_weckmichmal.core.ExceptionHandler
+import de.heinzenburger.g2_weckmichmal.core.MockupCore
+import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
 
 class AllowNotificationsScreen : ComponentActivity() {
+    private lateinit var core : CoreSpecification
     private val requestPermissionLauncher = registerForActivityResult(
         RequestPermission()
     ) { isGranted: Boolean ->
@@ -52,13 +56,16 @@ class AllowNotificationsScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent {
-            BackHandler {
-                //Finish all and close the app
-                finishAffinity()
-            }
-            G2_WeckMichMalTheme {
-                InnerComposable(modifier = Modifier)
+        core = Core(applicationContext)
+        ExceptionHandler(core as Core).runWithUnexpectedExceptionHandler("Error displaying AllowNotifications",true) {
+            setContent {
+                BackHandler {
+                    //Finish all and close the app
+                    finishAffinity()
+                }
+                G2_WeckMichMalTheme {
+                    InnerComposable(modifier = Modifier)
+                }
             }
         }
     }
@@ -187,6 +194,7 @@ class AllowNotificationsScreen : ComponentActivity() {
     @Preview(showBackground = true)
     @Composable
     fun AllowNotificationsPreview() {
+        core = MockupCore()
         G2_WeckMichMalTheme {
             InnerComposable(
                 modifier = Modifier,

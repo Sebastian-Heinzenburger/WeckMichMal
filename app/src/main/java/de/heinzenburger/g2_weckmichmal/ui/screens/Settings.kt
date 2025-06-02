@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.heinzenburger.g2_weckmichmal.core.Core
+import de.heinzenburger.g2_weckmichmal.core.ExceptionHandler
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.LoadingScreen
@@ -44,25 +45,27 @@ class SettingsScreen : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val core = Core(context = applicationContext)
-        val locUrl = core.getRaplaURL()
-        if(locUrl != null){
-            url.value = locUrl
-        }
-        thread{
-            core.getListOfNameOfCourses().forEach { listOfCourses.add(it) }
-            core.getListOfExcludedCourses().forEach { listOfExcludedCourses.add(it) }
-        }
-        setContent {
-            val context = LocalContext.current
-            BackHandler {
-                //Go to Overview Screen without animation
-                val intent = Intent(context, AlarmClockOverviewScreen::class.java)
-                intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-                startActivity(intent)
-                finish()
+        ExceptionHandler(core).runWithUnexpectedExceptionHandler("Error displaying Settings",true) {
+            val locUrl = core.getRaplaURL()
+            if (locUrl != null) {
+                url.value = locUrl
             }
-            G2_WeckMichMalTheme {
-                SettingsComposable(modifier = Modifier, core)
+            thread {
+                core.getListOfNameOfCourses()?.forEach { listOfCourses.add(it) }
+                core.getListOfExcludedCourses()?.forEach { listOfExcludedCourses.add(it) }
+            }
+            setContent {
+                val context = LocalContext.current
+                BackHandler {
+                    //Go to Overview Screen without animation
+                    val intent = Intent(context, AlarmClockOverviewScreen::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                    startActivity(intent)
+                    finish()
+                }
+                G2_WeckMichMalTheme {
+                    SettingsComposable(modifier = Modifier, core)
+                }
             }
         }
     }

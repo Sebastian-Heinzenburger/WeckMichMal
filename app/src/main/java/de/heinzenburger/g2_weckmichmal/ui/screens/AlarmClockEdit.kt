@@ -46,6 +46,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.heinzenburger.g2_weckmichmal.core.Core
+import de.heinzenburger.g2_weckmichmal.core.ExceptionHandler
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
@@ -184,31 +185,33 @@ class AlarmClockEditScreen : ComponentActivity() {
         enableEdgeToEdge()
         core = Core(context = applicationContext)
 
-        defaultAlarmValues = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent.getParcelableExtra("defaultAlarmValues", DefaultAlarmValues::class.java)!!
-        } else {
-            @Suppress("DEPRECATION")
-            intent.getParcelableExtra<DefaultAlarmValues>("configuration")!!
-        }
+        ExceptionHandler(core as Core).runWithUnexpectedExceptionHandler("Error displaying AlarmClockEdit",true){
+            defaultAlarmValues = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                intent.getParcelableExtra("defaultAlarmValues", DefaultAlarmValues::class.java)!!
+            } else {
+                @Suppress("DEPRECATION")
+                intent.getParcelableExtra<DefaultAlarmValues>("configuration")!!
+            }
 
-        reset(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent.getParcelableExtra("configuration", Configuration::class.java)
-        } else {
-            @Suppress("DEPRECATION")
-            intent.getParcelableExtra<Configuration>("configuration")
-        })
+            reset(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                intent.getParcelableExtra("configuration", Configuration::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                intent.getParcelableExtra<Configuration>("configuration")
+            })
 
-        setContent {
-            G2_WeckMichMalTheme {
-                val context = LocalContext.current
-                BackHandler {
-                    //Go to Overview Screen without animation
-                    val intent = Intent(context, AlarmClockOverviewScreen::class.java)
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-                    startActivity(intent)
-                    finish()
+            setContent {
+                G2_WeckMichMalTheme {
+                    val context = LocalContext.current
+                    BackHandler {
+                        //Go to Overview Screen without animation
+                        val intent = Intent(context, AlarmClockOverviewScreen::class.java)
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                        startActivity(intent)
+                        finish()
+                    }
+                    EditComposable(modifier = Modifier, core)
                 }
-                EditComposable(modifier = Modifier, core)
             }
         }
     }
@@ -787,7 +790,7 @@ class AlarmClockEditScreen : ComponentActivity() {
     @Composable
     fun EditPreview() {
         core = MockupCore()
-        defaultAlarmValues = core.getDefaultAlarmValues()
+        defaultAlarmValues = core.getDefaultAlarmValues()!!
         reset(null)
             G2_WeckMichMalTheme {
             EditComposable(

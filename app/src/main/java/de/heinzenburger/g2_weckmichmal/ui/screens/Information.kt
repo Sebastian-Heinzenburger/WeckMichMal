@@ -40,6 +40,7 @@ import de.heinzenburger.g2_weckmichmal.ui.components.NavBar
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
 import kotlin.concurrent.thread
 import androidx.core.net.toUri
+import de.heinzenburger.g2_weckmichmal.core.ExceptionHandler
 
 class InformationScreen : ComponentActivity() {
     lateinit var core: CoreSpecification
@@ -47,19 +48,21 @@ class InformationScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        core = Core(context = applicationContext)
         context = applicationContext
-        setContent {
-            val context = LocalContext.current
-            BackHandler {
-                //Go to Overview Screen without animation
-                val intent = Intent(context, AlarmClockOverviewScreen::class.java)
-                intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-                startActivity(intent)
-                finish()
-            }
-            G2_WeckMichMalTheme {
-                InformationComposable(modifier = Modifier)
+        core = Core(context)
+        ExceptionHandler(core as Core).runWithUnexpectedExceptionHandler("Error displaying Information",true) {
+            setContent {
+                val context = LocalContext.current
+                BackHandler {
+                    //Go to Overview Screen without animation
+                    val intent = Intent(context, AlarmClockOverviewScreen::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                    startActivity(intent)
+                    finish()
+                }
+                G2_WeckMichMalTheme {
+                    InformationComposable(modifier = Modifier)
+                }
             }
         }
     }
@@ -122,7 +125,7 @@ class InformationScreen : ComponentActivity() {
     fun InnerMensaComposable(innerPadding: PaddingValues){
         val mensaMeals = remember { mutableStateOf(emptyList<MensaMeal>()) }
         thread {
-            mensaMeals.value = core.nextMensaMeals()
+            mensaMeals.value = core.nextMensaMeals()!!
         }
         Column(
             modifier = Modifier

@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.heinzenburger.g2_weckmichmal.core.Core
+import de.heinzenburger.g2_weckmichmal.core.ExceptionHandler
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
@@ -36,13 +37,15 @@ class WelcomeScreen : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val core = Core(context = applicationContext)
-        setContent {
-            BackHandler {
-                //Finish all and close the app
-                finishAffinity()
-            }
-            G2_WeckMichMalTheme {
-                Greeting(modifier = Modifier, core)
+        ExceptionHandler(core).runWithUnexpectedExceptionHandler("Error displaying Welcome",true) {
+            setContent {
+                BackHandler {
+                    //Finish all and close the app
+                    finishAffinity()
+                }
+                G2_WeckMichMalTheme {
+                    Greeting(modifier = Modifier, core)
+                }
             }
         }
     }

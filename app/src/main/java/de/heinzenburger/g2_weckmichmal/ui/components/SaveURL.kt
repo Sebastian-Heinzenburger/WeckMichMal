@@ -118,14 +118,13 @@ class SaveURL {
                     }
                 }
                 else {
-                    openLoadingScreen.value = true
                     var updatedUrl = url.replace("page=calendar","page=ical")
                     updatedUrl = updatedUrl.replace("TINF23B2","TINF23BN2")
                     if (updatedUrl == "" || core.isValidCourseURL(updatedUrl)) {
+                        openLoadingScreen.value = true
                         core.saveRaplaURL(updatedUrl)
                         onSave()
                         core.showToast("Passt")
-
                     } else {
                         core.showToast("Fehler in der Eingabe")
                     }

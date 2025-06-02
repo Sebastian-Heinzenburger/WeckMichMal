@@ -1,6 +1,7 @@
 package de.heinzenburger.g2_weckmichmal.specifications
 
 import de.heinzenburger.g2_weckmichmal.persistence.Logger
+import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity.DefaultAlarmValues
 import java.time.LocalDate
 
 /**
@@ -10,28 +11,18 @@ interface CoreSpecification {
     /**
      * Update all events depending on current train and rapla status
      */
-    fun deriveStationName(input: String) : List<String>
+    fun deriveStationName(input: String) : List<String>?
 
     /**
      * Returns the meals for the next day
      * @return A list of MensaMeal objects representing today's meals.
      */
-    fun nextMensaMeals() : List<MensaMeal>
+    fun nextMensaMeals() : List<MensaMeal>?
 
     /**
      * Update all events depending on current train and rapla status
      */
     fun runUpdateLogic()
-
-    /**
-     * Start the background process that wakes the user at the time of next occuring event
-     */
-    fun runWakeUpLogic(configurationWithEvent: ConfigurationWithEvent)
-
-    /**
-     * Start the background process that regularly updates the events
-     */
-    fun startUpdateScheduler(delay: Int)
 
     /**
      * Save the rapla URL to the settings database
@@ -117,12 +108,12 @@ interface CoreSpecification {
     /**
      * Get all courses that can be found in Course URL within next 3 months
      */
-    fun getListOfNameOfCourses(): List<String>
+    fun getListOfNameOfCourses(): List<String>?
 
     /**
      * Get the list of excluded courses from the database
      */
-    fun getListOfExcludedCourses() : List<String>
+    fun getListOfExcludedCourses() : List<String>?
 
     /**
      * Save the list of excluded courses into the database
@@ -132,12 +123,12 @@ interface CoreSpecification {
     /**
      * Reads the default alarm values from the database
      */
-    fun getDefaultAlarmValues() : SettingsEntity.DefaultAlarmValues
+    fun getDefaultAlarmValues() : DefaultAlarmValues?
 
     /**
      * Update default alarm values in database
      */
-    fun updateDefaultAlarmValues(defaultAlarmValues: SettingsEntity.DefaultAlarmValues)
+    fun updateDefaultAlarmValues(defaultAlarmValues: DefaultAlarmValues)
 
     /**
      * If configuration entity contains only valid attributes

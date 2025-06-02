@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachReversed
 import de.heinzenburger.g2_weckmichmal.background.ForegroundService
 import de.heinzenburger.g2_weckmichmal.core.Core
+import de.heinzenburger.g2_weckmichmal.core.ExceptionHandler
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationWithEvent
@@ -47,6 +48,8 @@ import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
 import de.heinzenburger.g2_weckmichmal.specifications.Route
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
+import java.time.Duration
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
@@ -78,49 +81,68 @@ class AlarmRingingScreen : ComponentActivity(){
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val core = Core(context = applicationContext)
-        setShowWhenLocked(true)
-        setTurnScreenOn(true)
+        ExceptionHandler(core).runWithUnexpectedExceptionHandler("Error displaying AlarmRinging",true) {
+            setShowWhenLocked(true)
+            setTurnScreenOn(true)
 
-        isPreview = intent.getBooleanExtra("isPreview", false)
-        if(!isPreview){
-            bindService()
-        }
+            isPreview = intent.getBooleanExtra("isPreview", false)
+            if (!isPreview) {
+                bindService()
+            }
 
-        var configurationWithEvent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent.getParcelableExtra("configurationWithEvent", ConfigurationWithEvent::class.java)!!
-        } else {
-            @Suppress("DEPRECATION")
-            intent.getParcelableExtra<ConfigurationWithEvent>("configurationWithEvent")!!
-        }
-        if(configurationWithEvent.event != null){
-            event.value = configurationWithEvent.event
-        }
-        configuration.value = configurationWithEvent.configuration
-
-        setContent {
-            G2_WeckMichMalTheme {
-                val context = LocalContext.current
-                BackHandler {
-                    val intent = Intent(context, AlarmClockOverviewScreen::class.java)
-                    startActivity(intent)
-                    finish()
+            var configurationWithEvent =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    intent.getParcelableExtra(
+                        "configurationWithEvent",
+                        ConfigurationWithEvent::class.java
+                    )!!
+                } else {
+                    @Suppress("DEPRECATION")
+                    intent.getParcelableExtra<ConfigurationWithEvent>("configurationWithEvent")!!
                 }
-                innerAlarmRingingScreenComposable(core)
+            if (configurationWithEvent.event != null) {
+                event.value = configurationWithEvent.event
+            }
+            configuration.value = configurationWithEvent.configuration
+
+            setContent {
+                G2_WeckMichMalTheme {
+                    val context = LocalContext.current
+                    BackHandler {
+                        val intent = Intent(context, AlarmClockOverviewScreen::class.java)
+                        startActivity(intent)
+                        finish()
+                    }
+                    innerAlarmRingingScreenComposable(core)
+                }
             }
         }
     }
 
     @Composable fun OverviewComposable(){
         val detailedViewForRoute = remember { mutableStateOf<Route?>(null) }
-        Text(
-            text = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")),
-            color = MaterialTheme.colorScheme.primary,
-            style = MaterialTheme.typography.titleLarge,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 32.dp)
-        )
+        if(isPreview){
+            Text(
+                text = "In " + Duration.between(LocalDateTime.now(),event.value.getLocalDateTime()).toMinutes().toString() + " Minuten",
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.titleMedium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 32.dp)
+            )
+        }
+        else{
+            Text(
+                text = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")),
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.titleLarge,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 32.dp)
+            )
+        }
         var text = ""
         var isCoursesEmpty = true
         event.value.courses?.forEachIndexed { index, it ->

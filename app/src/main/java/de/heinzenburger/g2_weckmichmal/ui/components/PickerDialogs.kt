@@ -176,7 +176,7 @@ class PickerDialogs {
                                 thread{
                                     if(station.value.length > 2){
                                         try {
-                                            stationPredictions.value = core.deriveStationName(it)
+                                            stationPredictions.value = core.deriveStationName(it)!!
                                         }
                                         catch (e: Exception){
                                             core.log(Logger.Level.SEVERE, e.message.toString())

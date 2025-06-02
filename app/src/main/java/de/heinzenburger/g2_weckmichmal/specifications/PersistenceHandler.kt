@@ -138,6 +138,11 @@ interface InterfaceApplicationSettings {
      * Update excluded courses in the database
      */
     fun updateExcludedCoursesList(excludedCoursesList: List<String>)
+
+    /**
+     * Update course url in the database
+     */
+    fun updateCourseURL(url: String)
 }
 
 /**

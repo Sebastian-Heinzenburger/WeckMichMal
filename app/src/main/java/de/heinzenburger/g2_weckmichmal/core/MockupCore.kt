@@ -10,7 +10,7 @@ import de.heinzenburger.g2_weckmichmal.specifications.MealType
 import de.heinzenburger.g2_weckmichmal.specifications.MensaMeal
 import de.heinzenburger.g2_weckmichmal.specifications.Route
 import de.heinzenburger.g2_weckmichmal.specifications.RouteSection
-import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity
+import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity.DefaultAlarmValues
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -132,8 +132,6 @@ class MockupCore : CoreSpecification {
     }
 
     override fun runUpdateLogic() {}
-    override fun runWakeUpLogic(event: ConfigurationWithEvent) {}
-    override fun startUpdateScheduler(delay: Int) {}
     override fun saveRaplaURL(url : String){}
     override fun saveRaplaURL(director: String, course: String) {
 
@@ -203,7 +201,7 @@ class MockupCore : CoreSpecification {
         return listOf("Numerik","Compilerbau")
     }
 
-    override fun getListOfExcludedCourses(): List<String> {
+    override fun getListOfExcludedCourses(): List<String>? {
         return listOf("Compilerbau")
     }
 
@@ -211,11 +209,11 @@ class MockupCore : CoreSpecification {
 
     }
 
-    override fun getDefaultAlarmValues(): SettingsEntity.DefaultAlarmValues {
-        return SettingsEntity.DefaultAlarmValues()
+    override fun getDefaultAlarmValues(): DefaultAlarmValues? {
+        return DefaultAlarmValues()
     }
 
-    override fun updateDefaultAlarmValues(defaultAlarmValues: SettingsEntity.DefaultAlarmValues) {
+    override fun updateDefaultAlarmValues(defaultAlarmValues: DefaultAlarmValues) {
     }
 
 
