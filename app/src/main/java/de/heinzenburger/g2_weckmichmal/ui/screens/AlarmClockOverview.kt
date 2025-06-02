@@ -1,13 +1,8 @@
 package de.heinzenburger.g2_weckmichmal.ui.screens
 
-import android.Manifest
-import android.app.AlarmManager
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
-import android.os.PowerManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -50,7 +45,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import androidx.core.content.ContextCompat
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.ExceptionHandler
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
@@ -85,8 +79,6 @@ class AlarmClockOverviewScreen : ComponentActivity(){
                 configurationAndEventEntities.value = core.getAllConfigurationAndEvent()!!
             }
 
-            checkForPermissions()
-
             setContent {
                 G2_WeckMichMalTheme {
                     BackHandler {
@@ -99,26 +91,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
         }
     }
 
-    fun checkForPermissions(){
-        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
-        val powerManager = getSystemService(POWER_SERVICE) as PowerManager
 
-        if(!alarmManager.canScheduleExactAlarms()){
-            core.showToast("Bitte erlaube Alarm Erstellung in den Systemeinstellungen")
-        }
-        if(!powerManager.isIgnoringBatteryOptimizations(packageName)){
-            core.showToast("Bitte erlaube uneingeschränkte Hintergrundnutzung in den 'battery optimization' Einstellungen")
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                core.showToast("Bitte erlaube Notifications in den Systemeinstellungen")
-            }
-        }
-    }
 
     private fun deleteConfiguration(
         core: CoreSpecification,

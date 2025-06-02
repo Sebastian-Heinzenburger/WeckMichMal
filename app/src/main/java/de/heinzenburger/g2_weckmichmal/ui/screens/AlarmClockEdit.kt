@@ -190,7 +190,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                 intent.getParcelableExtra("defaultAlarmValues", DefaultAlarmValues::class.java)!!
             } else {
                 @Suppress("DEPRECATION")
-                intent.getParcelableExtra<DefaultAlarmValues>("configuration")!!
+                intent.getParcelableExtra<DefaultAlarmValues>("defaultAlarmValues")!!
             }
 
             reset(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
