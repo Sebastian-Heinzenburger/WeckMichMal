@@ -165,7 +165,7 @@ class SettingsScreen : ComponentActivity() {
                     }
                 }
 
-                SaveURL.innerSettingsComposable(innerPadding, core,
+                SaveURL().innerSettingsComposable(innerPadding, core,
                     fun () {
                         val intent = Intent(context, AlarmClockOverviewScreen::class.java)
                         intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)

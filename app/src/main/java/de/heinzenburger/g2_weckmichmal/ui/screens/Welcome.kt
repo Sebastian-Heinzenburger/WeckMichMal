@@ -70,7 +70,7 @@ class WelcomeScreen : ComponentActivity() {
                 color = MaterialTheme.colorScheme.error,
                 modifier = modifier.padding(16.dp)
             )
-            SaveURL.innerSettingsComposable(
+            SaveURL().innerSettingsComposable(
                 PaddingValues(0.dp), core,
                 fun () {
                     val intent = Intent(context, AllowNotificationsScreen::class.java)

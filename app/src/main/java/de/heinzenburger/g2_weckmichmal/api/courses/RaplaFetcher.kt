@@ -23,14 +23,7 @@ import java.util.Date
  * Applies formatting rules specific to DHBW Karlsruhe's Rapla naming conventions.
  */
 val urlTemplate: (String, String) -> String = { director, course ->
-    var realDirector = director
-    var realCourse = course
-    if (course[course.length - 2].uppercase() != "N") {
-        realCourse = course.substring(0, course.length - 2) + "BN" + course.substring(course.length - 1)
-    }
-    realDirector = realDirector.replace(" ", "").lowercase()
-    realCourse = realCourse.replace(" ", "").uppercase()
-    "https://rapla.dhbw-karlsruhe.de/rapla?page=ical&user=${realDirector}&file=${realCourse}"
+    "https://rapla.dhbw-karlsruhe.de/rapla?page=ical&user=${director}&file=${course}"
 }
 
 /**

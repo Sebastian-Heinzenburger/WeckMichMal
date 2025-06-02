@@ -24,113 +24,117 @@ import kotlin.concurrent.thread
 
 
 class SaveURL {
-    companion object{
-        val innerSettingsComposable : @Composable (PaddingValues, CoreSpecification, () -> Unit) -> Unit = { innerPadding, core, onSave ->
-            var openLoadingScreen = remember { mutableStateOf(false) }
-            when {
-                openLoadingScreen.value ->{
-                    LoadingScreen()
-                }
-            }
+    var openLoadingScreen =  mutableStateOf(false)
 
-            var tempURL = core.getRaplaURL()
-            var url = remember { mutableStateOf(tempURL ?: "") }
-            var director = remember { mutableStateOf("") }
-            var course = remember { mutableStateOf("") }
-
-            Row(modifier = Modifier.fillMaxWidth()){
-                OurTextField(
-                    value = director.value,
-                    onValueChange = {director.value = it},
-                    modifier = Modifier.padding(4.dp).fillMaxWidth(0.6f).padding(start = 8.dp, end=8.dp, top = 8.dp),
-                    placeholderText = "Studiengangsleiter",
-                )
-                OurTextField(
-                    value = course.value,
-                    onValueChange = {course.value = it},
-                    modifier = Modifier.padding(4.dp).fillMaxWidth(1f).padding(top = 8.dp,end=8.dp),
-                    placeholderText = "Kursname",
-                )
-            }
-
-            OurText(
-                text = "Oder",
-                modifier = Modifier.padding(top = 8.dp)
-            )
-
-
-            OurTextField(
-                value = url.value,
-                onValueChange = {url.value = it},
-                modifier = Modifier.padding(16.dp),
-                placeholderText = "URL beginnend mit https:// oder http://",
-            )
-
-            Button(
-                onClick = {
-                    openLoadingScreen.value = true
-                    onclickSaveButton(core, onSave, url.value, director.value, course.value)
-                },
-                colors = ButtonColors(
-                    contentColor = MaterialTheme.colorScheme.primary,
-                    containerColor = MaterialTheme.colorScheme.onBackground,
-                    disabledContainerColor = MaterialTheme.colorScheme.error,
-                    disabledContentColor = MaterialTheme.colorScheme.error
-                ),
-                modifier = Modifier.padding(16.dp)
-            ) {
-                OurText(
-                    text = "Vorlesungsplan speichern",
-                    modifier = Modifier.padding(8.dp),
-                )
+    val innerSettingsComposable : @Composable (PaddingValues, CoreSpecification, () -> Unit) -> Unit = { innerPadding, core, onSave ->
+        when {
+            openLoadingScreen.value ->{
+                LoadingScreen()
             }
         }
 
-        fun onclickSaveButton(core: CoreSpecification, onSave: () -> Unit, url: String, director: String, course: String){
-            if(core.isInternetAvailable()){
-                thread {
-                    //very very dirty aber was soll man machen...
-                    if(url == "" && director == "" && course == ""){
-                        core.saveRaplaURL("")
-                        core.showToast("Vorlesungsplan gelöscht")
-                    }
-                    else if(url != ""){
-                        var updatedUrl = url.replace("page=calendar","page=ical")
-                        updatedUrl = updatedUrl.replace("TINF23B2","TINF23BN2")
-                        updatedUrl = updatedUrl.replace("TINF23B1","TINF23BN1")
-                        updatedUrl = updatedUrl.replace("TINF23B3","TINF23BN3")
-                        updatedUrl = updatedUrl.replace("TINF23B4","TINF23BN4")
-                        updatedUrl = updatedUrl.replace("TINF23B5","TINF23BN5")
-                        updatedUrl = updatedUrl.replace("TINF23B6","TINF23BN6")
-                        if (updatedUrl == "" || core.isValidCourseURL(updatedUrl)) {
-                            core.saveRaplaURL(updatedUrl)
+        var tempURL = core.getRaplaURL()
+        var url = remember { mutableStateOf(tempURL ?: "") }
+        var director = remember { mutableStateOf("") }
+        var course = remember { mutableStateOf("") }
+
+        Row(modifier = Modifier.fillMaxWidth()){
+            OurTextField(
+                value = director.value,
+                onValueChange = {director.value = it},
+                modifier = Modifier.padding(4.dp).fillMaxWidth(0.6f).padding(start = 8.dp, end=8.dp, top = 8.dp),
+                placeholderText = "Studiengangsleiter",
+            )
+            OurTextField(
+                value = course.value,
+                onValueChange = {course.value = it},
+                modifier = Modifier.padding(4.dp).fillMaxWidth(1f).padding(top = 8.dp,end=8.dp),
+                placeholderText = "Kursname",
+            )
+        }
+
+        OurText(
+            text = "Oder",
+            modifier = Modifier.padding(top = 8.dp)
+        )
+
+
+        OurTextField(
+            value = url.value,
+            onValueChange = {url.value = it},
+            modifier = Modifier.padding(16.dp),
+            placeholderText = "URL beginnend mit https:// oder http://",
+        )
+
+        Button(
+            onClick = {
+                onclickSaveButton(core, onSave, url.value, director.value, course.value)
+            },
+            colors = ButtonColors(
+                contentColor = MaterialTheme.colorScheme.primary,
+                containerColor = MaterialTheme.colorScheme.onBackground,
+                disabledContainerColor = MaterialTheme.colorScheme.error,
+                disabledContentColor = MaterialTheme.colorScheme.error
+            ),
+            modifier = Modifier.padding(16.dp)
+        ) {
+            OurText(
+                text = "Vorlesungsplan speichern",
+                modifier = Modifier.padding(8.dp),
+            )
+        }
+    }
+
+    fun onclickSaveButton(core: CoreSpecification, onSave: () -> Unit, url: String, director: String, course: String){
+        //Inkonsistenz in der RAPLA-URL für unseren Kurs. Random N...
+        if(core.isInternetAvailable()){
+            thread {
+                //very very dirty aber was soll man machen...
+                if(url == "" && director == "" && course == ""){
+                    openLoadingScreen.value = true
+                    core.showToast("Vorlesungsplan gelöscht")
+                    core.saveRaplaURL("")
+                    onSave()
+                }
+                else if (director != "" || course != ""){
+                    if (director != "" && course != ""){
+                        openLoadingScreen.value = true
+                        var realCourse = course.uppercase().replace(" ", "")
+                        var realDirector = director.lowercase().replace(" ", "")
+                        if(realCourse == "TINF23B2"){
+                            realCourse = "TINF23BN2"
+                        }
+                        if(core.isValidCourseURL(realDirector, realCourse)){
+                            core.saveRaplaURL(realDirector, realCourse)
                             onSave()
                             core.showToast("Passt")
-
-                        } else {
-                            core.showToast("Immer Schulfrei??? Da stimmt doch was mit der URL nicht...")
+                        }
+                        else{
+                            core.showToast("Fehler in der Eingabe")
                         }
                     }
                     else{
-                        if (director != "" && course != ""){
-                            if(core.isValidCourseURL(director, course)){
-                                core.saveRaplaURL(director, course)
-                                onSave()
-                                core.showToast("Passt")
-                            }
-                            else{
-                                core.showToast("Fehler in der Eingabe")
-                            }
-                        }
-                        else{
-                            core.showToast("Bitte Studiengangsleiter und Kursname angeben.")
-                        }
+                        core.showToast("Bitte Studiengangsleiter und Kursname angeben.")
                     }
                 }
+                else {
+                    openLoadingScreen.value = true
+                    var updatedUrl = url.replace("page=calendar","page=ical")
+                    updatedUrl = updatedUrl.replace("TINF23B2","TINF23BN2")
+                    if (updatedUrl == "" || core.isValidCourseURL(updatedUrl)) {
+                        core.saveRaplaURL(updatedUrl)
+                        onSave()
+                        core.showToast("Passt")
+
+                    } else {
+                        core.showToast("Fehler in der Eingabe")
+                    }
+                }
+
             }
-            else{
-                core.showToast("Aufgrund der Validierung ist eine Internetverbindung nötig")
-            }
+        }
+        else{
+            core.showToast("Aufgrund der Validierung ist eine Internetverbindung nötig")
         }
     }
 }

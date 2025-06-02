@@ -609,7 +609,14 @@ data class Core(
         log(Logger.Level.INFO, "updateConfigurationActive called with isActive: $isActive, configuration: $configuration")
         try {
             val configurationHandler = ConfigurationHandler(context)
-            configurationHandler.updateConfigurationActive(isActive, configuration.uid)
+            if(isActive == true && getRaplaURL() == "" && configuration.fixedArrivalTime == null){
+                configurationHandler.updateConfigurationActive(false, configuration.uid)
+                showToast("RAPLA URL fehlt, Wecker deaktiviert")
+            }
+            else{
+                configurationHandler.updateConfigurationActive(isActive, configuration.uid)
+            }
+
             log(Logger.Level.INFO, "Configuration active state updated")
         }
         catch (e: PersistenceException){
