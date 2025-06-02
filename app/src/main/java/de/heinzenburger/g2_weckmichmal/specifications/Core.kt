@@ -26,7 +26,7 @@ interface CoreSpecification {
     /**
      * Start the background process that wakes the user at the time of next occuring event
      */
-    fun runWakeUpLogic(event: Event)
+    fun runWakeUpLogic(configurationWithEvent: ConfigurationWithEvent)
 
     /**
      * Start the background process that regularly updates the events

@@ -28,7 +28,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
@@ -54,10 +53,9 @@ class AllowNotificationsScreen : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val context = LocalContext.current
             BackHandler {
                 //Finish all and close the app
-                ActivityCompat.finishAffinity(context as ComponentActivity)
+                finishAffinity()
             }
             G2_WeckMichMalTheme {
                 InnerComposable(modifier = Modifier)
@@ -170,8 +168,8 @@ class AllowNotificationsScreen : ComponentActivity() {
                 onClick = {
                     val intent = Intent(context, AlarmClockOverviewScreen::class.java)
                     intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-                    context.startActivity(intent)
-                    (context as ComponentActivity).finish()
+                    startActivity(intent)
+                    finish()
                 }
             ) {
                 OurText(
@@ -186,18 +184,16 @@ class AllowNotificationsScreen : ComponentActivity() {
             }
         }
     }
-}
-//Is only called when json settings file is not found on android device
-
-
-
-@Preview(showBackground = true)
-@Composable
-fun AllowNotificationsPreview() {
-    val allowNotificationsScreen = AllowNotificationsScreen()
-    G2_WeckMichMalTheme {
-        allowNotificationsScreen.InnerComposable(
-            modifier = Modifier,
-        )
+    @Preview(showBackground = true)
+    @Composable
+    fun AllowNotificationsPreview() {
+        G2_WeckMichMalTheme {
+            InnerComposable(
+                modifier = Modifier,
+            )
+        }
     }
 }
+
+
+

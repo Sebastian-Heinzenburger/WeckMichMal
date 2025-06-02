@@ -132,7 +132,7 @@ class MockupCore : CoreSpecification {
     }
 
     override fun runUpdateLogic() {}
-    override fun runWakeUpLogic(event: Event) {}
+    override fun runWakeUpLogic(event: ConfigurationWithEvent) {}
     override fun startUpdateScheduler(delay: Int) {}
     override fun saveRaplaURL(url : String){}
     override fun saveRaplaURL(director: String, course: String) {

@@ -1,5 +1,7 @@
 package de.heinzenburger.g2_weckmichmal.specifications
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 import java.time.LocalDateTime
 
 /**
@@ -51,6 +53,7 @@ interface RoutePlannerSpecification {
  * @property endTime The end date and time for the entire journey.
  * @property sections The list of route sections that make up the entire route.
  */
+@Parcelize
 data class Route(
 
     /** The DB Navigator conform name of the start station for the whole journey. */
@@ -67,7 +70,7 @@ data class Route(
 
     /** The list of route sections that the entire route consists of. */
     val sections: List<RouteSection>
-)
+) : Parcelable
 
 /**
  * Represents a section of the route (where the user stays in the same vehicle) specified by the DB Navigator.
@@ -78,6 +81,7 @@ data class Route(
  * @property endTime The time the route section ends.
  * @property endStation The DB Navigator conform name of the end station for this section of the journey.
  */
+@Parcelize
 data class RouteSection(
 
     /** The DB Navigator conform name of the vehicle for this section of the journey. */
@@ -94,7 +98,7 @@ data class RouteSection(
 
     /** The DB Navigator conform name of the end station for this section. */
     val endStation: String,
-)
+) : Parcelable
 
 sealed class RoutePlannerException(message: String, cause: Exception?) : Exception(message, cause) {
     class MalformedStationNameException(stationName: String, cause: Exception?) :

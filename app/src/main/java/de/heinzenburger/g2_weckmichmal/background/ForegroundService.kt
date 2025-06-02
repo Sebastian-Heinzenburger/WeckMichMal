@@ -12,7 +12,9 @@ import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Binder
+import android.os.Build
 import android.os.IBinder
+import android.os.PowerManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.compose.ui.util.fastForEachReversed
@@ -92,24 +94,27 @@ class ForegroundService : Service() {
             vibrator?.cancel()
             mediaPlayer?.stop()
             if(!isForeverSleep){
-                Thread.sleep(300000)
+                val powerManager = getSystemService(POWER_SERVICE) as PowerManager
+                val wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "WeckMichMal::5MinSnooze")
+                wakeLock.acquire(5 * 65 * 1000L)
+
+                Thread.sleep(5 * 60 * 1000L)
                 playWithPerry()
+
+                wakeLock.release()
             }
         }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val configID = intent?.getLongExtra("configID",-1)
-        val core = Core(applicationContext)
+        var configurationWithEvent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent?.getParcelableExtra("configurationWithEvent", ConfigurationWithEvent::class.java)!!
+        } else {
+            @Suppress("DEPRECATION")
+            intent?.getParcelableExtra<ConfigurationWithEvent>("configurationWithEvent")!!
+        }
 
         thread {
-            var configurationWithEvent: ConfigurationWithEvent? = null
-            core.getAllConfigurationAndEvent()?.forEach {
-                if(it.event?.configID == configID){
-                    configurationWithEvent = it
-                }
-            }
-
             val notification = createNotification(configurationWithEvent)
             startForeground(1, notification)
             playWithPerry()
@@ -154,7 +159,8 @@ class ForegroundService : Service() {
         val intent = Intent(this, AlarmRingingScreen::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
-        intent.putExtra("configID", configurationWithEvent?.configuration?.uid)
+
+        intent.putExtra("configurationWithEvent", configurationWithEvent)
         val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
         val title = configurationWithEvent?.configuration?.name

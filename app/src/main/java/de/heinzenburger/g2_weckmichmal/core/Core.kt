@@ -20,7 +20,6 @@ import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationWithEvent
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.CourseFetcherException
-import de.heinzenburger.g2_weckmichmal.specifications.Event
 import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
 import de.heinzenburger.g2_weckmichmal.specifications.PersistenceException
 import de.heinzenburger.g2_weckmichmal.specifications.WakeUpCalculatorException
@@ -59,16 +58,17 @@ data class Core(
 
     fun scheduleNextAction(configurationsWithEvents: List<ConfigurationWithEvent>?){
         var earliestEventDate = LocalDateTime.MAX
-        var earliestEvent: Event? = null
+        var earliestConfigurationWithEvent: ConfigurationWithEvent? = null
         configurationsWithEvents?.forEach {
             val eventDateTime = it.event?.getLocalDateTime()
             log(Logger.Level.INFO, "Checking eventDateTime: $eventDateTime for configuration: ${it.configuration}")
             if(it.configuration.isActive
                 && it.configuration.ichHabGeringt.isBefore(LocalDate.now())
                 && eventDateTime?.isBefore(earliestEventDate) == true){
+
                 earliestEventDate = eventDateTime
-                earliestEvent = it.event
-                log(Logger.Level.INFO, "New earliestEventDate: $earliestEventDate, earliestEvent: $earliestEvent")
+                earliestConfigurationWithEvent = it
+                log(Logger.Level.INFO, "New earliestEventDate: $earliestEventDate, earliestEvent: $earliestConfigurationWithEvent")
             }
         }
         log(Logger.Level.INFO, "Earliest Event is at " + earliestEventDate.format(DateTimeFormatter.ofPattern("MM-dd HH:mm:ss")))
@@ -98,8 +98,8 @@ data class Core(
             log(Logger.Level.INFO, "Scheduling update in 4 minutes")
             startUpdateScheduler(240) // 4 minutes
         } else {
-            log(Logger.Level.INFO, "Running wake up logic for earliestEvent: $earliestEvent")
-            runWakeUpLogic(earliestEvent!!)
+            log(Logger.Level.INFO, "Running wake up logic for earliestEvent: $earliestConfigurationWithEvent")
+            runWakeUpLogic(earliestConfigurationWithEvent!!)
         }
     }
 
@@ -143,16 +143,9 @@ data class Core(
                 log(Logger.Level.SEVERE, "No Routes found and not enforcing start buffer. Wake up now!")
                 log(Logger.Level.SEVERE, e.message.toString())
                 log(Logger.Level.SEVERE, e.stackTraceToString())
-                try {
-                    if(it.event != null){
-                        configurationWithEvent = it
-                        configurationWithEvent.event.wakeUpTime = LocalTime.now()
-                    }
-                }
-                catch (e: Exception){
-                    log(Logger.Level.SEVERE, "HELP THE RUN WAKEUPLOGIC FAILED OHNO!")
-                    log(Logger.Level.SEVERE, e.message.toString())
-                    log(Logger.Level.SEVERE, e.stackTraceToString())
+                if(it.event != null){
+                    configurationWithEvent = it
+                    configurationWithEvent.event.wakeUpTime = LocalTime.now()
                 }
             }
         }
@@ -219,7 +212,7 @@ data class Core(
 
         configurationsWithEvents?.forEachIndexed {
             index, it ->
-
+            log(Logger.Level.SEVERE, "HALLO0000")
             var configurationWithEvent = calculateNextEventForConfiguration(it, wakeUpCalculator)
             configurationsWithEvents[index] = configurationWithEvent
             val eventHandler = EventHandler(context)
@@ -239,12 +232,12 @@ data class Core(
         scheduleNextAction(configurationsWithEvents)
     }
 
-    override fun runWakeUpLogic(earliestEvent: Event) {
+    override fun runWakeUpLogic(earliestConfigurationWithEvent: ConfigurationWithEvent) {
         try {
-            log(Logger.Level.INFO, "runWakeUpLogic called with earliestEvent: $earliestEvent")
+            log(Logger.Level.INFO, "runWakeUpLogic called with earliestEvent: $earliestConfigurationWithEvent")
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val alarmIntent = Intent(context, AlarmEvent::class.java)
-            alarmIntent.putExtra("configID", earliestEvent.configID)
+            alarmIntent.putExtra("configurationWithEvent", earliestConfigurationWithEvent)
             val pendingIntent = PendingIntent.getBroadcast(
                 context,
                 0,
@@ -265,12 +258,12 @@ data class Core(
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(intent)
             }
-            val alarmDate = earliestEvent.getLocalDateTime()
+            val alarmDate = earliestConfigurationWithEvent.event!!.getLocalDateTime()
             log(Logger.Level.INFO, "Setting alarm for date: $alarmDate")
 
             val alarmClockInfo = AlarmManager.AlarmClockInfo(alarmDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
                 pendingEditIntent)
-            log(Logger.Level.INFO, "Alarm ringing at ${earliestEvent.wakeUpTime}!")
+            log(Logger.Level.INFO, "Alarm ringing at ${earliestConfigurationWithEvent.event.wakeUpTime}!")
             alarmManager.setAlarmClock(alarmClockInfo, pendingIntent)
         }
         catch (e: Exception){
@@ -346,8 +339,9 @@ data class Core(
                 )
 
                 configuration.ichHabGeringt = LocalDate.MIN
-                if(calculateNextEventForConfiguration(ConfigurationWithEvent(configuration,null),wakeUpCalculator).event?.getLocalDateTime()?.isBefore(
-                        LocalDateTime.now().minusSeconds(5)) == true
+                if(calculateNextEventForConfiguration(ConfigurationWithEvent(configuration,null),wakeUpCalculator).event?.getLocalDateTime()?.minusMinutes(2)
+                        ?.isBefore(
+                            LocalDateTime.now()) == true
                 ){
                     configuration.ichHabGeringt = LocalDate.now()
                     showToast("Alarm für heute ausgesetzt")

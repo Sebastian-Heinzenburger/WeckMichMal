@@ -58,8 +58,8 @@ class SettingsScreen : ComponentActivity() {
                 //Go to Overview Screen without animation
                 val intent = Intent(context, AlarmClockOverviewScreen::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-                context.startActivity(intent)
-                (context as ComponentActivity).finish()
+                startActivity(intent)
+                finish()
             }
             G2_WeckMichMalTheme {
                 SettingsComposable(modifier = Modifier, core)
@@ -123,7 +123,7 @@ class SettingsScreen : ComponentActivity() {
                         openLoadingScreen.value = true
                         val intent = Intent(context, LogScreen::class.java)
                         intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-                        context.startActivity(intent)
+                        startActivity(intent)
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.error
@@ -169,8 +169,8 @@ class SettingsScreen : ComponentActivity() {
                     fun () {
                         val intent = Intent(context, AlarmClockOverviewScreen::class.java)
                         intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-                        context.startActivity(intent)
-                        (context as ComponentActivity).finish()
+                        startActivity(intent)
+                        finish()
                     }
                 )
             }

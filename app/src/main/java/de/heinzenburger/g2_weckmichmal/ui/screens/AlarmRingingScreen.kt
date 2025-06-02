@@ -3,6 +3,7 @@ package de.heinzenburger.g2_weckmichmal.ui.screens
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
+import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import androidx.activity.ComponentActivity
@@ -40,19 +41,23 @@ import de.heinzenburger.g2_weckmichmal.background.ForegroundService
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
+import de.heinzenburger.g2_weckmichmal.specifications.ConfigurationWithEvent
 import de.heinzenburger.g2_weckmichmal.specifications.Event
 import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
 import de.heinzenburger.g2_weckmichmal.specifications.Route
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
-import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-import kotlin.concurrent.thread
 
 class AlarmRingingScreen : ComponentActivity(){
     private lateinit var foregroundService: ForegroundService
     private var isPreview = false
+    var listOfExcludedCourses = emptyList<String>()
+    var event = mutableStateOf(Event.emptyEvent)
+    var configuration = mutableStateOf(Configuration.emptyConfiguration)
+    var swipedLeft = mutableStateOf(false)
+
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             val binder = service as ForegroundService.MyBinder
@@ -76,51 +81,29 @@ class AlarmRingingScreen : ComponentActivity(){
         setShowWhenLocked(true)
         setTurnScreenOn(true)
 
-        val id = intent.getLongExtra("configID", -1)
         isPreview = intent.getBooleanExtra("isPreview", false)
         if(!isPreview){
             bindService()
         }
 
-        listOfExcludedCourses = core.getListOfExcludedCourses()
-        if(id < 0){
-            thread {
-                var allConfigurationWithEvent = core.getAllConfigurationAndEvent()
-                allConfigurationWithEvent?.forEach {
-                    var wakeUpDate = it.event?.getLocalDateTime()
-                    var endDate = LocalDateTime.now()
-                    it.event?.routes?.forEach {
-                            route -> if(route.endTime > endDate){
-                        endDate = route.endTime
-                    }
-                    }
-                    if(it.event != null){
-                        if(LocalDateTime.now().isAfter(wakeUpDate) && LocalDateTime.now().isBefore(endDate)){
-                            event.value = it.event
-                            configuration.value = it.configuration
-                        }
-                    }
-                }
-            }
+        var configurationWithEvent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableExtra("configurationWithEvent", ConfigurationWithEvent::class.java)!!
+        } else {
+            @Suppress("DEPRECATION")
+            intent.getParcelableExtra<ConfigurationWithEvent>("configurationWithEvent")!!
         }
-        else{
-            thread {
-                core.getAllConfigurationAndEvent()?.forEach {
-                    if(it.event?.configID == id){
-                        event.value = it.event
-                        configuration.value = it.configuration
-                    }
-                }
-            }
+        if(configurationWithEvent.event != null){
+            event.value = configurationWithEvent.event
         }
+        configuration.value = configurationWithEvent.configuration
 
         setContent {
             G2_WeckMichMalTheme {
                 val context = LocalContext.current
                 BackHandler {
                     val intent = Intent(context, AlarmClockOverviewScreen::class.java)
-                    context.startActivity(intent)
-                    (context as ComponentActivity).finish()
+                    startActivity(intent)
+                    finish()
                 }
                 innerAlarmRingingScreenComposable(core)
             }
@@ -258,10 +241,7 @@ class AlarmRingingScreen : ComponentActivity(){
         }
     }
 
-    var listOfExcludedCourses = emptyList<String>()
-    var event = mutableStateOf(Event.emptyEvent)
-    var configuration = mutableStateOf(Configuration.emptyConfiguration)
-    var swipedLeft = mutableStateOf(false)
+
     val innerAlarmRingingScreenComposable : @Composable (CoreSpecification) -> Unit = { core: CoreSpecification ->
         Box(
             modifier = Modifier.pointerInput(Unit) {
@@ -285,7 +265,7 @@ class AlarmRingingScreen : ComponentActivity(){
                 }
                 else{
                     if(core.isInternetAvailable()){
-                        InformationScreen().innerMensaComposable(PaddingValues(top = 32.dp),core)
+                        InformationScreen().InnerMensaComposable(PaddingValues(top = 32.dp))
                     }
                     else{
                         core.showToast("Mensa Essensplan kann nur bei aktiver Internetverbindung angezeigt werden.")
@@ -344,17 +324,16 @@ class AlarmRingingScreen : ComponentActivity(){
             }
         }
     }
-
-}
-
-@Preview(showBackground = true)
-@Composable
-fun AlarmRingingScreenPreview() {
-    val alarmRingingScreen = AlarmRingingScreen()
-    val core = MockupCore()
-    alarmRingingScreen.event.value = MockupCore.mockupEvents[0]
-    alarmRingingScreen.configuration.value = MockupCore.mockupConfigurations[0]
-    G2_WeckMichMalTheme {
-        alarmRingingScreen.innerAlarmRingingScreenComposable(core)
+    @Preview(showBackground = true)
+    @Composable
+    fun AlarmRingingScreenPreview() {
+        val alarmRingingScreen = AlarmRingingScreen()
+        val core = MockupCore()
+        alarmRingingScreen.event.value = MockupCore.mockupEvents[0]
+        alarmRingingScreen.configuration.value = MockupCore.mockupConfigurations[0]
+        G2_WeckMichMalTheme {
+            alarmRingingScreen.innerAlarmRingingScreenComposable(core)
+        }
     }
 }
+

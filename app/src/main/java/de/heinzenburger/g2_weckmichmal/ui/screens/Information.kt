@@ -1,5 +1,7 @@
 package de.heinzenburger.g2_weckmichmal.ui.screens
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -40,29 +42,31 @@ import kotlin.concurrent.thread
 import androidx.core.net.toUri
 
 class InformationScreen : ComponentActivity() {
+    private lateinit var core: CoreSpecification
+    private lateinit var context: Context
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val core = Core(context = applicationContext)
+        core = Core(context = applicationContext)
+        context = applicationContext
         setContent {
             val context = LocalContext.current
             BackHandler {
                 //Go to Overview Screen without animation
                 val intent = Intent(context, AlarmClockOverviewScreen::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-                context.startActivity(intent)
-                (context as ComponentActivity).finish()
+                startActivity(intent)
+                finish()
             }
             G2_WeckMichMalTheme {
-                InformationComposable(modifier = Modifier, core)
+                InformationComposable(modifier = Modifier)
             }
         }
     }
 
     //When text is clicked, platypus mode in AlarmClockOverviewScreen is activated hehe
-    val innerInformationComposable: @Composable (PaddingValues, CoreSpecification) -> Unit =
+    private val innerInformationComposable: @Composable (PaddingValues, CoreSpecification) -> Unit =
         { innerPadding: PaddingValues, core: CoreSpecification ->
-            var context = LocalContext.current
             Column(modifier = Modifier.padding(innerPadding).fillMaxWidth()) {
                 OurText(
                     text = "Info",
@@ -83,7 +87,7 @@ class InformationScreen : ComponentActivity() {
                             val intent = Intent(Intent.ACTION_VIEW, url.toUri())
                             intent.flags =
                                 Intent.FLAG_ACTIVITY_NEW_TASK
-                            context.startActivity(intent)
+                            startActivity(intent)
                         }
                     }
                 ) {
@@ -99,13 +103,13 @@ class InformationScreen : ComponentActivity() {
                         val intent = Intent(Intent.ACTION_VIEW, url.toUri())
                         intent.flags =
                             Intent.FLAG_ACTIVITY_NEW_TASK
-                        context.startActivity(intent)
+                        startActivity(intent)
                     }
                 ) {
                     OurText(text = "Mensaplan im Browser öffnen", modifier = Modifier)
                 }
                 if(core.isInternetAvailable()){
-                    innerMensaComposable(innerPadding, core)
+                    InnerMensaComposable(innerPadding)
                 }
                 else{
                     core.showToast("Mensa Essensplan kann nur bei aktiver Internetverbindung angezeigt werden.")
@@ -113,50 +117,51 @@ class InformationScreen : ComponentActivity() {
 
             }
         }
-    val innerMensaComposable: @Composable (PaddingValues, CoreSpecification) -> Unit =
-        { innerPadding: PaddingValues, core: CoreSpecification ->
-            val mensaMeals = remember { mutableStateOf(emptyList<MensaMeal>()) }
-            thread {
-                mensaMeals.value = core.nextMensaMeals()
-            }
-            Column(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .padding(16.dp)
-                    .fillMaxWidth()
-                    .background(color = MaterialTheme.colorScheme.onBackground,
-                        RoundedCornerShape(16.dp)
-                    )
-                    .padding(top = 8.dp, start = 8.dp, end = 8.dp)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Text(
-                    style = MaterialTheme.typography.titleSmall,
-                    text = "Mensa Essensplan",
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(10.dp).align(BiasAlignment.Horizontal(0f))
+    @SuppressLint("DefaultLocale")
+    @Composable
+    fun InnerMensaComposable(innerPadding: PaddingValues){
+        val mensaMeals = remember { mutableStateOf(emptyList<MensaMeal>()) }
+        thread {
+            mensaMeals.value = core.nextMensaMeals()
+        }
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .padding(16.dp)
+                .fillMaxWidth()
+                .background(color = MaterialTheme.colorScheme.onBackground,
+                    RoundedCornerShape(16.dp)
                 )
-                Column {
-                    mensaMeals.value.forEach { meal ->
-                        Row(horizontalArrangement = Arrangement.SpaceBetween) {
-                            OurText(
-                                text = meal.name,
-                                textAlign = TextAlign.Left,
-                                modifier = Modifier.padding(16.dp).fillMaxWidth(0.65f),
-                            )
-                            OurText(
-                                text = String.format("%.2f €", meal.price),
-                                textAlign = TextAlign.Right,
-                                modifier = Modifier.padding(top=16.dp, bottom = 16.dp, end = 16.dp).fillMaxWidth()
-                            )
-                        }
+                .padding(top = 8.dp, start = 8.dp, end = 8.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
+            Text(
+                style = MaterialTheme.typography.titleSmall,
+                text = "Mensa Essensplan",
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(10.dp).align(BiasAlignment.Horizontal(0f))
+            )
+            Column {
+                mensaMeals.value.forEach { meal ->
+                    Row(horizontalArrangement = Arrangement.SpaceBetween) {
+                        OurText(
+                            text = meal.name,
+                            textAlign = TextAlign.Left,
+                            modifier = Modifier.padding(16.dp).fillMaxWidth(0.65f),
+                        )
+                        OurText(
+                            text = String.format("%.2f €", meal.price),
+                            textAlign = TextAlign.Right,
+                            modifier = Modifier.padding(top=16.dp, bottom = 16.dp, end = 16.dp).fillMaxWidth()
+                        )
                     }
                 }
             }
         }
+    }
     @Composable
-    fun InformationComposable(modifier: Modifier, core: CoreSpecification) {
+    fun InformationComposable(modifier: Modifier) {
         NavBar.Companion.NavigationBar(
             modifier,
             core,
@@ -164,18 +169,18 @@ class InformationScreen : ComponentActivity() {
             caller = InformationScreen::class
         )
     }
-}
-
-
-
-@Preview(showBackground = true)
-@Composable
-fun InformationPreview() {
-    val informationScreen = InformationScreen()
-    G2_WeckMichMalTheme {
-        informationScreen.InformationComposable(
-            modifier = Modifier,
-            core = MockupCore()
-        )
+    @Preview(showBackground = true)
+    @Composable
+    fun InformationPreview() {
+        core = MockupCore()
+        G2_WeckMichMalTheme {
+            InformationComposable(
+                modifier = Modifier,
+            )
+        }
     }
+
 }
+
+
+

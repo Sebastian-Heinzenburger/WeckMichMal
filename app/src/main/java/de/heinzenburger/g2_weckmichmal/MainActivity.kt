@@ -23,12 +23,12 @@ class MainActivity : ComponentActivity() {
             val intent = Intent(applicationContext, WelcomeScreen::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            applicationContext.startActivity(intent)
+            startActivity(intent)
         } else {
             val intent = Intent(applicationContext, AlarmClockOverviewScreen::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-            applicationContext.startActivity(intent)
+            startActivity(intent)
         }
     }
 

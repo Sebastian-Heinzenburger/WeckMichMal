@@ -1,5 +1,6 @@
 package de.heinzenburger.g2_weckmichmal.specifications
 
+import android.os.Parcelable
 import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
@@ -8,6 +9,7 @@ import androidx.room.Relation
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.persistence.DataConverter
 import de.heinzenburger.g2_weckmichmal.persistence.Logger
+import kotlinx.parcelize.Parcelize
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -153,6 +155,7 @@ interface InterfaceApplicationSettings {
  * @property isActive Whether the User enabled the Alarm
  * @property enforceStartBuffer means, that the application has to do always ensure the start buffer
  */
+@Parcelize
 @Entity(tableName = "configuration")
 data class Configuration(
     /** A unique identifier to uniquely identify this configuration. */
@@ -179,7 +182,7 @@ data class Configuration(
     @ColumnInfo(name = "enforceStartBuffer") var enforceStartBuffer: Boolean,
     /** The date where this alarm rang the last time.*/
     @ColumnInfo(name = "ichHabGeringt") var ichHabGeringt: LocalDate = LocalDate.MIN,
-){
+) : Parcelable {
     @Suppress("unused")
     fun log(core : Core){
         core.log(Logger.Level.INFO,"Logging configuration with id $uid:\n$name\n$days\n$fixedArrivalTime\n$fixedTravelBuffer\n$startBuffer\n$endBuffer\n$startStation\n$endStation\n$isActive")
@@ -211,6 +214,7 @@ data class Configuration(
  * @property courses The courses following this day.
  * @property routes The specific date this event references.
  */
+@Parcelize
 @Entity(tableName = "event")
 data class Event(
     /** The unique identifier of the corresponding alarm configuration. */
@@ -225,7 +229,7 @@ data class Event(
     @ColumnInfo(name = "courses") var courses: List<Course>?,
     /** The specific date this event references. */
     @ColumnInfo(name = "routes") var routes: List<Route>?
-){
+) : Parcelable {
     @Suppress("unused")
     fun log(core: Core) {
         core.log(
@@ -267,6 +271,7 @@ data class Event(
         )
     }
 }
+@Parcelize
 data class ConfigurationWithEvent(
     @Embedded val configuration: Configuration,
     @Relation(
@@ -274,7 +279,7 @@ data class ConfigurationWithEvent(
         entityColumn = "configID"
     )
     val event: Event?
-)
+) : Parcelable
 
 /**
  * @property raplaURL The WebLink leading to the RAPLA schedule.
@@ -285,6 +290,7 @@ data class SettingsEntity(
     var defaultValues: DefaultAlarmValues = DefaultAlarmValues(),
     var excludeCourses: List<String> = mutableListOf<String>()
 ){
+    @Parcelize
     data class DefaultAlarmValues(
             //Static
             val name: String = "",
@@ -297,7 +303,8 @@ data class SettingsEntity(
             var setEndBufferTime: Int = 5,
             var startStation: String = "Startbahnhof",
             var endStation: String = "Endbahnhof"
-        )
+        ) : Parcelable
+
     @Suppress("unused")
     fun log(core: Core){
         core.log(Logger.Level.INFO,"Logging SettingsEntity:\n$raplaURL")

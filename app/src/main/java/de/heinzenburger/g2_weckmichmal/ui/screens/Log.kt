@@ -52,8 +52,8 @@ class LogScreen : ComponentActivity() {
                 //Go to Overview Screen without animation
                 val intent = Intent(context, AlarmClockOverviewScreen::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-                context.startActivity(intent)
-                (context as ComponentActivity).finish()
+                startActivity(intent)
+                finish()
             }
             G2_WeckMichMalTheme {
                 LogComposable(modifier = Modifier, core)

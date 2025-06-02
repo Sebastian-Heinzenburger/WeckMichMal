@@ -1,6 +1,7 @@
 package de.heinzenburger.g2_weckmichmal.specifications
 
-import java.net.URL
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 import java.time.LocalDateTime
 
 /**
@@ -75,13 +76,14 @@ data class Period(
  * @property startDate The date and time when the course begins.
  * @property endDate The date and time when the course ends.
  */
+@Parcelize
 data class Course(
     val name: String?,
     val lecturer: String?,
     val room: String?,
     val startDate: LocalDateTime,
     val endDate: LocalDateTime
-)
+) : Parcelable
 
 /**
  * Represents exceptions related to fetching course data.

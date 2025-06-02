@@ -23,7 +23,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
 import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
@@ -38,10 +37,9 @@ class WelcomeScreen : ComponentActivity() {
         enableEdgeToEdge()
         val core = Core(context = applicationContext)
         setContent {
-            val context = LocalContext.current
             BackHandler {
                 //Finish all and close the app
-                ActivityCompat.finishAffinity(context as ComponentActivity)
+                finishAffinity()
             }
             G2_WeckMichMalTheme {
                 Greeting(modifier = Modifier, core)
@@ -77,8 +75,8 @@ class WelcomeScreen : ComponentActivity() {
                 fun () {
                     val intent = Intent(context, AllowNotificationsScreen::class.java)
                     intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-                    context.startActivity(intent)
-                    (context as ComponentActivity).finish()
+                    startActivity(intent)
+                    finish()
                 }
             )
             Button(
@@ -86,8 +84,8 @@ class WelcomeScreen : ComponentActivity() {
                     core.saveRaplaURL("")
                     val intent = Intent(context, AllowNotificationsScreen::class.java)
                     intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-                    context.startActivity(intent)
-                    (context as ComponentActivity).finish()
+                    startActivity(intent)
+                    finish()
                 },
                 colors = ButtonColors(
                     contentColor = MaterialTheme.colorScheme.primary,

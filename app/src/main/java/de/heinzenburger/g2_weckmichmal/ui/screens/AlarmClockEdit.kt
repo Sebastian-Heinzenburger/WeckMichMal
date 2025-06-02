@@ -2,6 +2,7 @@ package de.heinzenburger.g2_weckmichmal.ui.screens
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -48,7 +49,7 @@ import de.heinzenburger.g2_weckmichmal.core.Core
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.Configuration
 import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
-import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity
+import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity.DefaultAlarmValues
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.LoadingScreen
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurButtonInEditAlarm
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
@@ -64,10 +65,139 @@ import java.time.format.DateTimeFormatter
 import kotlin.concurrent.thread
 
 class AlarmClockEditScreen : ComponentActivity() {
+
+    private var openLoadingScreen = mutableStateOf(false)
+
+    private var openArrivalTimePickerDialog : MutableState<Boolean> = mutableStateOf(false)
+    private var openTravelTimePickerDialog : MutableState<Boolean> = mutableStateOf(false)
+    private var openStartBufferPickerDialog : MutableState<Boolean> = mutableStateOf(false)
+    private var openEndBufferPickerDialog : MutableState<Boolean> = mutableStateOf(false)
+    private var openStartStationDialog : MutableState<Boolean> = mutableStateOf(false)
+    private var openEndStationDialog : MutableState<Boolean> = mutableStateOf(false)
+
+    //Everytime an alarm is created, the reset function has to be called before calling this view so all configurations are set to default
+    //If an alarm is to be updated, the current configuration is passed as parameter to reset function
+    private lateinit var alarmName : MutableState<String>
+    private lateinit var manuallySetArrivalTime: MutableState<LocalTime> //Set if arrival time shouldnt be dependent on lecture plan
+    private lateinit var isManualArrivalTime : MutableState<Boolean>
+    private lateinit var manuallySetTravelTime: MutableIntState //Set if travel time shouldnt be dependent on Deutsche Bahn
+    private lateinit var isManualTravelTime : MutableState<Boolean>
+    private lateinit var enforceStartBuffer : MutableState<Boolean>
+    private lateinit var setStartBufferTime: MutableIntState //Set if arrival time shouldnt be dependent on lecture plan
+    private lateinit var setEndBufferTime: MutableIntState //Time between arrival and lecture start
+    private lateinit var startStation: MutableState<String>
+    private lateinit var endStation: MutableState<String>
+    private lateinit var selectedDays: MutableState<List<Boolean>> //All days where this alarm applies to
+    private lateinit var configuration : Configuration //The configuration stored in the database
+
+    private lateinit var defaultAlarmValues: DefaultAlarmValues
+    private lateinit var core: CoreSpecification
+
+    fun reset(configuration: Configuration?){
+        openLoadingScreen.value = false
+        if(configuration == null){
+            //All default values
+            alarmName = mutableStateOf(defaultAlarmValues.name)
+            manuallySetArrivalTime = mutableStateOf(LocalTime.parse(defaultAlarmValues.manuallySetArrivalTime))
+            manuallySetTravelTime = mutableIntStateOf(defaultAlarmValues.manuallySetTravelTime)
+            setStartBufferTime = mutableIntStateOf(defaultAlarmValues.setStartBufferTime)
+            setEndBufferTime = mutableIntStateOf(defaultAlarmValues.setEndBufferTime)
+            startStation = mutableStateOf(defaultAlarmValues.startStation)
+            endStation = mutableStateOf(defaultAlarmValues.endStation)
+            selectedDays = mutableStateOf(listOf(false,false,false,false,false,false,false))
+            isManualArrivalTime = mutableStateOf(false)
+            isManualTravelTime = mutableStateOf(false)
+            enforceStartBuffer = mutableStateOf(defaultAlarmValues.enforceStartBuffer)
+            this.configuration = Configuration(
+                name = defaultAlarmValues.name,
+                days = setOf(),
+                fixedArrivalTime = null,
+                fixedTravelBuffer = null,
+                startBuffer = 30,
+                endBuffer = 10,
+                startStation = null,
+                endStation = null,
+                isActive = true,
+                enforceStartBuffer = true
+            )
+        }
+        else{
+            //Set Alarm Name
+            alarmName = mutableStateOf(configuration.name)
+
+            //BufferTimes
+            setStartBufferTime = mutableIntStateOf(configuration.startBuffer)
+            setEndBufferTime = mutableIntStateOf(configuration.endBuffer)
+
+            //Convert Day of Week to Boolean List
+            var days = mutableListOf<Boolean>()
+            DayOfWeek.entries.forEach { day ->
+                days.add(configuration.days.contains(day))
+            }
+            selectedDays = mutableStateOf(days)
+
+            //Manual set Arrival Time
+            isManualArrivalTime = mutableStateOf(configuration.fixedArrivalTime != null)
+            manuallySetArrivalTime = if(isManualArrivalTime.value){
+                mutableStateOf(configuration.fixedArrivalTime!!)
+            } else{
+                mutableStateOf(LocalTime.NOON)
+            }
+
+            enforceStartBuffer = mutableStateOf(configuration.enforceStartBuffer)
+
+            //Manual set Travel Time
+            isManualTravelTime = mutableStateOf(configuration.fixedTravelBuffer != null)
+            manuallySetTravelTime = if(isManualTravelTime.value){
+                mutableIntStateOf(configuration.fixedTravelBuffer!!)
+            } else{
+                mutableIntStateOf(defaultAlarmValues.manuallySetTravelTime)
+            }
+            //Stations if needed
+            if(isManualTravelTime.value){
+                startStation = mutableStateOf(defaultAlarmValues.startStation)
+                endStation = mutableStateOf(defaultAlarmValues.endStation)
+            }
+            else{
+                startStation = mutableStateOf(configuration.startStation!!)
+                endStation = mutableStateOf(configuration.endStation!!)
+            }
+
+            this.configuration = Configuration(
+                uid = configuration.uid, //Use the same uid as the configuration that is changed
+                name = defaultAlarmValues.name,
+                days = setOf(),
+                fixedArrivalTime = null,
+                fixedTravelBuffer = null,
+                startBuffer = 30,
+                endBuffer = 10,
+                startStation = null,
+                endStation = null,
+                isActive = true, //Even if the alarm was initially inactive, it will be set as active again
+                enforceStartBuffer = true
+            )
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val core = Core(context = applicationContext)
+        core = Core(context = applicationContext)
+
+        defaultAlarmValues = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableExtra("defaultAlarmValues", DefaultAlarmValues::class.java)!!
+        } else {
+            @Suppress("DEPRECATION")
+            intent.getParcelableExtra<DefaultAlarmValues>("configuration")!!
+        }
+
+        reset(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableExtra("configuration", Configuration::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            intent.getParcelableExtra<Configuration>("configuration")
+        })
+
         setContent {
             G2_WeckMichMalTheme {
                 val context = LocalContext.current
@@ -75,240 +205,224 @@ class AlarmClockEditScreen : ComponentActivity() {
                     //Go to Overview Screen without animation
                     val intent = Intent(context, AlarmClockOverviewScreen::class.java)
                     intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-                    context.startActivity(intent)
-                    (context as ComponentActivity).finish()
+                    startActivity(intent)
+                    finish()
                 }
                 EditComposable(modifier = Modifier, core)
             }
         }
     }
-    companion object{
-        private var openLoadingScreen = mutableStateOf(false)
 
-        private var openArrivalTimePickerDialog : MutableState<Boolean> = mutableStateOf(false)
-        private var openTravelTimePickerDialog : MutableState<Boolean> = mutableStateOf(false)
-        private var openStartBufferPickerDialog : MutableState<Boolean> = mutableStateOf(false)
-        private var openEndBufferPickerDialog : MutableState<Boolean> = mutableStateOf(false)
-        private var openStartStationDialog : MutableState<Boolean> = mutableStateOf(false)
-        private var openEndStationDialog : MutableState<Boolean> = mutableStateOf(false)
 
-        //These are static. They are storing all necessary information for an alarm configuration
-        //Everytime an alarm is created, the reset function has to be called before calling this view so all configurations are set to default
-        //If an alarm is to be updated, the current configuration is passed as parameter to reset function
-        private lateinit var alarmName : MutableState<String>
-        private lateinit var manuallySetArrivalTime: MutableState<LocalTime> //Set if arrival time shouldnt be dependent on lecture plan
-        private lateinit var isManualArrivalTime : MutableState<Boolean>
-        private lateinit var manuallySetTravelTime: MutableIntState //Set if travel time shouldnt be dependent on Deutsche Bahn
-        private lateinit var isManualTravelTime : MutableState<Boolean>
-        private lateinit var enforceStartBuffer : MutableState<Boolean>
-        private lateinit var setStartBufferTime: MutableIntState //Set if arrival time shouldnt be dependent on lecture plan
-        private lateinit var setEndBufferTime: MutableIntState //Time between arrival and lecture start
-        private lateinit var startStation: MutableState<String>
-        private lateinit var endStation: MutableState<String>
-        private lateinit var selectedDays: MutableState<List<Boolean>> //All days where this alarm applies to
-        private lateinit var configuration : Configuration //The configuration stored in the database
 
-        //Also static and has to be set
-        lateinit var defaultAlarmValues: SettingsEntity.DefaultAlarmValues
 
-        fun reset(configuration: Configuration?){
-            openLoadingScreen.value = false
-            if(configuration == null){
-                //All default values
-                alarmName = mutableStateOf(defaultAlarmValues.name)
-                manuallySetArrivalTime = mutableStateOf(LocalTime.parse(defaultAlarmValues.manuallySetArrivalTime))
-                manuallySetTravelTime = mutableIntStateOf(defaultAlarmValues.manuallySetTravelTime)
-                setStartBufferTime = mutableIntStateOf(defaultAlarmValues.setStartBufferTime)
-                setEndBufferTime = mutableIntStateOf(defaultAlarmValues.setEndBufferTime)
-                startStation = mutableStateOf(defaultAlarmValues.startStation)
-                endStation = mutableStateOf(defaultAlarmValues.endStation)
-                selectedDays = mutableStateOf(listOf(false,false,false,false,false,false,false))
-                isManualArrivalTime = mutableStateOf(false)
-                isManualTravelTime = mutableStateOf(false)
-                enforceStartBuffer = mutableStateOf(defaultAlarmValues.enforceStartBuffer)
-                AlarmClockEditScreen.configuration = Configuration(
-                    name = defaultAlarmValues.name,
-                    days = setOf(),
-                    fixedArrivalTime = null,
-                    fixedTravelBuffer = null,
-                    startBuffer = 30,
-                    endBuffer = 10,
-                    startStation = null,
-                    endStation = null,
-                    isActive = true,
-                    enforceStartBuffer = true
-                )
+    fun saveConfiguration(core: CoreSpecification, context: Context){
+        thread{
+            var validation = true
+            //Name of Alarm
+            configuration.name = alarmName.value
+
+            //fixed arrival time if selected, else null
+            if(isManualArrivalTime.value){
+                configuration.fixedArrivalTime = manuallySetArrivalTime.value
+            }
+            else if(!core.isInternetAvailable()){
+                validation = false
+                core.showToast("Für diese Konfiguration ist eine Internetverbindung nötig")
+            }
+            else if(core.getRaplaURL() == "" || core.getRaplaURL() == null){
+                validation = false
+                core.showToast("Ankunft nach Vorlesungsplan nicht möglich. URL fehlt.")
+            }
+            //fixed travel time if selected, else null
+            if(isManualTravelTime.value){
+                defaultAlarmValues.manuallySetTravelTime = manuallySetTravelTime.intValue
+                configuration.fixedTravelBuffer = manuallySetTravelTime.intValue
+            }
+            else if(!core.isInternetAvailable()){
+                validation = false
+                core.showToast("Für diese Konfiguration ist eine Internetverbindung nötig")
+            }
+            //stations needed, else null
+            else{
+                if(startStation.value == "Startbahnhof"){
+                    validation = false
+                    core.showToast("Startbahnhof setzen")
+                }
+                else if(endStation.value == "Endbahnhof"){
+                    validation = false
+                    core.showToast("Endbahnhof setzen")
+                }
+                else{
+                    configuration.startStation = startStation.value
+                    configuration.endStation = endStation.value
+                    defaultAlarmValues.startStation = startStation.value
+                    defaultAlarmValues.endStation = endStation.value
+                }
+            }
+            //set required start and endbuffer
+            configuration.startBuffer = setStartBufferTime.intValue
+            configuration.endBuffer = setEndBufferTime.intValue
+            defaultAlarmValues.setStartBufferTime = setStartBufferTime.intValue
+            defaultAlarmValues.setEndBufferTime = setEndBufferTime.intValue
+
+            configuration.enforceStartBuffer = enforceStartBuffer.value
+            defaultAlarmValues.enforceStartBuffer = enforceStartBuffer.value
+
+            //Setting days parameter
+            var days = mutableSetOf<DayOfWeek>()
+            selectedDays.value.forEachIndexed { index, active ->
+                if(active) days.add(DayOfWeek.entries[index])
+            }
+            if(days.isEmpty()){
+                validation = false
+                core.showToast("Mindestens einen Tag auswählen")
             }
             else{
-                //Set Alarm Name
-                alarmName = mutableStateOf(configuration.name)
+                configuration.days = days
+            }
+            if(validation){
+                core.generateOrUpdateAlarmConfiguration(configuration)
+                core.updateDefaultAlarmValues(defaultAlarmValues)
+                core.runUpdateLogic()
 
-                //BufferTimes
-                setStartBufferTime = mutableIntStateOf(configuration.startBuffer)
-                setEndBufferTime = mutableIntStateOf(configuration.endBuffer)
+                val intent = Intent(context, AlarmClockOverviewScreen::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                startActivity(intent)
+                finish()
+            }
+        }
+    }
 
-                //Convert Day of Week to Boolean List
-                var days = mutableListOf<Boolean>()
-                DayOfWeek.entries.forEach { day ->
-                    days.add(configuration.days.contains(day))
-                }
-                selectedDays = mutableStateOf(days)
-
-                //Manual set Arrival Time
-                isManualArrivalTime = mutableStateOf(configuration.fixedArrivalTime != null)
-                manuallySetArrivalTime = if(isManualArrivalTime.value){
-                    mutableStateOf(configuration.fixedArrivalTime!!)
-                } else{
-                    mutableStateOf(LocalTime.NOON)
-                }
-
-                enforceStartBuffer = mutableStateOf(configuration.enforceStartBuffer)
-
-                //Manual set Travel Time
-                isManualTravelTime = mutableStateOf(configuration.fixedTravelBuffer != null)
-                manuallySetTravelTime = if(isManualTravelTime.value){
-                    mutableIntStateOf(configuration.fixedTravelBuffer!!)
-                } else{
-                    mutableIntStateOf(defaultAlarmValues.manuallySetTravelTime)
-                }
-                //Stations if needed
-                if(isManualTravelTime.value){
-                    startStation = mutableStateOf(defaultAlarmValues.startStation)
-                    endStation = mutableStateOf(defaultAlarmValues.endStation)
-                }
-                else{
-                    startStation = mutableStateOf(configuration.startStation!!)
-                    endStation = mutableStateOf(configuration.endStation!!)
-                }
-
-                AlarmClockEditScreen.configuration = Configuration(
-                    uid = configuration.uid, //Use the same uid as the configuration that is changed
-                    name = defaultAlarmValues.name,
-                    days = setOf(),
-                    fixedArrivalTime = null,
-                    fixedTravelBuffer = null,
-                    startBuffer = 30,
-                    endBuffer = 10,
-                    startStation = null,
-                    endStation = null,
-                    isActive = true, //Even if the alarm was initially inactive, it will be set as active again
-                    enforceStartBuffer = true
-                )
+    @Composable
+    private fun InnerDatengrundlageComposable () {
+        val arrivalOptions = listOf("Manuelle Ankuftszeit", "Ankuftszeit nach Vorlesungsplan")
+        //Dont really know what this is doing
+        val (arrivalSelectedOption, onArrivalOptionSelected) = remember {
+            if(isManualArrivalTime.value){
+                mutableStateOf(arrivalOptions[0])
+            }
+            else{
+                mutableStateOf(arrivalOptions[1])
             }
         }
 
-        fun saveConfiguration(core: CoreSpecification, context: Context){
-            thread{
-                var validation = true
-                //Name of Alarm
-                configuration.name = alarmName.value
+        OurText(
+            text = "Datengrundlage",
+            modifier = Modifier.padding(top = 24.dp, start = 24.dp)
+        )
+        Row{
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .selectableGroup() //All radio buttons in this column correspond to one group
+            ) {
 
-                //fixed arrival time if selected, else null
-                if(isManualArrivalTime.value){
-                    configuration.fixedArrivalTime = manuallySetArrivalTime.value
-                }
-                else if(!core.isInternetAvailable()){
-                    validation = false
-                    core.showToast("Für diese Konfiguration ist eine Internetverbindung nötig")
-                }
-                else if(core.getRaplaURL() == "" || core.getRaplaURL() == null){
-                    validation = false
-                    core.showToast("Ankunft nach Vorlesungsplan nicht möglich. URL fehlt.")
-                }
-                //fixed travel time if selected, else null
-                if(isManualTravelTime.value){
-                    defaultAlarmValues.manuallySetTravelTime = manuallySetTravelTime.intValue
-                    configuration.fixedTravelBuffer = manuallySetTravelTime.intValue
-                }
-                else if(!core.isInternetAvailable()){
-                    validation = false
-                    core.showToast("Für diese Konfiguration ist eine Internetverbindung nötig")
-                }
-                //stations needed, else null
-                else{
-                    if(startStation.value == "Startbahnhof"){
-                        validation = false
-                        core.showToast("Startbahnhof setzen")
-                    }
-                    else if(endStation.value == "Endbahnhof"){
-                        validation = false
-                        core.showToast("Endbahnhof setzen")
-                    }
-                    else{
-                        configuration.startStation = startStation.value
-                        configuration.endStation = endStation.value
-                        defaultAlarmValues.startStation = startStation.value
-                        defaultAlarmValues.endStation = endStation.value
-                    }
-                }
-                //set required start and endbuffer
-                configuration.startBuffer = setStartBufferTime.intValue
-                configuration.endBuffer = setEndBufferTime.intValue
-                defaultAlarmValues.setStartBufferTime = setStartBufferTime.intValue
-                defaultAlarmValues.setEndBufferTime = setEndBufferTime.intValue
 
-                configuration.enforceStartBuffer = enforceStartBuffer.value
-                defaultAlarmValues.enforceStartBuffer = enforceStartBuffer.value
 
-                //Setting days parameter
-                var days = mutableSetOf<DayOfWeek>()
-                selectedDays.value.forEachIndexed { index, active ->
-                    if(active) days.add(DayOfWeek.entries[index])
-                }
-                if(days.isEmpty()){
-                    validation = false
-                    core.showToast("Mindestens einen Tag auswählen")
-                }
-                else{
-                    configuration.days = days
-                }
-                if(validation){
-                    core.generateOrUpdateAlarmConfiguration(configuration)
-                    core.updateDefaultAlarmValues(defaultAlarmValues)
-                    core.runUpdateLogic()
+                Row(
+                    Modifier
+                        .selectable(
+                            selected = (arrivalOptions[0] == arrivalSelectedOption),
+                            onClick = {
+                                onArrivalOptionSelected(arrivalOptions[0])
+                                isManualArrivalTime.value = true
+                            },
+                            role = Role.RadioButton
+                        )
+                        .padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = (arrivalOptions[0] == arrivalSelectedOption),
+                        onClick = null,
+                        colors = RadioButtonDefaults.colors(
+                            selectedColor = MaterialTheme.colorScheme.onBackground
+                        ),
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                    OurText(
+                        text = arrivalOptions[0],
+                        modifier = Modifier.padding(start = 8.dp, top = 8.dp)
+                    )
+                    OurButtonInEditAlarm(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 12.dp),
+                        enabled = arrivalSelectedOption == arrivalOptions[0],
+                        onClick = {
+                            openArrivalTimePickerDialog.value = true
+                        },
+                        text = manuallySetArrivalTime.value.format(
+                            DateTimeFormatter.ofPattern(
+                                "HH:mm"
+                            )
+                        ),
+                    )
 
-                    val intent = Intent(context, AlarmClockOverviewScreen::class.java)
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-                    context.startActivity(intent)
-                    (context as ComponentActivity).finish()
                 }
+                Row(
+                    Modifier
+                        .selectable(
+                            selected = (arrivalOptions[1] == arrivalSelectedOption),
+                            onClick = {
+                                onArrivalOptionSelected(arrivalOptions[1])
+                                isManualArrivalTime.value = false
+                            },
+                            role = Role.RadioButton
+                        )
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = (arrivalOptions[1] == arrivalSelectedOption),
+                        onClick = null,
+                        colors = RadioButtonDefaults.colors(
+                            selectedColor = MaterialTheme.colorScheme.onBackground
+                        ),
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                    OurText(
+                        text = arrivalOptions[1],
+                        modifier = Modifier.padding(start = 8.dp, top = 8.dp)
+                    )
+                }
+            }
+
+        }
+    }
+    @Composable
+    private fun InnerFahrtwegComposable() {
+        val rideOptions = listOf("Bahnverbindung", "Manuelle Fahrtzeit")
+        val (rideSelectedOption, onRideOptionSelected) = remember {
+            if(isManualTravelTime.value){
+                mutableStateOf(rideOptions[1])
+            }
+            else{
+                mutableStateOf(rideOptions[0])
             }
         }
 
-        //All components are stored as variables so they can be used as callbacks if needed
-        private val innerDatengrundlageComposable : @Composable (PaddingValues, CoreSpecification) -> Unit =
-        { innerPadding: PaddingValues, core: CoreSpecification ->
-            val arrivalOptions = listOf("Manuelle Ankuftszeit", "Ankuftszeit nach Vorlesungsplan")
-            //Dont really know what this is doing
-            val (arrivalSelectedOption, onArrivalOptionSelected) = remember {
-                if(isManualArrivalTime.value){
-                    mutableStateOf(arrivalOptions[0])
-                }
-                else{
-                    mutableStateOf(arrivalOptions[1])
-                }
-            }
-
+        Column (
+            modifier = Modifier.selectableGroup()
+        ){
             OurText(
-                text = "Datengrundlage",
+                text = "Fahrtweg",
                 modifier = Modifier.padding(top = 24.dp, start = 24.dp)
             )
             Row{
                 Column(
                     Modifier
                         .fillMaxWidth()
-                        .selectableGroup() //All radio buttons in this column correspond to one group
+                        .selectableGroup()
                 ) {
-
-
-
                     Row(
                         Modifier
                             .selectable(
-                                selected = (arrivalOptions[0] == arrivalSelectedOption),
+                                selected = (rideOptions[0] == rideSelectedOption),
                                 onClick = {
-                                    onArrivalOptionSelected(arrivalOptions[0])
-                                    isManualArrivalTime.value = true
+                                    onRideOptionSelected(rideOptions[0])
+                                    isManualTravelTime.value = false
                                 },
                                 role = Role.RadioButton
                             )
@@ -316,7 +430,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         RadioButton(
-                            selected = (arrivalOptions[0] == arrivalSelectedOption),
+                            selected = (rideOptions[0] == rideSelectedOption),
                             onClick = null,
                             colors = RadioButtonDefaults.colors(
                                 selectedColor = MaterialTheme.colorScheme.onBackground
@@ -324,32 +438,50 @@ class AlarmClockEditScreen : ComponentActivity() {
                             modifier = Modifier.padding(top = 8.dp)
                         )
                         OurText(
-                            text = arrivalOptions[0],
+                            text = rideOptions[0],
                             modifier = Modifier.padding(start = 8.dp, top = 8.dp)
+                        )
+                    }
+                    Column{
+                        OurButtonInEditAlarm(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(48.dp, 0.dp),
+                            onClick = {
+                                if(core.isInternetAvailable()){
+                                    openStartStationDialog.value = true
+                                }
+                                else{
+                                    core.showToast("Dafür ist eine Internetverbindung nötig")
+                                }
+                            },
+                            text = startStation.value,
+                            enabled = rideSelectedOption == rideOptions[0]
                         )
                         OurButtonInEditAlarm(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(start = 12.dp),
-                            enabled = arrivalSelectedOption == arrivalOptions[0],
+                                .padding(48.dp, 0.dp),
                             onClick = {
-                                openArrivalTimePickerDialog.value = true
+                                if(core.isInternetAvailable()){
+                                    openEndStationDialog.value = true
+                                }
+                                else{
+                                    core.showToast("Dafür ist eine Internetverbindung nötig")
+                                }
                             },
-                            text = manuallySetArrivalTime.value.format(
-                                DateTimeFormatter.ofPattern(
-                                    "HH:mm"
-                                )
-                            ),
+                            text = endStation.value,
+                            enabled = rideSelectedOption == rideOptions[0]
                         )
-
                     }
+
                     Row(
                         Modifier
                             .selectable(
-                                selected = (arrivalOptions[1] == arrivalSelectedOption),
+                                selected = (rideOptions[1] == rideSelectedOption),
                                 onClick = {
-                                    onArrivalOptionSelected(arrivalOptions[1])
-                                    isManualArrivalTime.value = false
+                                    onRideOptionSelected(rideOptions[1])
+                                    isManualTravelTime.value = true
                                 },
                                 role = Role.RadioButton
                             )
@@ -357,7 +489,7 @@ class AlarmClockEditScreen : ComponentActivity() {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         RadioButton(
-                            selected = (arrivalOptions[1] == arrivalSelectedOption),
+                            selected = (rideOptions[1] == rideSelectedOption),
                             onClick = null,
                             colors = RadioButtonDefaults.colors(
                                 selectedColor = MaterialTheme.colorScheme.onBackground
@@ -365,418 +497,307 @@ class AlarmClockEditScreen : ComponentActivity() {
                             modifier = Modifier.padding(top = 8.dp)
                         )
                         OurText(
-                            text = arrivalOptions[1],
+                            text = rideOptions[1],
                             modifier = Modifier.padding(start = 8.dp, top = 8.dp)
                         )
-                    }
-                }
-
-            }
-        }
-        private val innerFahrtwegComposable : @Composable (PaddingValues, CoreSpecification) -> Unit =
-            { innerPadding: PaddingValues, core: CoreSpecification ->
-                val rideOptions = listOf("Bahnverbindung", "Manuelle Fahrtzeit")
-                val (rideSelectedOption, onRideOptionSelected) = remember {
-                    if(isManualTravelTime.value){
-                        mutableStateOf(rideOptions[1])
-                    }
-                    else{
-                        mutableStateOf(rideOptions[0])
-                    }
-                }
-
-                Column (
-                    modifier = Modifier.selectableGroup()
-                ){
-                    OurText(
-                        text = "Fahrtweg",
-                        modifier = Modifier.padding(top = 24.dp, start = 24.dp)
-                    )
-                    Row{
-                        Column(
-                            Modifier
-                                .fillMaxWidth()
-                                .selectableGroup()
-                        ) {
-                            Row(
-                                Modifier
-                                    .selectable(
-                                        selected = (rideOptions[0] == rideSelectedOption),
-                                        onClick = {
-                                            onRideOptionSelected(rideOptions[0])
-                                            isManualTravelTime.value = false
-                                        },
-                                        role = Role.RadioButton
-                                    )
-                                    .padding(horizontal = 16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                RadioButton(
-                                    selected = (rideOptions[0] == rideSelectedOption),
-                                    onClick = null,
-                                    colors = RadioButtonDefaults.colors(
-                                        selectedColor = MaterialTheme.colorScheme.onBackground
-                                    ),
-                                    modifier = Modifier.padding(top = 8.dp)
-                                )
-                                OurText(
-                                    text = rideOptions[0],
-                                    modifier = Modifier.padding(start = 8.dp, top = 8.dp)
-                                )
-                            }
-                            Column{
-                                OurButtonInEditAlarm(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(48.dp, 0.dp),
-                                    onClick = {
-                                        if(core.isInternetAvailable()){
-                                            openStartStationDialog.value = true
-                                        }
-                                        else{
-                                            core.showToast("Dafür ist eine Internetverbindung nötig")
-                                        }
-                                    },
-                                    text = startStation.value,
-                                    enabled = rideSelectedOption == rideOptions[0]
-                                )
-                                OurButtonInEditAlarm(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(48.dp, 0.dp),
-                                    onClick = {
-                                        if(core.isInternetAvailable()){
-                                            openEndStationDialog.value = true
-                                        }
-                                        else{
-                                            core.showToast("Dafür ist eine Internetverbindung nötig")
-                                        }
-                                    },
-                                    text = endStation.value,
-                                    enabled = rideSelectedOption == rideOptions[0]
-                                )
-                            }
-
-                            Row(
-                                Modifier
-                                    .selectable(
-                                        selected = (rideOptions[1] == rideSelectedOption),
-                                        onClick = {
-                                            onRideOptionSelected(rideOptions[1])
-                                            isManualTravelTime.value = true
-                                        },
-                                        role = Role.RadioButton
-                                    )
-                                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                RadioButton(
-                                    selected = (rideOptions[1] == rideSelectedOption),
-                                    onClick = null,
-                                    colors = RadioButtonDefaults.colors(
-                                        selectedColor = MaterialTheme.colorScheme.onBackground
-                                    ),
-                                    modifier = Modifier.padding(top = 8.dp)
-                                )
-                                OurText(
-                                    text = rideOptions[1],
-                                    modifier = Modifier.padding(start = 8.dp, top = 8.dp)
-                                )
-                                OurButtonInEditAlarm(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(start = 48.dp),
-                                    onClick = {
-                                        openTravelTimePickerDialog.value = true
-                                    },
-                                    enabled = rideSelectedOption == rideOptions[1],
-                                    text = manuallySetTravelTime.intValue.toString() + "min",
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        private val innerZeitaufwandComposable : @Composable (PaddingValues, CoreSpecification) -> Unit =
-            { innerPadding: PaddingValues, core: CoreSpecification ->
-                OurText(
-                    text = "Zeitaufwand",
-                    modifier = Modifier.padding(top = 24.dp, start = 24.dp)
-                )
-                Row(
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                ) {
-                    OurText(
-                        text = "Puffer vor Fahrt",
-                        modifier = Modifier.padding(top = 24.dp, start = 24.dp)
-                    )
-                    OurButtonInEditAlarm(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 48.dp),
-                        onClick = {
-                            openStartBufferPickerDialog.value = true
-                        },
-                        text = setStartBufferTime.intValue.toString() + "min",
-                    )
-                }
-                Row(
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                ) {
-                    OurText(
-                        text = "Puffer vor Fahrt erzwingen",
-                        modifier = Modifier.padding(24.dp, 16.dp, 0.dp, 0.dp)
-                    )
-                    Switch(
-                        checked = enforceStartBuffer.value,
-                        //Configuration will always be reset to active when edited in AlarmClockEdit
-                        onCheckedChange = {
-                            enforceStartBuffer.value = it
-                        },
-                        enabled = true,
-                        colors = SwitchDefaults.colors(
-                            checkedBorderColor = MaterialTheme.colorScheme.background,
-                            uncheckedBorderColor = MaterialTheme.colorScheme.background,
-                            checkedIconColor = MaterialTheme.colorScheme.primary,
-                            uncheckedIconColor = MaterialTheme.colorScheme.error
-                        ),
-                        modifier = Modifier.padding(16.dp, 0.dp)
-                    )
-                }
-                Row(
-                    modifier = Modifier.padding(horizontal = 16.dp)
-
-                ){
-                    OurText(
-                        text = "Puffer nach Ankunft",
-                        modifier = Modifier.padding(top = 24.dp, start = 24.dp)
-                    )
-                    OurButtonInEditAlarm(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 48.dp),
-                        onClick = {
-                            openEndBufferPickerDialog.value = true
-                        },
-                        text = setEndBufferTime.intValue.toString() + "min"
-                    )
-                }
-            }
-        private val innerGueltigkeitComposable : @Composable (PaddingValues, CoreSpecification) -> Unit =
-            { innerPadding: PaddingValues, core: CoreSpecification ->
-                OurText(
-                    text = "Gültig für",
-                    modifier = Modifier.padding(top = 24.dp, start = 24.dp)
-                )
-                Box(
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp)
-                        .fillMaxWidth()
-                ){
-                    selectedDays.value.forEachIndexed { index, active ->
-
-                        TextButton(
+                        OurButtonInEditAlarm(
                             modifier = Modifier
-                                .padding(start = 0.dp)
-                                .width(50.dp)
-                                .align(
-                                    BiasAlignment(
-                                        (2 * (index / 6f) - 1),
-                                        verticalBias = 0f
-                                    )
-                                ),
+                                .fillMaxWidth()
+                                .padding(start = 48.dp),
                             onClick = {
-                                var days = selectedDays.value.toMutableList()
-                                days[index] = !days[index]
-                                selectedDays.value = days
+                                openTravelTimePickerDialog.value = true
                             },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.Transparent
-                            )
-                        ) {
-                            val day = DayOfWeek.entries[index].name
-                            OurText(
-                                text = day[0]+day[1].lowercase(),
-                                color = if(active){
-                                    MaterialTheme.colorScheme.secondary
-                                } else{
-                                    MaterialTheme.colorScheme.onBackground
-                                },
-                                modifier = Modifier.padding(0.dp)
-                            )
-                        }
-                    }
-                }
-            }
-
-        //Main component that is sent as navbar as callback
-        @OptIn(ExperimentalMaterial3Api::class) //Needed because Time Picker is yet experimental
-        val innerEditComposable : @Composable (PaddingValues, CoreSpecification) -> Unit =
-        { innerPadding: PaddingValues, core: CoreSpecification ->
-            val context = LocalContext.current
-            //Open time picker dialogs when corresponding boolean set to true
-            when {
-                openLoadingScreen.value ->{
-                    LoadingScreen()
-                }
-            }
-            when {
-                openArrivalTimePickerDialog.value -> {
-                    TimePickerDialogContainer(
-                        onConfirm =
-                        { timePickerState: TimePickerState ->
-                            openArrivalTimePickerDialog.value = false
-                            manuallySetArrivalTime.value = LocalTime.of(
-                                timePickerState.hour, timePickerState.minute
-                            )
-                        },
-                        onDismiss = {
-                            openArrivalTimePickerDialog.value = false
-                        })
-                }
-            }
-            when {
-                openTravelTimePickerDialog.value -> {
-                    MinutePickerDialog(
-                        onConfirm =
-                            { minutes: Int ->
-                                openTravelTimePickerDialog.value = false
-                                manuallySetTravelTime.intValue = minutes
-                            },
-                        onDismiss = {
-                            openTravelTimePickerDialog.value = false
-                        },
-                        default = manuallySetTravelTime.intValue
-                    )
-                }
-            }
-            when {
-                openStartBufferPickerDialog.value -> {
-                    MinutePickerDialog(
-                        onConfirm =
-                            { minutes: Int ->
-                                openStartBufferPickerDialog.value = false
-                                setStartBufferTime.intValue = minutes
-                            },
-                        onDismiss = {
-                            openStartBufferPickerDialog.value = false
-                        },
-                        default = setStartBufferTime.intValue
-                    )
-                }
-            }
-            when {
-                openEndBufferPickerDialog.value -> {
-                    MinutePickerDialog(
-                        onConfirm =
-                            { minutes: Int ->
-                                openEndBufferPickerDialog.value = false
-                                setEndBufferTime.intValue = minutes
-                            },
-                        onDismiss = {
-                            openEndBufferPickerDialog.value = false
-                        },
-                        default = setEndBufferTime.intValue
-                    )
-                }
-            }
-            when {
-                openStartStationDialog.value -> {
-                    StationPickerDialog(
-                        onConfirm =
-                            { station: String ->
-                                openStartStationDialog.value = false
-                                startStation.value = station
-                            },
-                        onDismiss = {
-                            openStartStationDialog.value = false
-                        },
-                        core
-                    )
-                }
-            }
-            when {
-                openEndStationDialog.value -> {
-                    StationPickerDialog(
-                        onConfirm =
-                            { station: String ->
-                                openEndStationDialog.value = false
-                                endStation.value = station
-                            },
-                        onDismiss = {
-                            openEndStationDialog.value = false
-                        },
-                        core
-                    )
-                }
-            }
-            Column(
-                modifier = Modifier
-                    .verticalScroll(rememberScrollState())
-                    .padding(innerPadding)
-                    .background(MaterialTheme.colorScheme.background)
-            ) {
-                Row (
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                {
-                    OurText(
-                        text = "Wecker bearbeiten",
-                        modifier = Modifier.padding(16.dp)
-                    )
-                    TextButton(
-                        //Save to database when clicked
-                        onClick = {
-                            openLoadingScreen.value = true
-                            saveConfiguration(core, context)
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Transparent
-                        ),
-                        contentPadding = PaddingValues(0.dp),
-
-                    ) {
-                        OurText(
-                            text = "Speichern",
-                            textAlign = TextAlign.Right,
-                            color = MaterialTheme.colorScheme.secondary,
-                            modifier = Modifier.padding(10.dp)
+                            enabled = rideSelectedOption == rideOptions[1],
+                            text = manuallySetTravelTime.intValue.toString() + "min",
                         )
                     }
                 }
-                OurTextField(
-                    value = alarmName.value,
-                    onValueChange = {alarmName.value = it},
-                    modifier = Modifier
-                        .padding(24.dp, 8.dp)
-                        .align(alignment = Alignment.CenterHorizontally),
-                    placeholderText = "Wecker Name",
-                )
-
-                innerDatengrundlageComposable(innerPadding,core)
-                innerFahrtwegComposable(innerPadding,core)
-                innerZeitaufwandComposable(innerPadding,core)
-                innerGueltigkeitComposable(innerPadding,core)
             }
+        }
+    }
+    @Composable
+    private fun InnerZeitaufwandComposable() {
+        OurText(
+            text = "Zeitaufwand",
+            modifier = Modifier.padding(top = 24.dp, start = 24.dp)
+        )
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp)
+        ) {
+            OurText(
+                text = "Puffer vor Fahrt",
+                modifier = Modifier.padding(top = 24.dp, start = 24.dp)
+            )
+            OurButtonInEditAlarm(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 48.dp),
+                onClick = {
+                    openStartBufferPickerDialog.value = true
+                },
+                text = setStartBufferTime.intValue.toString() + "min",
+            )
+        }
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp)
+        ) {
+            OurText(
+                text = "Puffer vor Fahrt erzwingen",
+                modifier = Modifier.padding(24.dp, 16.dp, 0.dp, 0.dp)
+            )
+            Switch(
+                checked = enforceStartBuffer.value,
+                //Configuration will always be reset to active when edited in AlarmClockEdit
+                onCheckedChange = {
+                    enforceStartBuffer.value = it
+                },
+                enabled = true,
+                colors = SwitchDefaults.colors(
+                    checkedBorderColor = MaterialTheme.colorScheme.background,
+                    uncheckedBorderColor = MaterialTheme.colorScheme.background,
+                    checkedIconColor = MaterialTheme.colorScheme.primary,
+                    uncheckedIconColor = MaterialTheme.colorScheme.error
+                ),
+                modifier = Modifier.padding(16.dp, 0.dp)
+            )
+        }
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp)
+
+        ){
+            OurText(
+                text = "Puffer nach Ankunft",
+                modifier = Modifier.padding(top = 24.dp, start = 24.dp)
+            )
+            OurButtonInEditAlarm(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 48.dp),
+                onClick = {
+                    openEndBufferPickerDialog.value = true
+                },
+                text = setEndBufferTime.intValue.toString() + "min"
+            )
+        }
+    }
+    @Composable
+    private fun InnerGueltigkeitComposable(){
+        OurText(
+            text = "Gültig für",
+            modifier = Modifier.padding(top = 24.dp, start = 24.dp)
+        )
+        Box(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .fillMaxWidth()
+        ){
+            selectedDays.value.forEachIndexed { index, active ->
+
+                TextButton(
+                    modifier = Modifier
+                        .padding(start = 0.dp)
+                        .width(50.dp)
+                        .align(
+                            BiasAlignment(
+                                (2 * (index / 6f) - 1),
+                                verticalBias = 0f
+                            )
+                        ),
+                    onClick = {
+                        var days = selectedDays.value.toMutableList()
+                        days[index] = !days[index]
+                        selectedDays.value = days
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent
+                    )
+                ) {
+                    val day = DayOfWeek.entries[index].name
+                    OurText(
+                        text = day[0]+day[1].lowercase(),
+                        color = if(active){
+                            MaterialTheme.colorScheme.secondary
+                        } else{
+                            MaterialTheme.colorScheme.onBackground
+                        },
+                        modifier = Modifier.padding(0.dp)
+                    )
+                }
+            }
+        }
+    }
+
+    //Main component that is sent as navbar as callback
+    @OptIn(ExperimentalMaterial3Api::class) //Needed because Time Picker is yet experimental
+    val innerEditComposable : @Composable (PaddingValues, CoreSpecification) -> Unit =
+    { innerPadding: PaddingValues, core: CoreSpecification ->
+        val context = LocalContext.current
+        //Open time picker dialogs when corresponding boolean set to true
+        when {
+            openLoadingScreen.value ->{
+                LoadingScreen()
+            }
+        }
+        when {
+            openArrivalTimePickerDialog.value -> {
+                TimePickerDialogContainer(
+                    onConfirm =
+                    { timePickerState: TimePickerState ->
+                        openArrivalTimePickerDialog.value = false
+                        manuallySetArrivalTime.value = LocalTime.of(
+                            timePickerState.hour, timePickerState.minute
+                        )
+                    },
+                    onDismiss = {
+                        openArrivalTimePickerDialog.value = false
+                    })
+            }
+        }
+        when {
+            openTravelTimePickerDialog.value -> {
+                MinutePickerDialog(
+                    onConfirm =
+                        { minutes: Int ->
+                            openTravelTimePickerDialog.value = false
+                            manuallySetTravelTime.intValue = minutes
+                        },
+                    onDismiss = {
+                        openTravelTimePickerDialog.value = false
+                    },
+                    default = manuallySetTravelTime.intValue
+                )
+            }
+        }
+        when {
+            openStartBufferPickerDialog.value -> {
+                MinutePickerDialog(
+                    onConfirm =
+                        { minutes: Int ->
+                            openStartBufferPickerDialog.value = false
+                            setStartBufferTime.intValue = minutes
+                        },
+                    onDismiss = {
+                        openStartBufferPickerDialog.value = false
+                    },
+                    default = setStartBufferTime.intValue
+                )
+            }
+        }
+        when {
+            openEndBufferPickerDialog.value -> {
+                MinutePickerDialog(
+                    onConfirm =
+                        { minutes: Int ->
+                            openEndBufferPickerDialog.value = false
+                            setEndBufferTime.intValue = minutes
+                        },
+                    onDismiss = {
+                        openEndBufferPickerDialog.value = false
+                    },
+                    default = setEndBufferTime.intValue
+                )
+            }
+        }
+        when {
+            openStartStationDialog.value -> {
+                StationPickerDialog(
+                    onConfirm =
+                        { station: String ->
+                            openStartStationDialog.value = false
+                            startStation.value = station
+                        },
+                    onDismiss = {
+                        openStartStationDialog.value = false
+                    },
+                    core
+                )
+            }
+        }
+        when {
+            openEndStationDialog.value -> {
+                StationPickerDialog(
+                    onConfirm =
+                        { station: String ->
+                            openEndStationDialog.value = false
+                            endStation.value = station
+                        },
+                    onDismiss = {
+                        openEndStationDialog.value = false
+                    },
+                    core
+                )
+            }
+        }
+        Column(
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(innerPadding)
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            Row (
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            )
+            {
+                OurText(
+                    text = "Wecker bearbeiten",
+                    modifier = Modifier.padding(16.dp)
+                )
+                TextButton(
+                    //Save to database when clicked
+                    onClick = {
+                        openLoadingScreen.value = true
+                        saveConfiguration(core, context)
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent
+                    ),
+                    contentPadding = PaddingValues(0.dp),
+
+                ) {
+                    OurText(
+                        text = "Speichern",
+                        textAlign = TextAlign.Right,
+                        color = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.padding(10.dp)
+                    )
+                }
+            }
+            OurTextField(
+                value = alarmName.value,
+                onValueChange = {alarmName.value = it},
+                modifier = Modifier
+                    .padding(24.dp, 8.dp)
+                    .align(alignment = Alignment.CenterHorizontally),
+                placeholderText = "Wecker Name",
+            )
+
+            InnerDatengrundlageComposable()
+            InnerFahrtwegComposable()
+            InnerZeitaufwandComposable()
+            InnerGueltigkeitComposable()
+        }
+    }
+    @Composable
+    fun EditComposable(modifier: Modifier, core: CoreSpecification) {
+        NavBar.Companion.NavigationBar(modifier, core, innerEditComposable, caller = AlarmClockEditScreen::class)
+    }
+
+    @Preview(showBackground = true)
+    @Composable
+    fun EditPreview() {
+        core = MockupCore()
+        defaultAlarmValues = core.getDefaultAlarmValues()
+        reset(null)
+            G2_WeckMichMalTheme {
+            EditComposable(
+                modifier = Modifier,
+                core = MockupCore()
+            )
         }
     }
 }
 
-@Composable
-fun EditComposable(modifier: Modifier, core: CoreSpecification) {
-    NavBar.Companion.NavigationBar(modifier, core, AlarmClockEditScreen.innerEditComposable, caller = AlarmClockEditScreen::class)
-}
 
 
-@Preview(showBackground = true)
-@Composable
-fun EditPreview() {
-    AlarmClockEditScreen.reset(null)
-    G2_WeckMichMalTheme {
-        EditComposable(
-            modifier = Modifier,
-            core = MockupCore()
-        )
-    }
-}
+
