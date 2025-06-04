@@ -61,4 +61,31 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+
+    /*
+    fun checkForPermissions() : Boolean{
+        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+        val powerManager = getSystemService(POWER_SERVICE) as PowerManager
+
+        if(!alarmManager.canScheduleExactAlarms()){
+            core.showToast("Bitte erlaube Alarm Erstellung in den Systemeinstellungen")
+            return false
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                core.showToast("Bitte erlaube Notifications in den Systemeinstellungen")
+            }
+            return false
+        }
+        if(!powerManager.isIgnoringBatteryOptimizations(packageName)){
+            core.showToast("Bitte deaktiviere battery optimization für diese App")
+        }
+        return true
+    }
+     */
+
 }
