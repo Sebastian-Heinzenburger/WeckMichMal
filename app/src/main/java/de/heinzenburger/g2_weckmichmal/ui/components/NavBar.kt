@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.AccessAlarm
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
@@ -73,7 +74,7 @@ class NavBar : ComponentActivity() {
                                 context.startActivity(intent)
                             }, modifier.size(90.dp)) {
                                 Icon(
-                                    Icons.Filled.Info,
+                                    Icons.Filled.School,
                                     contentDescription = "Localized description",
                                     modifier.size(iconSize),
                                     tint = if(caller == InformationScreen::class){iconSelectedColor}else{iconColor},
