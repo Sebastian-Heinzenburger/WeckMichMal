@@ -42,7 +42,7 @@ data class ConfigurationHandler(
         //Combining Events with their corresponding Configuration
         @Transaction
         @Query("SELECT * FROM configuration")
-        fun getConfigurationsAndEvents(): List<ConfigurationWithEvent>
+        fun getConfigurationsAndEvents(): List<ConfigurationWithEvent>?
         @Transaction
         @Query("SELECT * FROM configuration WHERE uid = :uid")
         fun getConfigurationAndEvent(uid: Long): ConfigurationWithEvent
@@ -126,6 +126,7 @@ data class ConfigurationHandler(
             return result
         }
         catch (e: Exception){
+            logger.log(Logger.Level.SEVERE,e.message.toString())
             throw PersistenceException.GetConfigurationException(e)
         }
     }

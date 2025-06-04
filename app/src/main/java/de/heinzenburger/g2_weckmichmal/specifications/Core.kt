@@ -3,6 +3,7 @@ package de.heinzenburger.g2_weckmichmal.specifications
 import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity.DefaultAlarmValues
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 /**
  * Interface defining the core
@@ -139,4 +140,8 @@ interface CoreSpecification {
      * Show a Toast message
      */
     fun showToast(message: String)
+
+    fun getLoggedNextAlarm() : String
+
+    fun logNextAlarm(date: LocalDateTime, type: String)
 }

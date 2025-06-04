@@ -30,6 +30,7 @@ import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.components.SaveURL
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
+import kotlin.concurrent.thread
 
 class WelcomeScreen : ComponentActivity() {
 
@@ -84,7 +85,9 @@ class WelcomeScreen : ComponentActivity() {
             )
             Button(
                 onClick = {
-                    core.saveRaplaURL("")
+                    thread {
+                        core.saveRaplaURL("")
+                    }
                     val intent = Intent(context, AllowNotificationsScreen::class.java)
                     intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
                     startActivity(intent)

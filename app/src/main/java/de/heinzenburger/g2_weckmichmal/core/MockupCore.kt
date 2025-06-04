@@ -226,4 +226,11 @@ class MockupCore : CoreSpecification {
 
     override fun showToast(message: String) {
     }
+
+    override fun getLoggedNextAlarm(): String {
+        return "No alarm scheduled"
+    }
+
+    override fun logNextAlarm(date: LocalDateTime, type: String) {
+    }
 }

@@ -8,6 +8,7 @@ class ExceptionHandler(val core: Core) {
     fun unexpectedException(e: Throwable, toastMessage: String, snitch: Boolean){
         core.log(Logger.Level.SEVERE, toastMessage)
         core.log(Logger.Level.SEVERE, e.message.toString())
+        core.log(Logger.Level.SEVERE, e.cause?.message.toString())
         core.log(Logger.Level.SEVERE, e.stackTraceToString())
         core.showToast(toastMessage)
         if(snitch){

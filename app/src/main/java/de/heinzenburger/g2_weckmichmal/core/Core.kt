@@ -13,6 +13,7 @@ import de.heinzenburger.g2_weckmichmal.api.courses.deriveValidCourseURL
 import de.heinzenburger.g2_weckmichmal.specifications.MensaMeal
 import de.heinzenburger.g2_weckmichmal.specifications.SettingsEntity.DefaultAlarmValues
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 //For description of specific method, see I_Core in specifications
 data class Core(
@@ -167,6 +168,13 @@ data class Core(
             log(Logger.Level.SEVERE, e.message.toString())
             log(Logger.Level.SEVERE, e.stackTraceToString())
         }
+    }
+
+    override fun getLoggedNextAlarm() : String{
+        return logger.getNextAlarm()
+    }
+    override fun logNextAlarm(date: LocalDateTime, type: String){
+        logger.updateNextAlarmFile(date, type)
     }
 
     override fun log(

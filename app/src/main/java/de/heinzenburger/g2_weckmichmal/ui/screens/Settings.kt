@@ -114,6 +114,19 @@ class SettingsScreen : ComponentActivity() {
                 text = "Einstellungen",
                 modifier = Modifier.padding(16.dp)
             )
+            OurText(
+                text = if(core::class.java == Core::class.java){
+                    "Version Number: " + packageManager.getPackageInfo(packageName, 0).versionName.toString()
+                }
+                else{
+                    "Version Number: 1.1"
+                },
+                modifier = Modifier.padding(start = 16.dp)
+            )
+            OurText(
+                text = core.getLoggedNextAlarm(),
+                modifier = Modifier.padding(start = 16.dp)
+            )
             Column(Modifier
                 .background(MaterialTheme.colorScheme.background)
                 .fillMaxSize(),

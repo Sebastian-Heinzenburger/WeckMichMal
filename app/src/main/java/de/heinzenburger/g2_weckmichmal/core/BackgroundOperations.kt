@@ -155,6 +155,9 @@ class BackgroundOperations(var core: Core) {
         core.log(Logger.Level.INFO, "runUpdateLogic started")
 
         var configurationsWithEvents = core.getAllConfigurationAndEvent()?.toMutableList()
+        if(configurationsWithEvents == null ||configurationsWithEvents.isEmpty()){
+            return
+        }
         core.log(Logger.Level.INFO, "ConfigurationsWithEvents loaded: $configurationsWithEvents")
 
         core.log(Logger.Level.INFO, "Starting safety alarm scheduler")
@@ -179,7 +182,7 @@ class BackgroundOperations(var core: Core) {
         )
 
 
-        configurationsWithEvents?.forEachIndexed {
+        configurationsWithEvents.forEachIndexed {
                 index, it ->
             var configurationWithEvent = calculateNextEventForConfiguration(it, wakeUpCalculator)
             configurationsWithEvents[index] = configurationWithEvent
@@ -201,87 +204,73 @@ class BackgroundOperations(var core: Core) {
     }
 
     fun runWakeUpLogic(earliestConfigurationWithEvent: ConfigurationWithEvent) {
-        try {
-            core.log(Logger.Level.INFO, "runWakeUpLogic called with earliestEvent: $earliestConfigurationWithEvent")
-            val alarmManager = core.context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            val alarmIntent = Intent(core.context, AlarmEvent::class.java)
-            alarmIntent.putExtra("configurationWithEvent", earliestConfigurationWithEvent)
-            val pendingIntent = PendingIntent.getBroadcast(
-                core.context,
-                0,
-                alarmIntent,
-                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-            )
+        core.log(Logger.Level.INFO, "runWakeUpLogic called with earliestEvent: $earliestConfigurationWithEvent")
+        val alarmManager = core.context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val alarmIntent = Intent(core.context, AlarmEvent::class.java)
+        alarmIntent.putExtra("configurationWithEvent", earliestConfigurationWithEvent)
+        val pendingIntent = PendingIntent.getBroadcast(
+            core.context,
+            0,
+            alarmIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
 
-            val pendingEditIntent = PendingIntent.getBroadcast(
-                core.context,
-                0,
-                alarmIntent,
-                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-            )
+        val pendingEditIntent = PendingIntent.getBroadcast(
+            core.context,
+            0,
+            alarmIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
 
-            if (!alarmManager.canScheduleExactAlarms()) {
-                core.log(Logger.Level.INFO, "Requesting permission to schedule exact alarms")
-                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                core.context.startActivity(intent)
-            }
-            val alarmDate = earliestConfigurationWithEvent.event!!.getLocalDateTime()
-            core.log(Logger.Level.INFO, "Setting alarm for date: $alarmDate")
-
-            val alarmClockInfo = AlarmManager.AlarmClockInfo(alarmDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
-                pendingEditIntent)
-            core.log(Logger.Level.INFO, "Alarm ringing at ${earliestConfigurationWithEvent.event.wakeUpTime}!")
-            alarmManager.setAlarmClock(alarmClockInfo, pendingIntent)
+        if (!alarmManager.canScheduleExactAlarms()) {
+            core.log(Logger.Level.INFO, "Requesting permission to schedule exact alarms")
+            val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            core.context.startActivity(intent)
         }
-        catch (e: Exception){
-            core.log(Logger.Level.INFO, "HILFEEEE DER RUN WAKEUPLOGIC IST ABGESTÜRZT!!!")
-            core.log(Logger.Level.SEVERE, e.message.toString())
-            core.log(Logger.Level.SEVERE, e.stackTraceToString())
-            runUpdateLogic()
-        }
+        val alarmDate = earliestConfigurationWithEvent.event!!.getLocalDateTime()
+        core.log(Logger.Level.INFO, "Setting alarm for date: $alarmDate")
+
+        val alarmClockInfo = AlarmManager.AlarmClockInfo(alarmDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+            pendingEditIntent)
+        core.log(Logger.Level.INFO, "Alarm ringing at ${earliestConfigurationWithEvent.event.wakeUpTime}!")
+        alarmManager.setAlarmClock(alarmClockInfo, pendingIntent)
+        core.logNextAlarm(alarmDate, "Wake")
     }
     
     fun startUpdateScheduler(delay: Int) {
-        try {
-            core.log(Logger.Level.INFO, "startUpdateScheduler called with delay: $delay")
-            val alarmManager = core.context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            val alarmIntent = Intent(core.context, AlarmUpdater::class.java)
-            val pendingIntent = PendingIntent.getBroadcast(
-                core.context,
-                0,
-                alarmIntent,
-                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-            )
+        core.log(Logger.Level.INFO, "startUpdateScheduler called with delay: $delay")
+        val alarmManager = core.context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val alarmIntent = Intent(core.context, AlarmUpdater::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+            core.context,
+            0,
+            alarmIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
 
-            val pendingEditIntent = PendingIntent.getBroadcast(
-                core.context,
-                0,
-                alarmIntent,
-                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-            )
+        val pendingEditIntent = PendingIntent.getBroadcast(
+            core.context,
+            0,
+            alarmIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
 
-            if (!alarmManager.canScheduleExactAlarms()) {
-                core.log(Logger.Level.INFO, "Requesting permission to schedule exact alarms for update scheduler")
-                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                core.context.startActivity(intent)
-            }
-            val triggerTime = LocalDateTime.now().plusSeconds(delay.toLong())
-            core.log(Logger.Level.INFO, "Scheduling update alarm for: $triggerTime")
-
-            val alarmClockInfo = AlarmManager.AlarmClockInfo(
-                triggerTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
-                pendingEditIntent)
-
-            core.log(Logger.Level.INFO, "Alarm updating in ${delay/60} minutes")
-            alarmManager.setAlarmClock(alarmClockInfo, pendingIntent)
+        if (!alarmManager.canScheduleExactAlarms()) {
+            core.log(Logger.Level.INFO, "Requesting permission to schedule exact alarms for update scheduler")
+            val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            core.context.startActivity(intent)
         }
-        catch (e : Exception){
-            core.log(Logger.Level.INFO, "HILFEEEE DER START UPDATE SCHEDULER IST ABGESTÜRZT!!!")
-            core.log(Logger.Level.SEVERE, e.message.toString())
-            core.log(Logger.Level.SEVERE, e.stackTraceToString())
-            runUpdateLogic()
-        }
+        val triggerTime = LocalDateTime.now().plusSeconds(delay.toLong())
+        core.log(Logger.Level.INFO, "Scheduling update alarm for: $triggerTime")
+
+        val alarmClockInfo = AlarmManager.AlarmClockInfo(
+            triggerTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+            pendingEditIntent)
+
+        core.log(Logger.Level.INFO, "Alarm updating in ${delay/60} minutes")
+        alarmManager.setAlarmClock(alarmClockInfo, pendingIntent)
+        core.logNextAlarm(triggerTime, "Update")
     }
 }
