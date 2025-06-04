@@ -287,13 +287,15 @@ class AlarmClockEditScreen : ComponentActivity() {
             if(validation){
                 core.generateOrUpdateAlarmConfiguration(configuration)
                 core.updateDefaultAlarmValues(defaultAlarmValues)
+
+                val intent = Intent(context, AlarmClockOverviewScreen::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                startActivity(intent)
+                finish()
+
                 core.runUpdateLogic()
             }
         }
-        val intent = Intent(context, AlarmClockOverviewScreen::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-        startActivity(intent)
-        finish()
     }
 
     @Composable
