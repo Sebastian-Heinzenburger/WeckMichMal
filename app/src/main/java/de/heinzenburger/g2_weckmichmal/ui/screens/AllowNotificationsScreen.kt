@@ -73,22 +73,23 @@ class AllowNotificationsScreen : ComponentActivity() {
     @Composable
     fun InnerComposable(modifier: Modifier) {
         val context = LocalContext.current
-        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
-        val powerManager = context.getSystemService(POWER_SERVICE) as PowerManager
-        val allowNotifications = remember { mutableStateOf(true) }
-        val allowNoBatteryOptimization = remember { mutableStateOf(true) }
-        val allowSheduleAlarm = remember { mutableStateOf(true) }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            allowNotifications.value = ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED
+        val allowNotifications = remember { mutableStateOf(false) }
+        val allowNoBatteryOptimization = remember { mutableStateOf(false) }
+        val allowSheduleAlarm = remember { mutableStateOf(false) }
+
+        if(core::class.java == Core::class.java){
+            val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+            val powerManager = context.getSystemService(POWER_SERVICE) as PowerManager
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                allowNotifications.value = ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
+            }
+            allowSheduleAlarm.value = alarmManager.canScheduleExactAlarms()
+            allowNoBatteryOptimization.value = powerManager.isIgnoringBatteryOptimizations(packageName)
         }
-        allowSheduleAlarm.value = alarmManager.canScheduleExactAlarms()
-        allowNoBatteryOptimization.value = powerManager.isIgnoringBatteryOptimizations(packageName)
-
-
         Column(modifier
             .background(MaterialTheme.colorScheme.background)
             .fillMaxSize(),
@@ -96,17 +97,24 @@ class AllowNotificationsScreen : ComponentActivity() {
             horizontalAlignment = Alignment.CenterHorizontally
         ){
             Text(
-                textAlign = TextAlign.Center,
+                text = "Erteilen von Berechtigungen",
+                modifier = Modifier.background(MaterialTheme.colorScheme.secondary,
+                    RoundedCornerShape(16.dp)).padding(10.dp),
+                color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.titleSmall,
+            )
+            Text(
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodyMedium,
                 text =
-                    if(!allowNoBatteryOptimization.value){
-                        "Um zu garantieren, dass sich der Wecker in deinem Schlaf aktualisieren kann, muss die App mögliche Batterie-Optimisierungen umgehen. Dein Akku-Verbrauch wird sich dabei nicht wirklich erhöhen. Drücke auf 'Weiter' und durchsuche die Liste nach G2-WeckMichMal um uneingeschränkte Hintergrundnutzung zu erlauben."
-                    }
-                    else if(!allowNotifications.value){
+                     if(!allowNotifications.value){
                         "WeckMichMal benötigt die Berechtigung, Benachrichtigungen zu senden. Nur so kann der Alarm dich zuverlässig wecken.\nKeine Sorge, es gibt keine Werbung oder störende Nachrichten."
                     }
                     else if(!allowSheduleAlarm.value){
                         "Außerdem benötigt WeckMichMal die Berechtigung, Alarme in deinem System zu setzen. Ansonsten verschläfst du jeden morgen."
+                    }
+                    else if(!allowNoBatteryOptimization.value){
+                        "Um zu garantieren, dass sich der Wecker in deinem Schlaf aktualisieren kann, muss die App mögliche Batterie-Optimisierungen umgehen. Dein Akku-Verbrauch wird sich dabei nicht wirklich erhöhen. Drücke auf 'Weiter' und durchsuche die Liste nach G2-WeckMichMal um uneingeschränkte Hintergrundnutzung zu erlauben."
                     }
                     else{
                         "Hinweis: Lasse dein Smartphone nachts am Strom angesteckt! Ansonsten ist das aktualisieren eines Weckers anhand von Bahn und Vorlesungsplan stark eingeschränkt!"
@@ -130,17 +138,14 @@ class AllowNotificationsScreen : ComponentActivity() {
                                 Manifest.permission.POST_NOTIFICATIONS
                             ) == PackageManager.PERMISSION_GRANTED
                         }
+
+                        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+                        val powerManager = context.getSystemService(POWER_SERVICE) as PowerManager
+
                         allowSheduleAlarm.value = alarmManager.canScheduleExactAlarms()
                         allowNoBatteryOptimization.value = powerManager.isIgnoringBatteryOptimizations(packageName)
 
-                        if(!allowNoBatteryOptimization.value){
-                            val intent = Intent()
-                            intent.action = Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS
-                            startActivity(intent)
-                            allowNoBatteryOptimization.value = true
-                        }
-
-                        else if (!allowNotifications.value && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        if (!allowNotifications.value && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                             requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                             allowNotifications.value = true
                         }
@@ -151,6 +156,12 @@ class AllowNotificationsScreen : ComponentActivity() {
                             }
                             startActivity(intent)
                             allowSheduleAlarm.value = true
+                        }
+                        else if(!allowNoBatteryOptimization.value){
+                            val intent = Intent()
+                            intent.action = Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS
+                            startActivity(intent)
+                            allowNoBatteryOptimization.value = true
                         }
                     }
                 ) {
