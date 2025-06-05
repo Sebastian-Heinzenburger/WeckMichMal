@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,6 +18,7 @@ import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -28,12 +30,14 @@ import de.heinzenburger.g2_weckmichmal.core.ExceptionHandler
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
+import de.heinzenburger.g2_weckmichmal.ui.components.PickerDialogs.Companion.GrantPermissions
 import de.heinzenburger.g2_weckmichmal.ui.components.SaveURL
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
 import kotlin.concurrent.thread
 
 class WelcomeScreen : ComponentActivity() {
-
+    private val registerForActivityResult = registerForActivityResult(RequestPermission()){ }
+    private val openPermissionDialog = mutableStateOf(false)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -54,6 +58,22 @@ class WelcomeScreen : ComponentActivity() {
     @Composable
     fun Greeting(modifier: Modifier, core: CoreSpecification) {
         val context = LocalContext.current
+        when {
+            openPermissionDialog.value -> {
+                GrantPermissions(
+                    onDismiss = {
+                        openPermissionDialog.value = false
+                        val intent = Intent(context, AlarmClockOverviewScreen::class.java)
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                        startActivity(intent)
+                        finish()
+                                },
+                    isFirstTime = false,
+                    core = core,
+                    registerForActivityResult = registerForActivityResult
+                )
+            }
+        }
         Column(modifier
             .background(MaterialTheme.colorScheme.background)
             .fillMaxSize(),
@@ -77,10 +97,7 @@ class WelcomeScreen : ComponentActivity() {
             SaveURL().innerSettingsComposable(
                 PaddingValues(0.dp), core,
                 fun () {
-                    val intent = Intent(context, AllowNotificationsScreen::class.java)
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-                    startActivity(intent)
-                    finish()
+                    openPermissionDialog.value = true
                 }
             )
             Button(
@@ -88,10 +105,7 @@ class WelcomeScreen : ComponentActivity() {
                     thread {
                         core.saveRaplaURL("")
                     }
-                    val intent = Intent(context, AllowNotificationsScreen::class.java)
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-                    startActivity(intent)
-                    finish()
+                    openPermissionDialog.value = true
                 },
                 colors = ButtonColors(
                     contentColor = MaterialTheme.colorScheme.primary,

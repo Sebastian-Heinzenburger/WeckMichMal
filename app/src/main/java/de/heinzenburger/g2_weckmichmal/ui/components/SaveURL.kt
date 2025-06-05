@@ -41,13 +41,13 @@ class SaveURL {
         Row(modifier = Modifier.fillMaxWidth()){
             OurTextField(
                 value = director.value,
-                onValueChange = {director.value = it},
+                onValueChange = {director.value = it.replace("\n","")},
                 modifier = Modifier.padding(4.dp).fillMaxWidth(0.6f).padding(start = 8.dp, end=8.dp, top = 8.dp),
                 placeholderText = "Studiengangsleiter",
             )
             OurTextField(
                 value = course.value,
-                onValueChange = {course.value = it},
+                onValueChange = {course.value = it.replace("\n","")},
                 modifier = Modifier.padding(4.dp).fillMaxWidth(1f).padding(top = 8.dp,end=8.dp),
                 placeholderText = "Kursname",
             )
@@ -61,7 +61,7 @@ class SaveURL {
 
         OurTextField(
             value = url.value,
-            onValueChange = {url.value = it},
+            onValueChange = {url.value = it.replace("\n","")},
             modifier = Modifier.padding(16.dp),
             placeholderText = "URL beginnend mit https:// oder http://",
         )
@@ -98,13 +98,13 @@ class SaveURL {
                 }
                 else if (director != "" || course != ""){
                     if (director != "" && course != ""){
-                        openLoadingScreen.value = true
                         var realCourse = course.uppercase().replace(" ", "")
                         var realDirector = director.lowercase().replace(" ", "")
                         if(realCourse == "TINF23B2"){
                             realCourse = "TINF23BN2"
                         }
                         if(core.isValidCourseURL(realDirector, realCourse)){
+                            openLoadingScreen.value = true
                             core.saveRaplaURL(realDirector, realCourse)
                             onSave()
                             core.showToast("Passt")

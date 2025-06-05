@@ -137,6 +137,11 @@ interface CoreSpecification {
     fun validateConfiguration(configuration: Configuration) : Boolean
 
     /**
+     * Get a list of absolutely required granted permissions
+     */
+    fun getGrantedPermissions(): List<String>?
+
+    /**
      * Show a Toast message
      */
     fun showToast(message: String)

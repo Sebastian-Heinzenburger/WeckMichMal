@@ -84,6 +84,12 @@ data class Core(
         } == true
     }
 
+    override fun getGrantedPermissions(): List<String>? {
+        return exceptionHandler.runWithUnexpectedExceptionHandler("Can not get granted permissions.", true){
+            validations.getGrantedPermissions()
+        }
+    }
+
 
     /******************** PERSISTENCE ********************/
     /**Configurations**/

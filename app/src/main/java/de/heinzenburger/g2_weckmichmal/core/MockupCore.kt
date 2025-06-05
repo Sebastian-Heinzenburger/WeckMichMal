@@ -221,6 +221,14 @@ class MockupCore : CoreSpecification {
         return true
     }
 
+    override fun getGrantedPermissions(): List<String>? {
+        return listOf(
+            "Alarm",
+            "Battery",
+            //"Notifications",
+        )
+    }
+
     override fun deleteAlarmConfiguration(uid: Long) {
     }
 

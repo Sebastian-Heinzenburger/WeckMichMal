@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -57,6 +58,7 @@ import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.Our
 import de.heinzenburger.g2_weckmichmal.ui.components.NavBar
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurTextField
+import de.heinzenburger.g2_weckmichmal.ui.components.PickerDialogs.Companion.GrantPermissions
 import de.heinzenburger.g2_weckmichmal.ui.components.PickerDialogs.Companion.TimePickerDialogContainer
 import de.heinzenburger.g2_weckmichmal.ui.components.PickerDialogs.Companion.MinutePickerDialog
 import de.heinzenburger.g2_weckmichmal.ui.components.PickerDialogs.Companion.StationPickerDialog
@@ -67,6 +69,8 @@ import kotlin.concurrent.thread
 
 class AlarmClockEditScreen : ComponentActivity() {
 
+    private val registerForActivityResult = registerForActivityResult(RequestPermission()){ }
+
     private var openLoadingScreen = mutableStateOf(false)
 
     private var openArrivalTimePickerDialog : MutableState<Boolean> = mutableStateOf(false)
@@ -75,6 +79,7 @@ class AlarmClockEditScreen : ComponentActivity() {
     private var openEndBufferPickerDialog : MutableState<Boolean> = mutableStateOf(false)
     private var openStartStationDialog : MutableState<Boolean> = mutableStateOf(false)
     private var openEndStationDialog : MutableState<Boolean> = mutableStateOf(false)
+    private var openPermissionDialog : MutableState<Boolean> = mutableStateOf(false)
 
     //Everytime an alarm is created, the reset function has to be called before calling this view so all configurations are set to default
     //If an alarm is to be updated, the current configuration is passed as parameter to reset function
@@ -284,7 +289,18 @@ class AlarmClockEditScreen : ComponentActivity() {
             else{
                 configuration.days = days
             }
+
+
+            val permissions = core.getGrantedPermissions()
+            if(validation && (permissions?.contains("Notifications") == false || permissions?.contains("Alarm") == false)){
+                validation = false
+                core.showToast("Berechtigungen fehlen")
+                openPermissionDialog.value = true
+            }
+
+
             if(validation){
+                openLoadingScreen.value = true
                 core.generateOrUpdateAlarmConfiguration(configuration)
                 core.updateDefaultAlarmValues(defaultAlarmValues)
 
@@ -732,6 +748,16 @@ class AlarmClockEditScreen : ComponentActivity() {
                 )
             }
         }
+        when {
+            openPermissionDialog.value -> {
+                GrantPermissions(
+                    onDismiss = { openPermissionDialog.value = false },
+                    isFirstTime = false,
+                    core = core,
+                    registerForActivityResult = registerForActivityResult
+                )
+            }
+        }
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
@@ -750,7 +776,6 @@ class AlarmClockEditScreen : ComponentActivity() {
                 TextButton(
                     //Save to database when clicked
                     onClick = {
-                        openLoadingScreen.value = true
                         saveConfiguration(core, context)
                     },
                     colors = ButtonDefaults.buttonColors(

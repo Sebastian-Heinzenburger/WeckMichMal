@@ -1,9 +1,17 @@
 package de.heinzenburger.g2_weckmichmal.core
 
+import android.Manifest
+import android.app.AlarmManager
 import android.content.Context
+import android.content.Context.ALARM_SERVICE
+import android.content.Context.POWER_SERVICE
+import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.os.Build
+import android.os.PowerManager
 import android.webkit.URLUtil
+import androidx.core.content.ContextCompat
 import de.heinzenburger.g2_weckmichmal.api.courses.RaplaFetcher
 import de.heinzenburger.g2_weckmichmal.api.routes.DBRoutePlanner
 import de.heinzenburger.g2_weckmichmal.persistence.ApplicationSettingsHandler
@@ -81,5 +89,21 @@ class Validations(val core: Core) {
         }
         core.log(Logger.Level.INFO, "validateConfiguration result: $validation")
         return validation
+    }
+
+    fun getGrantedPermissions(): List<String>{
+        val result = mutableListOf<String>()
+        val alarmManager = core.context.getSystemService(ALARM_SERVICE) as AlarmManager
+        val powerManager = core.context.getSystemService(POWER_SERVICE) as PowerManager
+
+        if(alarmManager.canScheduleExactAlarms()) result.add("Alarm")
+        if(powerManager.isIgnoringBatteryOptimizations(core.context.packageName)) result.add("Battery")
+        var allowNotifications = true
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            allowNotifications = ContextCompat.checkSelfPermission(core.context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        }
+        if(allowNotifications) result.add("Notifications")
+
+        return result
     }
 }

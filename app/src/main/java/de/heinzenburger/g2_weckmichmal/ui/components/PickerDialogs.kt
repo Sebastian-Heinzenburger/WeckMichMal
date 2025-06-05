@@ -1,5 +1,14 @@
 package de.heinzenburger.g2_weckmichmal.ui.components
 
+import android.Manifest
+import android.app.Activity
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import androidx.activity.result.ActivityResultLauncher
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,17 +49,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.persistence.Logger
 import de.heinzenburger.g2_weckmichmal.specifications.CoreSpecification
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.NumberField
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurText
 import de.heinzenburger.g2_weckmichmal.ui.components.BasicElements.Companion.OurTextField
-import de.heinzenburger.g2_weckmichmal.ui.screens.SettingsScreen
+import de.heinzenburger.g2_weckmichmal.ui.screens.WelcomeScreen
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
 import java.util.Calendar
 import kotlin.concurrent.thread
@@ -172,7 +185,7 @@ class PickerDialogs {
                         OurTextField(
                             value = station.value,
                             onValueChange = {
-                                station.value = it
+                                station.value = it.replace("\n","")
                                 thread{
                                     if(station.value.length > 2){
                                         try {
@@ -421,14 +434,164 @@ class PickerDialogs {
                 }
             }
         }
+        @Composable
+        fun GrantPermissions(
+            onDismiss: () -> Unit,
+            isFirstTime: Boolean,
+            core: CoreSpecification,
+            registerForActivityResult: ActivityResultLauncher<String>
+        ) {
+            var permissions = remember { mutableStateOf(core.getGrantedPermissions()) }
+            var dismiss = remember { mutableStateOf(false) }
+            val ignorePermission = remember { mutableStateListOf("") }
+            var context = LocalContext.current
+            Dialog(
+                onDismissRequest = {
+                    dismiss.value = true
+                    onDismiss()
+                }
+            ) {
+                thread {
+                    while(!dismiss.value){
+                        Thread.sleep(500)
+                        permissions.value = core.getGrantedPermissions()
+                    }
+                }
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.5f)
+                        .padding(16.dp),
+                    shape = RoundedCornerShape(16.dp),
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = if (isFirstTime) "Berechtigungen erteilen" else "Berechtigungen fehlen!",
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(8.dp).fillMaxWidth().padding(8.dp),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+
+                        var title = ""
+                        var text = ""
+                        var buttonAction = {
+                            onDismiss()
+                        }
+                        if (ignorePermission.contains("Alarme setzen") == false &&
+                            permissions.value?.contains("Alarm") == false) {
+                            title = "Alarme setzen"
+                            text = "Diese App benötigt zwingend die Berechtigung Alarme im System zu erstellen."
+                            buttonAction = {
+                                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                                    data = "package:${context.packageName}".toUri()
+                                }
+                                context.startActivity(intent)
+                            }
+                        } else if (ignorePermission.contains("Benachrichtigungen senden") == false &&
+                            permissions.value?.contains("Notifications") == false) {
+                            title = "Benachrichtigungen senden"
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                val isPermanentlyDenied =
+                                    !ActivityCompat.shouldShowRequestPermissionRationale(
+                                        context as Activity, Manifest.permission.POST_NOTIFICATIONS
+                                    ) && ContextCompat.checkSelfPermission(
+                                        context,
+                                        Manifest.permission.POST_NOTIFICATIONS
+                                    ) == PackageManager.PERMISSION_DENIED
+                                if(!isPermanentlyDenied){
+                                    text = "Diese App benötigt zwingend die Berechtigung Benachrichtigungen zu senden."
+                                    buttonAction = {
+                                        registerForActivityResult.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                    }
+                                }
+                                else{
+                                    text = "Erlaube Benachrichtigungen in den Einstellungen - Ansonsten kann der Wecker nicht richtig funktionieren."
+                                    buttonAction = {
+                                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                            data = Uri.fromParts("package", context.packageName, null)
+                                        }
+                                        context.startActivity(intent)
+                                    }
+                                }
+                            }
+                        } else if (ignorePermission.contains("Uneingeschränkte Hintergrundnutzung") == false &&
+                            permissions.value?.contains("Battery") == false) {
+                            title = "Uneingeschränkte Hintergrundnutzung"
+                            text = "Die App läuft am zuverlässigsten, wenn uneingeschränkte Hintergrundnutzung erlaubt ist."
+                            buttonAction = {
+                                val intent = Intent()
+                                intent.action = Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS
+                                context.startActivity(intent)
+                            }
+                        }
+                        else{
+                            onDismiss()
+                        }
+                        Text(
+                            text = title,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(8.dp).fillMaxWidth().background(
+                                MaterialTheme.colorScheme.secondary,
+                                RoundedCornerShape(8.dp)
+                            ).padding(8.dp),
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                        Text(
+                            text = text,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(8.dp).fillMaxWidth().background(
+                                MaterialTheme.colorScheme.onBackground,
+                                RoundedCornerShape(8.dp)
+                            ).padding(8.dp),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+
+                        Button(
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.secondary
+                            ),
+                            onClick = {
+                                buttonAction()
+                            }
+                        ) {
+                            OurText(
+                                text = "Berechtigung erteilen",
+                                modifier = Modifier
+                            )
+                        }
+
+                        Button(
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                            onClick = {
+                                ignorePermission.add(title)
+                            }
+                        ) {
+                            OurText(
+                                text = "Überspringen",
+                                modifier = Modifier
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun SettingsScreenPreview() {
-    val settingsScreen = SettingsScreen()
     G2_WeckMichMalTheme {
-        settingsScreen.SettingsComposable(modifier = Modifier, uiActions = MockupCore())
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            WelcomeScreen().Greeting(modifier = Modifier, core = MockupCore())
+        }
     }
 }
