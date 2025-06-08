@@ -85,17 +85,19 @@ class SaveURL {
         }
     }
 
+    // Handles save button logic: validation, saving, and feedback
     fun onclickSaveButton(core: CoreSpecification, onSave: () -> Unit, url: String, director: String, course: String){
-        //Inkonsistenz in der RAPLA-URL für unseren Kurs. Random N...
+        //Inconsistency in RAPLA-URL for TINF23B2, is actually TINF23BN2...
         if(core.isInternetAvailable()){
             thread {
-                //very very dirty aber was soll man machen...
+                // If all fields are empty, delete the saved URL
                 if(url == "" && director == "" && course == ""){
                     openLoadingScreen.value = true
                     core.showToast("Vorlesungsplan gelöscht")
                     core.saveRaplaURL("")
                     onSave()
                 }
+                // If director and course are provided, validate and save
                 else if (director != "" || course != ""){
                     if (director != "" && course != ""){
                         var realCourse = course.uppercase().replace(" ", "")
@@ -117,6 +119,7 @@ class SaveURL {
                         core.showToast("Bitte Studiengangsleiter und Kursname angeben.")
                     }
                 }
+                // Otherwise, validate and save the direct URL
                 else {
                     var updatedUrl = url.replace("page=calendar","page=ical")
                     updatedUrl = updatedUrl.replace("TINF23B2","TINF23BN2")
@@ -138,6 +141,7 @@ class SaveURL {
     }
 }
 
+// Preview for Compose UI
 @Preview(showBackground = true)
 @Composable
 fun SaveURLPreview() {

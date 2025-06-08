@@ -16,9 +16,6 @@ class MainActivity : ComponentActivity() {
         core = Core(context = applicationContext)
         core.log(Logger.Level.INFO, "Starting Application")
 
-        /*val serviceIntent = Intent(applicationContext, ForegroundService::class.java)
-        serviceIntent.putExtra("configID",intent?.getLongExtra("configID",-1))
-        applicationContext.startService(serviceIntent)*/
         if (core.isApplicationOpenedFirstTime()) {
             val intent = Intent(applicationContext, WelcomeScreen::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)

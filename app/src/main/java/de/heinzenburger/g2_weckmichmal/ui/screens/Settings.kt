@@ -37,6 +37,7 @@ import de.heinzenburger.g2_weckmichmal.ui.components.SaveURL
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
 import kotlin.concurrent.thread
 
+// Main Activity for the Settings screen
 class SettingsScreen : ComponentActivity() {
     var listOfCourses = mutableStateListOf<String>()
     var listOfExcludedCourses = mutableStateListOf<String>()
@@ -50,12 +51,14 @@ class SettingsScreen : ComponentActivity() {
             if (locUrl != null) {
                 url.value = locUrl
             }
+            // Load courses and excluded courses in a background thread
             thread {
                 core.getListOfNameOfCourses()?.forEach { listOfCourses.add(it) }
                 core.getListOfExcludedCourses()?.forEach { listOfExcludedCourses.add(it) }
             }
             setContent {
                 val context = LocalContext.current
+                // Handle back navigation to overview screen
                 BackHandler {
                     //Go to Overview Screen without animation
                     val intent = Intent(context, AlarmClockOverviewScreen::class.java)
@@ -70,17 +73,20 @@ class SettingsScreen : ComponentActivity() {
         }
     }
 
+    // Wrapper function for the Settings Composable with NavBar
     @Composable
     fun SettingsComposable(modifier: Modifier, uiActions: CoreSpecification) {
         NavBar.Companion.NavigationBar(modifier, uiActions, innerSettingsComposable, SettingsScreen::class)
     }
 
     private var url = mutableStateOf("https://")
+
     //Main component
     val innerSettingsComposable : @Composable (PaddingValues, CoreSpecification) -> Unit = { innerPadding: PaddingValues, core: CoreSpecification ->
         val context = LocalContext.current
         val openExcludeCourseDialog = remember { mutableStateOf(false) }
 
+        // Show dialog to exclude courses
         when{
             openExcludeCourseDialog.value ->{
                 ExcludeCourseDialog(
@@ -181,6 +187,7 @@ class SettingsScreen : ComponentActivity() {
                     }
                 }
 
+                // Save URL component with callback to return to overview
                 SaveURL().innerSettingsComposable(innerPadding, core,
                     fun () {
                         val intent = Intent(context, AlarmClockOverviewScreen::class.java)
@@ -194,8 +201,7 @@ class SettingsScreen : ComponentActivity() {
     }
 }
 
-
-
+//Preview UI in Android Studio
 @Preview(showBackground = true)
 @Composable
 fun SettingsScreenPreview() {

@@ -7,7 +7,6 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.activity.result.ActivityResultLauncher
-import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -66,6 +65,7 @@ import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
 import java.util.Calendar
 import kotlin.concurrent.thread
 
+// PickerDialogs provides various dialog components for user input and permissions
 class PickerDialogs {
     companion object{
         //Dialogs for Picking LocalTime and Minutes
@@ -156,6 +156,7 @@ class PickerDialogs {
             }
         }
 
+        // Dialog for picking a station name with suggestions
         @Composable
         fun StationPickerDialog(
             onConfirm: (String) -> Unit,
@@ -237,6 +238,7 @@ class PickerDialogs {
             }
         }
 
+        // Dialog for picking a time using TimePicker
         @OptIn(ExperimentalMaterial3Api::class)
         @Composable
         fun TimePickerDialogContainer(
@@ -281,6 +283,8 @@ class PickerDialogs {
                 ) }
             )
         }
+
+        // Confirmation dialog for sharing sensitive data
         @OptIn(ExperimentalMaterial3Api::class)
         @Composable
         fun ConfirmDialog(
@@ -311,6 +315,8 @@ class PickerDialogs {
             )
         }
 
+
+        // Dialog for excluding courses from a list
         @Composable
         fun ExcludeCourseDialog(
             onDismiss: (List<String>) -> Unit,
@@ -437,6 +443,8 @@ class PickerDialogs {
                 }
             }
         }
+
+        // Dialog for requesting and explaining permissions
         @Composable
         fun GrantPermissions(
             onDismiss: () -> Unit,
@@ -444,6 +452,7 @@ class PickerDialogs {
             core: CoreSpecification,
             registerForActivityResult: ActivityResultLauncher<String>
         ) {
+            // State for granted permissions and dialog dismissal
             var permissions = remember { mutableStateOf(core.getGrantedPermissions()) }
             var dismiss = remember { mutableStateOf(false) }
             val ignorePermission = remember { mutableStateListOf("") }
@@ -454,6 +463,7 @@ class PickerDialogs {
                     onDismiss()
                 }
             ) {
+                // Background thread updates permission state
                 thread {
                     while(!dismiss.value){
                         Thread.sleep(500)
@@ -461,6 +471,9 @@ class PickerDialogs {
                     }
                 }
                 Card(
+                    // UI for requesting each required permission
+                    // Shows explanation and launches appropriate system intent
+                    // User can skip a permission
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -479,13 +492,15 @@ class PickerDialogs {
                             style = MaterialTheme.typography.bodyMedium
                         )
 
+                        var currentPermission = ""
                         var title = ""
                         var text = ""
                         var buttonAction = {
                             onDismiss()
                         }
-                        if (ignorePermission.contains("Alarme setzen") == false &&
+                        if (ignorePermission.contains(Manifest.permission.SCHEDULE_EXACT_ALARM) == false &&
                             permissions.value?.contains("Alarm") == false) {
+                            currentPermission = Manifest.permission.SCHEDULE_EXACT_ALARM
                             title = "Alarme setzen"
                             text = "Diese App benötigt zwingend die Berechtigung Alarme im System zu erstellen."
                             buttonAction = {
@@ -494,8 +509,9 @@ class PickerDialogs {
                                 }
                                 context.startActivity(intent)
                             }
-                        } else if (ignorePermission.contains("Benachrichtigungen senden") == false &&
+                        } else if (ignorePermission.contains(Manifest.permission.ACCESS_NOTIFICATION_POLICY) == false &&
                             permissions.value?.contains("Notifications") == false) {
+                            currentPermission = Manifest.permission.ACCESS_NOTIFICATION_POLICY
                             title = "Benachrichtigungen senden"
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                                 val isPermanentlyDenied =
@@ -518,8 +534,9 @@ class PickerDialogs {
                                     }
                                 }
                             }
-                        } else if (ignorePermission.contains("Uneingeschränkte Hintergrundnutzung") == false &&
+                        } else if (ignorePermission.contains(Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS) == false &&
                             permissions.value?.contains("Battery") == false) {
+                            currentPermission = Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
                             title = "Uneingeschränkte Hintergrundnutzung"
                             text = "Die App läuft am zuverlässigsten, wenn uneingeschränkte Hintergrundnutzung erlaubt ist."
                             buttonAction = {
@@ -563,7 +580,7 @@ class PickerDialogs {
                         Button(
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                             onClick = {
-                                ignorePermission.add(title)
+                                ignorePermission.add(currentPermission)
                             }
                         ) {
                             OurText(
@@ -578,6 +595,8 @@ class PickerDialogs {
     }
 }
 
+
+// Preview for the desired dialog
 @Preview(showBackground = true)
 @Composable
 fun SettingsScreenPreview() {

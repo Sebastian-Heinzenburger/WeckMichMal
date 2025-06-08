@@ -54,13 +54,19 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 class AlarmRingingScreen : ComponentActivity(){
+    // Reference to the foreground service handling alarm logic
     private lateinit var foregroundService: ForegroundService
+    // Indicates if the screen is shown as a preview
     private var isPreview = false
+    // List of courses to be excluded from the calculation
     var listOfExcludedCourses = emptyList<String>()
+    // Mutable states to hold the current event and configuration
     var event = mutableStateOf(Event.emptyEvent)
     var configuration = mutableStateOf(Configuration.emptyConfiguration)
+    // State to track swipe direction (left/right)
     var swipedLeft = mutableStateOf(false)
 
+    // Handles connection to the ForegroundService
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             val binder = service as ForegroundService.MyBinder
@@ -70,13 +76,14 @@ class AlarmRingingScreen : ComponentActivity(){
         override fun onServiceDisconnected(name: ComponentName?) {
         }
     }
-
+    // Binds to the running ForegroundService
     fun bindService(){
         Intent(this, ForegroundService::class.java).also { intent ->
             bindService(intent, serviceConnection, BIND_AUTO_CREATE)
         }
     }
 
+    // Activity entry point: sets up UI and binds service if not preview
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -90,6 +97,7 @@ class AlarmRingingScreen : ComponentActivity(){
                 bindService()
             }
 
+            // Retrieve configuration and event from intent
             var configurationWithEvent =
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     intent.getParcelableExtra(
@@ -108,6 +116,7 @@ class AlarmRingingScreen : ComponentActivity(){
             setContent {
                 G2_WeckMichMalTheme {
                     val context = LocalContext.current
+                    // Handle back button: return to overview
                     BackHandler {
                         val intent = Intent(context, AlarmClockOverviewScreen::class.java)
                         startActivity(intent)
@@ -119,6 +128,7 @@ class AlarmRingingScreen : ComponentActivity(){
         }
     }
 
+    // Composable: Shows alarm overview and route/course details
     @Composable fun OverviewComposable(){
         val detailedViewForRoute = remember { mutableStateOf<Route?>(null) }
         if(isPreview){
@@ -263,10 +273,11 @@ class AlarmRingingScreen : ComponentActivity(){
         }
     }
 
-
+    // Main composable for the alarm ringing screen, handles swipe and actions
     val innerAlarmRingingScreenComposable : @Composable (CoreSpecification) -> Unit = { core: CoreSpecification ->
         Box(
             modifier = Modifier.pointerInput(Unit) {
+                // Detect swipe gestures to switch between overview and mensa plan
                 detectDragGestures { change, dragAmount ->
                     val (x, y) = dragAmount
                     when {
@@ -348,6 +359,8 @@ class AlarmRingingScreen : ComponentActivity(){
             }
         }
     }
+
+    // Preview for Compose UI in Android Studio
     @Preview(showBackground = true)
     @Composable
     fun AlarmRingingScreenPreview() {

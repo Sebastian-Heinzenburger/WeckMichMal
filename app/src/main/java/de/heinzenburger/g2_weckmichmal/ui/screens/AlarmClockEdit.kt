@@ -67,19 +67,20 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import kotlin.concurrent.thread
 
+// Activity for editing or creating an alarm clock configuration
 class AlarmClockEditScreen : ComponentActivity() {
-
+    // Registers for permission result callback
     private val registerForActivityResult = registerForActivityResult(RequestPermission()){ }
 
+    // State variables for dialog visibility and alarm configuration fields
     private var openLoadingScreen = mutableStateOf(false)
-
-    private var openArrivalTimePickerDialog : MutableState<Boolean> = mutableStateOf(false)
-    private var openTravelTimePickerDialog : MutableState<Boolean> = mutableStateOf(false)
-    private var openStartBufferPickerDialog : MutableState<Boolean> = mutableStateOf(false)
-    private var openEndBufferPickerDialog : MutableState<Boolean> = mutableStateOf(false)
-    private var openStartStationDialog : MutableState<Boolean> = mutableStateOf(false)
-    private var openEndStationDialog : MutableState<Boolean> = mutableStateOf(false)
-    private var openPermissionDialog : MutableState<Boolean> = mutableStateOf(false)
+    private var openArrivalTimePickerDialog = mutableStateOf(false)
+    private var openTravelTimePickerDialog = mutableStateOf(false)
+    private var openStartBufferPickerDialog = mutableStateOf(false)
+    private var openEndBufferPickerDialog = mutableStateOf(false)
+    private var openStartStationDialog = mutableStateOf(false)
+    private var openEndStationDialog = mutableStateOf(false)
+    private var openPermissionDialog = mutableStateOf(false)
 
     //Everytime an alarm is created, the reset function has to be called before calling this view so all configurations are set to default
     //If an alarm should be updated, the current configuration is passed as parameter to reset function
@@ -99,6 +100,7 @@ class AlarmClockEditScreen : ComponentActivity() {
     private lateinit var defaultAlarmValues: DefaultAlarmValues
     private lateinit var core: CoreSpecification
 
+    // Resets all state variables to default or given configuration
     fun reset(configuration: Configuration?){
         openLoadingScreen.value = false
         if(configuration == null){
@@ -185,6 +187,7 @@ class AlarmClockEditScreen : ComponentActivity() {
         }
     }
 
+    // Initializes core logic, loads default values, and sets up the UI
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -221,8 +224,7 @@ class AlarmClockEditScreen : ComponentActivity() {
         }
     }
 
-
-
+    // Saves the current configuration to the database and handles validation
     fun saveConfiguration(core: CoreSpecification, context: Context){
         thread{
             var validation = true
@@ -313,6 +315,7 @@ class AlarmClockEditScreen : ComponentActivity() {
         }
     }
 
+    // Composable for selecting arrival time source (manual or lecture plan)
     @Composable
     private fun InnerDatengrundlageComposable () {
         val arrivalOptions = listOf("Manuelle Ankuftszeit", "Ankuftszeit nach Vorlesungsplan")
@@ -407,6 +410,8 @@ class AlarmClockEditScreen : ComponentActivity() {
 
         }
     }
+
+    // Composable for selecting travel method (train or manual time)
     @Composable
     private fun InnerFahrtwegComposable() {
         val rideOptions = listOf("Bahnverbindung", "Manuelle Fahrtzeit")
@@ -531,6 +536,8 @@ class AlarmClockEditScreen : ComponentActivity() {
             }
         }
     }
+
+    // Composable for setting buffer times and enforcing start buffer
     @Composable
     private fun InnerZeitaufwandComposable() {
         OurText(
@@ -596,6 +603,8 @@ class AlarmClockEditScreen : ComponentActivity() {
             )
         }
     }
+
+    // Composable for selecting valid days for the alarm
     @Composable
     private fun InnerGueltigkeitComposable(){
         OurText(
@@ -803,11 +812,14 @@ class AlarmClockEditScreen : ComponentActivity() {
             InnerGueltigkeitComposable()
         }
     }
+
+    // Entry point composable for the screen, includes navigation bar
     @Composable
     fun EditComposable(modifier: Modifier, core: CoreSpecification) {
         NavBar.Companion.NavigationBar(modifier, core, innerEditComposable, caller = AlarmClockEditScreen::class)
     }
 
+    // Preview for Compose UI in Android Studio
     @Preview(showBackground = true)
     @Composable
     fun EditPreview() {

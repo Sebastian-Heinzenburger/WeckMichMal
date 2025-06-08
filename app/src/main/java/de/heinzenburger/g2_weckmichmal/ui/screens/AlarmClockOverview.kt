@@ -58,6 +58,7 @@ import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
 import java.time.format.DateTimeFormatter
 import kotlin.concurrent.thread
 
+// Main screen activity for displaying and managing alarm clock configurations
 class AlarmClockOverviewScreen : ComponentActivity(){
     companion object{
         var aPlatypus = false //Static variable to set Platypus mode
@@ -75,6 +76,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
         core = Core(context = applicationContext)
 
         ExceptionHandler(core as Core).runWithUnexpectedExceptionHandler("Error displaying AlarmClockOverview",true) {
+            //Background loading of alarm configurations
             thread {
                 configurationAndEventEntities.value = core.getAllConfigurationAndEvent()!!
             }
@@ -82,7 +84,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
             setContent {
                 G2_WeckMichMalTheme {
                     BackHandler {
-                        //Finish all and close the app
+                        // Exits the app when back is pressed
                         finishAffinity()
                     }
                     AlarmClockOverviewComposable(modifier = Modifier, core)
@@ -92,7 +94,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
     }
 
 
-
+    // Deletes an alarm configuration and refreshes the screen
     private fun deleteConfiguration(
         core: CoreSpecification,
         properties: ConfigurationWithEvent,
@@ -108,6 +110,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
         }
     }
 
+    // Navigates to the alarm edit screen, passing configuration data
     private fun setEditScreen(context: Context, configuration: Configuration?){
         val core = Core(context)
         val intent = Intent(context, AlarmClockEditScreen::class.java)
@@ -118,6 +121,7 @@ class AlarmClockOverviewScreen : ComponentActivity(){
         finish()
     }
 
+    // Navigates to the alarm ringing preview screen
     private fun setRingingScreen(context: Context, configurationWithEvent: ConfigurationWithEvent){
         val intent = Intent(context, AlarmRingingScreen::class.java)
         intent.putExtra("configurationWithEvent", configurationWithEvent)
@@ -126,7 +130,6 @@ class AlarmClockOverviewScreen : ComponentActivity(){
         startActivity(intent)
         finish()
     }
-
 
     //Elements in Configuration Component that stay the same, regardless of Platypus
     @Composable
@@ -401,11 +404,15 @@ class AlarmClockOverviewScreen : ComponentActivity(){
 
         }
     }
+
+    // Entry point composable for the screen, wrapped with navigation bar
     @Composable
     fun AlarmClockOverviewComposable(modifier: Modifier, core: CoreSpecification) {
         NavBar.Companion.NavigationBar(modifier, core, innerAlarmClockOverviewComposable,
             AlarmClockOverviewScreen::class)
     }
+
+    // Preview for Compose UI in Android Studio
     @Preview(showBackground = true)
     @Composable
     fun AlarmClockOverviewScreenPreview() {

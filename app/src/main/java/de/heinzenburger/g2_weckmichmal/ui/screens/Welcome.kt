@@ -35,7 +35,9 @@ import de.heinzenburger.g2_weckmichmal.ui.components.SaveURL
 import de.heinzenburger.g2_weckmichmal.ui.theme.G2_WeckMichMalTheme
 import kotlin.concurrent.thread
 
+// Main screen shown when the app starts and no settings file is found
 class WelcomeScreen : ComponentActivity() {
+    // Registers for permission result callback
     private val registerForActivityResult = registerForActivityResult(RequestPermission()){ }
     private val openPermissionDialog = mutableStateOf(false)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,8 +46,8 @@ class WelcomeScreen : ComponentActivity() {
         val core = Core(context = applicationContext)
         ExceptionHandler(core).runWithUnexpectedExceptionHandler("Error displaying Welcome",true) {
             setContent {
+                // Handles back button to close the app
                 BackHandler {
-                    //Finish all and close the app
                     finishAffinity()
                 }
                 G2_WeckMichMalTheme {
@@ -55,6 +57,7 @@ class WelcomeScreen : ComponentActivity() {
         }
     }
 
+    // Composable function for the welcome UI
     @Composable
     fun Greeting(modifier: Modifier, core: CoreSpecification) {
         val context = LocalContext.current
@@ -123,10 +126,9 @@ class WelcomeScreen : ComponentActivity() {
         }
     }
 }
-//Is only called when json settings file is not found on android device
 
 
-
+// Preview for the Greeting composable in Android Studio
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {

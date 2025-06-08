@@ -41,6 +41,7 @@ import java.io.File
 import java.io.IOException
 import kotlin.concurrent.thread
 
+//Screen to display and upload the log of the app
 class LogScreen : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,8 +51,8 @@ class LogScreen : ComponentActivity() {
         ExceptionHandler(core).runWithUnexpectedExceptionHandler("Error displaying Log",true) {
             setContent {
                 val context = LocalContext.current
+                // Handles back navigation to the overview screen
                 BackHandler {
-                    //Go to Overview Screen without animation
                     val intent = Intent(context, AlarmClockOverviewScreen::class.java)
                     intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
                     startActivity(intent)
@@ -65,14 +66,17 @@ class LogScreen : ComponentActivity() {
     }
     private val showConfirmDialog = mutableStateOf(false)
 
+    // Composable function to display the log and a button to upload it
     val innerLogComposable: @Composable (PaddingValues, CoreSpecification) -> Unit =
         { innerPadding: PaddingValues, core: CoreSpecification ->
             val context = LocalContext.current
             when {
                 showConfirmDialog.value -> {
+                    // Show confirmation dialog for uploading logs
                     ConfirmDialog(
                         onConfirm = {
                             if(core.isInternetAvailable()){
+                                // Upload the log file to the server in a background thread
                                 thread {
                                     try {
                                         val file = File(context.filesDir, "log")
@@ -117,7 +121,7 @@ class LogScreen : ComponentActivity() {
             ) {
 
 
-                // Datenschutzerklärungsbutton
+                // Button to show privacy policy and enable easter egg
                 Button(
                     modifier = Modifier.padding(0.dp, 20.dp, 0.dp, 0.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
@@ -133,7 +137,7 @@ class LogScreen : ComponentActivity() {
                         modifier = Modifier.padding(10.dp)
                     )
                 }
-                // Log Analysis Button
+                // Button to trigger log upload confirmation dialog
                 Button(
                     onClick = {
                         showConfirmDialog.value = true
@@ -149,13 +153,14 @@ class LogScreen : ComponentActivity() {
                     OurText(text="Logs zur Analyse an Server senden", modifier = Modifier.padding(16.dp))
                 }
 
-
+                // Displays the log content
                 OurText(
                     text = core.getLog(),
                     modifier = Modifier,
                 )
             }
         }
+    // Wrapper composable for navigation bar and log content
     @Composable
     fun LogComposable(modifier: Modifier, core: CoreSpecification) {
         NavBar.Companion.NavigationBar(
@@ -168,7 +173,7 @@ class LogScreen : ComponentActivity() {
 }
 
 
-
+// Preview UI in Android Studio
 @Preview(showBackground = true)
 @Composable
 fun LogPreview() {

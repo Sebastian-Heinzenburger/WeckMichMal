@@ -27,17 +27,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 
-/**
- * Until now, the following Elements have been defined:
- * [OurTextField]: Should be used as a TextField
- * [OurText]: Should be used for text that is medium sized
- *
- * Optional Elements:
- * [OurButtonInEditAlarm]: The Buttons in AlarmEditScreen with primary color as background and Text
- */
+
 class BasicElements {
     companion object{
         @Composable
+        // Custom TextField with rounded corners and themed colors
         fun OurTextField(value: String, onValueChange: (String)->Unit, modifier: Modifier, placeholderText: String) {
             TextField(
                 shape = RoundedCornerShape(8.dp),
@@ -70,6 +64,7 @@ class BasicElements {
             )
         }
 
+        // Custom Button for the Edit Alarm screen with primary color and centered text
         @Composable fun OurButtonInEditAlarm(modifier: Modifier, onClick: ()->Unit, text: String, enabled: Boolean = true){
             Button(
                 modifier = modifier,
@@ -90,6 +85,7 @@ class BasicElements {
             }
         }
 
+        // Custom Text composable with configurable color and alignment
         @Composable fun OurText(color: Color = MaterialTheme.colorScheme.primary,
                                 text: String,
                                 modifier: Modifier,
@@ -102,6 +98,7 @@ class BasicElements {
                 textAlign = textAlign
             )
         }
+        // Numeric input field that only allows integer values
         @Composable
         fun NumberField(text: MutableState<Int>, modifier: Modifier) {
             fun extractIntFromString(input: String): Int {
@@ -119,6 +116,7 @@ class BasicElements {
                 onValueChange = change
             )
         }
+        // Simple loading dialog
         @Composable
         fun LoadingScreen() {
             Dialog(onDismissRequest = { }) {

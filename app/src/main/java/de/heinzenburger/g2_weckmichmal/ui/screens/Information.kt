@@ -42,6 +42,7 @@ import kotlin.concurrent.thread
 import androidx.core.net.toUri
 import de.heinzenburger.g2_weckmichmal.core.ExceptionHandler
 
+// Activity displaying the Information screen
 class InformationScreen : ComponentActivity() {
     lateinit var core: CoreSpecification
     private lateinit var context: Context
@@ -53,6 +54,7 @@ class InformationScreen : ComponentActivity() {
         ExceptionHandler(core as Core).runWithUnexpectedExceptionHandler("Error displaying Information",true) {
             setContent {
                 val context = LocalContext.current
+                // Custom back navigation to Overview screen
                 BackHandler {
                     //Go to Overview Screen without animation
                     val intent = Intent(context, AlarmClockOverviewScreen::class.java)
@@ -67,7 +69,7 @@ class InformationScreen : ComponentActivity() {
         }
     }
 
-    //When text is clicked, platypus mode in AlarmClockOverviewScreen is activated hehe
+    // Composable for the main content of the Information screen
     private val innerInformationComposable: @Composable (PaddingValues, CoreSpecification) -> Unit =
         { innerPadding: PaddingValues, core: CoreSpecification ->
             Column(modifier = Modifier.padding(innerPadding).fillMaxWidth()) {
@@ -75,6 +77,7 @@ class InformationScreen : ComponentActivity() {
                     text = "Info",
                     modifier = Modifier.padding(16.dp)
                 )
+                // Button to open course schedule in browser
                 Button(
                     modifier = Modifier.align(BiasAlignment.Horizontal(0f)).padding(top = 16.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -86,6 +89,7 @@ class InformationScreen : ComponentActivity() {
                 ) {
                     OurText(text = "Vorlesungsplan im Browser öffnen", modifier = Modifier)
                 }
+                // Button to open mensa menu in browser
                 Button(
                     modifier = Modifier.align(BiasAlignment.Horizontal(0f)).padding(top = 8.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -109,6 +113,7 @@ class InformationScreen : ComponentActivity() {
 
 
 
+    // Composable to display the list of upcoming mensa meals
     @SuppressLint("DefaultLocale")
     @Composable
     fun InnerMensaComposable(innerPadding: PaddingValues){
@@ -152,6 +157,7 @@ class InformationScreen : ComponentActivity() {
             }
         }
     }
+    // Composable wrapper for the screen with navigation bar
     @Composable
     fun InformationComposable(modifier: Modifier) {
         NavBar.Companion.NavigationBar(
@@ -161,6 +167,7 @@ class InformationScreen : ComponentActivity() {
             caller = InformationScreen::class
         )
     }
+    // Preview for UI design in Android Studio
     @Preview(showBackground = true)
     @Composable
     fun InformationPreview() {
@@ -172,6 +179,7 @@ class InformationScreen : ComponentActivity() {
         }
     }
 
+    // Opens the mensa menu in the browser
     fun openMensaInBrowser(){
         var url = "https://www.sw-ka.de/de/hochschulgastronomie/speiseplan/mensa_erzberger/?view=ok&c=erzberger&STYLE=popup_plain"
         val intent = Intent(Intent.ACTION_VIEW, url.toUri())
@@ -180,6 +188,7 @@ class InformationScreen : ComponentActivity() {
         startActivity(intent)
     }
 
+    // Opens the course schedule in the browser, adjusting the URL if needed
     private fun openCoursesInBrowser() {
         var url = core.getRaplaURL()
         if (url != null && url != ""){
