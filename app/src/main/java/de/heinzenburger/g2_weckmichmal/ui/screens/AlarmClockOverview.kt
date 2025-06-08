@@ -293,7 +293,6 @@ class AlarmClockOverviewScreen : ComponentActivity(){
 
                 Button(
                     onClick = {
-                        core.showToast("Perry the Platypus!?")
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(150,100,0),

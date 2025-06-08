@@ -323,6 +323,20 @@ class PickerDialogs {
             }
             var excludeCourse = remember { mutableStateOf("") }
             var proposeCourses = remember { mutableStateOf(listOfCourses) }
+
+            fun excludeCourse(it: String){
+                var isCourseAlreadyExcluded = false
+                excludeCourses.forEach {
+                        excludeCourse ->
+                    if(it == excludeCourse){
+                        isCourseAlreadyExcluded = true
+                    }
+                }
+                if(!isCourseAlreadyExcluded){
+                    excludeCourses.add(it)
+                }
+            }
+
             Dialog(
                 onDismissRequest = { onDismiss(excludeCourses) }
             ) {
@@ -404,16 +418,7 @@ class PickerDialogs {
                                     index, it ->
                                 Button(
                                     onClick = {
-                                        var isCourseAlreadyExcluded = false
-                                        excludeCourses.forEach {
-                                            excludeCourse ->
-                                            if(it == excludeCourse){
-                                                isCourseAlreadyExcluded = true
-                                            }
-                                        }
-                                        if(!isCourseAlreadyExcluded){
-                                            excludeCourses.add(it)
-                                        }
+                                        excludeCourse(it)
                                     },
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = MaterialTheme.colorScheme.onBackground
@@ -469,7 +474,7 @@ class PickerDialogs {
                         Text(
                             text = if (isFirstTime) "Berechtigungen erteilen" else "Berechtigungen fehlen!",
                             textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.primary,
+                            color = MaterialTheme.colorScheme.secondary,
                             modifier = Modifier.padding(8.dp).fillMaxWidth().padding(8.dp),
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -530,26 +535,20 @@ class PickerDialogs {
                             text = title,
                             textAlign = TextAlign.Center,
                             color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(8.dp).fillMaxWidth().background(
-                                MaterialTheme.colorScheme.secondary,
-                                RoundedCornerShape(8.dp)
-                            ).padding(8.dp),
+                            modifier = Modifier.padding(8.dp).fillMaxWidth().padding(8.dp),
                             style = MaterialTheme.typography.titleSmall
                         )
                         Text(
                             text = text,
                             textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(8.dp).fillMaxWidth().background(
-                                MaterialTheme.colorScheme.onBackground,
-                                RoundedCornerShape(8.dp)
-                            ).padding(8.dp),
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.padding(8.dp).fillMaxWidth().padding(8.dp),
                             style = MaterialTheme.typography.bodyMedium
                         )
 
                         Button(
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.secondary
+                                containerColor = MaterialTheme.colorScheme.onBackground
                             ),
                             onClick = {
                                 buttonAction()

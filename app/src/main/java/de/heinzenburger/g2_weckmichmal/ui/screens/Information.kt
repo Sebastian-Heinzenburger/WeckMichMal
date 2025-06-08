@@ -81,17 +81,7 @@ class InformationScreen : ComponentActivity() {
                         containerColor = MaterialTheme.colorScheme.secondary
                     ),
                     onClick = {
-                        var url = core.getRaplaURL()
-                        if (url != null && url != ""){
-                            url = url.replace("page=ical","page=calendar")
-                            if(!url.startsWith("http://") && !url.startsWith("https://")) {
-                                url = "http://$url"
-                            }
-                            val intent = Intent(Intent.ACTION_VIEW, url.toUri())
-                            intent.flags =
-                                Intent.FLAG_ACTIVITY_NEW_TASK
-                            startActivity(intent)
-                        }
+                        openCoursesInBrowser()
                     }
                 ) {
                     OurText(text = "Vorlesungsplan im Browser öffnen", modifier = Modifier)
@@ -102,11 +92,7 @@ class InformationScreen : ComponentActivity() {
                         containerColor = MaterialTheme.colorScheme.secondary
                     ),
                     onClick = {
-                        var url = "https://www.sw-ka.de/de/hochschulgastronomie/speiseplan/mensa_erzberger/?view=ok&c=erzberger&STYLE=popup_plain"
-                        val intent = Intent(Intent.ACTION_VIEW, url.toUri())
-                        intent.flags =
-                            Intent.FLAG_ACTIVITY_NEW_TASK
-                        startActivity(intent)
+                        openMensaInBrowser()
                     }
                 ) {
                     OurText(text = "Mensaplan im Browser öffnen", modifier = Modifier)
@@ -120,6 +106,9 @@ class InformationScreen : ComponentActivity() {
 
             }
         }
+
+
+
     @SuppressLint("DefaultLocale")
     @Composable
     fun InnerMensaComposable(innerPadding: PaddingValues){
@@ -183,6 +172,27 @@ class InformationScreen : ComponentActivity() {
         }
     }
 
+    fun openMensaInBrowser(){
+        var url = "https://www.sw-ka.de/de/hochschulgastronomie/speiseplan/mensa_erzberger/?view=ok&c=erzberger&STYLE=popup_plain"
+        val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+        intent.flags =
+            Intent.FLAG_ACTIVITY_NEW_TASK
+        startActivity(intent)
+    }
+
+    private fun openCoursesInBrowser() {
+        var url = core.getRaplaURL()
+        if (url != null && url != ""){
+            url = url.replace("page=ical","page=calendar")
+            if(!url.startsWith("http://") && !url.startsWith("https://")) {
+                url = "http://$url"
+            }
+            val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+            intent.flags =
+                Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(intent)
+        }
+    }
 }
 
 

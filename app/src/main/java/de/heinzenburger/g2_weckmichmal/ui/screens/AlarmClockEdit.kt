@@ -82,7 +82,7 @@ class AlarmClockEditScreen : ComponentActivity() {
     private var openPermissionDialog : MutableState<Boolean> = mutableStateOf(false)
 
     //Everytime an alarm is created, the reset function has to be called before calling this view so all configurations are set to default
-    //If an alarm is to be updated, the current configuration is passed as parameter to reset function
+    //If an alarm should be updated, the current configuration is passed as parameter to reset function
     private lateinit var alarmName : MutableState<String>
     private lateinit var manuallySetArrivalTime: MutableState<LocalTime> //Set if arrival time shouldnt be dependent on lecture plan
     private lateinit var isManualArrivalTime : MutableState<Boolean>
@@ -223,7 +223,6 @@ class AlarmClockEditScreen : ComponentActivity() {
 
 
 
-
     fun saveConfiguration(core: CoreSpecification, context: Context){
         thread{
             var validation = true
@@ -337,9 +336,6 @@ class AlarmClockEditScreen : ComponentActivity() {
                     .fillMaxWidth()
                     .selectableGroup() //All radio buttons in this column correspond to one group
             ) {
-
-
-
                 Row(
                     Modifier
                         .selectable(
