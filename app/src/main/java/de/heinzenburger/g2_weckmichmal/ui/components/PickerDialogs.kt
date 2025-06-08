@@ -3,7 +3,6 @@ package de.heinzenburger.g2_weckmichmal.ui.components
 import android.Manifest
 import android.app.Activity
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
@@ -55,7 +54,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import de.heinzenburger.g2_weckmichmal.core.MockupCore
 import de.heinzenburger.g2_weckmichmal.persistence.Logger
@@ -498,10 +496,7 @@ class PickerDialogs {
                                 val isPermanentlyDenied =
                                     !ActivityCompat.shouldShowRequestPermissionRationale(
                                         context as Activity, Manifest.permission.POST_NOTIFICATIONS
-                                    ) && ContextCompat.checkSelfPermission(
-                                        context,
-                                        Manifest.permission.POST_NOTIFICATIONS
-                                    ) == PackageManager.PERMISSION_DENIED
+                                    )
                                 if(!isPermanentlyDenied){
                                     text = "Diese App benötigt zwingend die Berechtigung Benachrichtigungen zu senden."
                                     buttonAction = {
