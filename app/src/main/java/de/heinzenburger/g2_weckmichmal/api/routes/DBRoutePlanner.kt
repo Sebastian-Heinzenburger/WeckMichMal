@@ -93,7 +93,7 @@ class DBRoutePlanner : RoutePlannerSpecification {
                 "ankunftsHalt":"$endStationID",
                 "ankunftSuche":"ANKUNFT",
                 "klasse":"KLASSE_2",
-                "produktgattungen":["REGIONAL","SBAHN","ICE","BUS","SCHIFF","UBAHN","TRAM"],
+                "produktgattungen":["REGIONAL","SBAHN","BUS","SCHIFF","UBAHN","TRAM"],
                 "reisende":[{"typ":"ERWACHSENER","ermaessigungen":[{"art":"KEINE_ERMAESSIGUNG","klasse":"KLASSENLOS"}],"alter":[],"anzahl":1}],
                 "schnelleVerbindungen":true,
                 "sitzplatzOnly":false,
