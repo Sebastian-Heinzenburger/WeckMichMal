@@ -179,6 +179,7 @@ data class Core(
     override fun getLoggedNextAlarm() : String{
         return logger.getNextAlarm()
     }
+
     override fun logNextAlarm(date: LocalDateTime, type: String){
         logger.updateNextAlarmFile(date, type)
     }
