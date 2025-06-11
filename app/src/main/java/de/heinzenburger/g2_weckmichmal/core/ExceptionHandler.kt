@@ -28,13 +28,13 @@ class ExceptionHandler(val core: Core) {
     }
     inline fun <T> runWithUnexpectedExceptionHandler(
         errorMessage: String = "Fehler",
-        rethrow: Boolean = false,
+        snitch: Boolean = false,
         block: () -> T
     ): T? {
         return try {
             block()
         } catch (e: Exception) {
-            unexpectedException(e, errorMessage, rethrow)
+            unexpectedException(e, errorMessage, snitch)
             null
         }
     }

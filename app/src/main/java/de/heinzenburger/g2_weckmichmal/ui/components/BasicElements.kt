@@ -103,7 +103,7 @@ class BasicElements {
         fun NumberField(text: MutableState<Int>, modifier: Modifier) {
             fun extractIntFromString(input: String): Int {
                 val digits = input.filter { it.isDigit() }
-                return if (digits.isNotEmpty()) digits.toInt() else 0
+                return if (digits.isNotEmpty() && input.length < 4) digits.toInt() else 0
             }
 
             val change : (String) -> Unit = { it ->

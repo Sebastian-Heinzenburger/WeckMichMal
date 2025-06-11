@@ -111,33 +111,35 @@ class PersistenceOperations(
         core.log(Logger.Level.INFO, "Alarm configuration and associated events deleted for uid: $uid")
     }
 
+    fun getWakeUpCalculator(): WakeUpCalculator {
+        var url = getRaplaURL()
+        return WakeUpCalculator(
+            routePlanner = DBRoutePlanner(),
+            courseFetcher = RaplaFetcher(
+                raplaUrl = URL(
+                    if(url == ""){
+                        "http://example.com"
+                    }else{
+                        url
+                    }
+                ),
+                excludedCourseNames = getListOfExcludedCourses().toSet()
+            )
+        )
+    }
+
     fun generateOrUpdateAlarmConfiguration(configuration: Configuration) {
         core.log(Logger.Level.INFO, "generateOrUpdateAlarmConfiguration called with configuration: $configuration")
         try {
             val configurationHandler = ConfigurationHandler(core.context)
             if (core.validateConfiguration(configuration)){
-                core.log(Logger.Level.INFO, "Configuration is valid, saving or updating.")
-                var url = getRaplaURL()
-                val wakeUpCalculator = WakeUpCalculator(
-                    routePlanner = DBRoutePlanner(),
-                    courseFetcher = RaplaFetcher(
-                        raplaUrl = URL(
-                            if(url == ""){
-                                "http://example.com"
-                            }else{
-                                url
-                            }
-                        ),
-                        excludedCourseNames = getListOfExcludedCourses().toSet()
-                    )
-                )
+                core.log(Logger.Level.INFO, "Configuration is valid, saving.")
+                val wakeUpCalculator = getWakeUpCalculator()
 
                 configuration.ichHabGeringt = LocalDate.MIN
-                val configurationWithEvent = core.calculateNextEventForConfiguration(ConfigurationWithEvent(configuration,null),wakeUpCalculator)!!.event
-                if(configurationWithEvent == null || configurationWithEvent.getLocalDateTime().minusMinutes(2)
-                        ?.isBefore(
-                            LocalDateTime.now()) == true
-                ){
+                //Prevent instant ringing
+                val configurationWithEvent = core.calculateNextEventForConfiguration(ConfigurationWithEvent(configuration,null),wakeUpCalculator)?.event
+                if(configurationWithEvent == null || configurationWithEvent.getLocalDateTime().minusMinutes(2)?.isBefore(LocalDateTime.now()) == true){
                     configuration.ichHabGeringt = LocalDate.now()
                     core.showToast("Alarm für heute ausgesetzt")
                 }
@@ -145,7 +147,6 @@ class PersistenceOperations(
                 configurationHandler.saveOrUpdate(configuration)
 
                 val eventHandler = EventHandler(core.context)
-                core.log(Logger.Level.INFO, "Using Rapla URL: $url")
                 val event = wakeUpCalculator.calculateNextEvent(configuration)
                 core.log(Logger.Level.INFO, "Calculated event: $event")
                 eventHandler.saveOrUpdate(event)

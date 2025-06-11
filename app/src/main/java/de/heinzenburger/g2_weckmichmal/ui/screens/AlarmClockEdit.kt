@@ -224,18 +224,11 @@ class AlarmClockEditScreen : ComponentActivity() {
         }
     }
 
-    // Saves the current configuration to the database and handles validation
-    fun saveConfiguration(core: CoreSpecification, context: Context){
-        thread{
-            var validation = true
-            //Name of Alarm
-            configuration.name = alarmName.value
+    fun validateConfiguration(): Boolean{
+        var validation = true
 
-            //fixed arrival time if selected, else null
-            if(isManualArrivalTime.value){
-                configuration.fixedArrivalTime = manuallySetArrivalTime.value
-            }
-            else if(!core.isInternetAvailable()){
+        if(!isManualArrivalTime.value){
+            if(!core.isInternetAvailable()){
                 validation = false
                 core.showToast("Für diese Konfiguration ist eine Internetverbindung nötig")
             }
@@ -243,16 +236,14 @@ class AlarmClockEditScreen : ComponentActivity() {
                 validation = false
                 core.showToast("Ankunft nach Vorlesungsplan nicht möglich. URL fehlt.")
             }
-            //fixed travel time if selected, else null
-            if(isManualTravelTime.value){
-                defaultAlarmValues.manuallySetTravelTime = manuallySetTravelTime.intValue
-                configuration.fixedTravelBuffer = manuallySetTravelTime.intValue
-            }
-            else if(!core.isInternetAvailable()){
+        }
+
+
+        if(!isManualTravelTime.value){
+            if(!core.isInternetAvailable()){
                 validation = false
                 core.showToast("Für diese Konfiguration ist eine Internetverbindung nötig")
             }
-            //stations needed, else null
             else{
                 if(startStation.value == "Startbahnhof"){
                     validation = false
@@ -262,49 +253,82 @@ class AlarmClockEditScreen : ComponentActivity() {
                     validation = false
                     core.showToast("Endbahnhof setzen")
                 }
-                else{
-                    configuration.startStation = startStation.value
-                    configuration.endStation = endStation.value
-                    defaultAlarmValues.startStation = startStation.value
-                    defaultAlarmValues.endStation = endStation.value
-                }
             }
-            //set required start and endbuffer
-            configuration.startBuffer = setStartBufferTime.intValue
-            configuration.endBuffer = setEndBufferTime.intValue
-            defaultAlarmValues.setStartBufferTime = setStartBufferTime.intValue
-            defaultAlarmValues.setEndBufferTime = setEndBufferTime.intValue
+        }
 
-            configuration.enforceStartBuffer = enforceStartBuffer.value
-            defaultAlarmValues.enforceStartBuffer = enforceStartBuffer.value
+        var days = mutableSetOf<DayOfWeek>()
+        selectedDays.value.forEachIndexed { index, active ->
+            if(active) days.add(DayOfWeek.entries[index])
+        }
+        if(days.isEmpty()){
+            validation = false
+            core.showToast("Mindestens einen Tag auswählen")
+        }
 
-            //Setting days parameter
-            var days = mutableSetOf<DayOfWeek>()
-            selectedDays.value.forEachIndexed { index, active ->
-                if(active) days.add(DayOfWeek.entries[index])
-            }
-            if(days.isEmpty()){
-                validation = false
-                core.showToast("Mindestens einen Tag auswählen")
-            }
-            else{
-                configuration.days = days
-            }
+        return validation
+    }
 
+    fun validatePermissions(): Boolean {
+        val permissions = core.getGrantedPermissions()
+        if((permissions?.contains("Notifications") == false || permissions?.contains("Alarm") == false)){
+            core.showToast("Berechtigungen fehlen")
+            openPermissionDialog.value = true
+            return false
+        }
+        return true
+    }
 
-            val permissions = core.getGrantedPermissions()
-            if(validation && (permissions?.contains("Notifications") == false || permissions?.contains("Alarm") == false)){
-                validation = false
-                core.showToast("Berechtigungen fehlen")
-                openPermissionDialog.value = true
-            }
+    fun inputFieldsToConfiguration(){
+        configuration.name = alarmName.value
 
+        //fixed arrival time if selected, else null
+        if(isManualArrivalTime.value){
+            configuration.fixedArrivalTime = manuallySetArrivalTime.value
+        }
 
-            if(validation){
-                openLoadingScreen.value = true
+        //fixed travel time if selected, else null
+        if(isManualTravelTime.value){
+            defaultAlarmValues.manuallySetTravelTime = manuallySetTravelTime.intValue
+            configuration.fixedTravelBuffer = manuallySetTravelTime.intValue
+        }
+        //stations needed, else null
+        else{
+            configuration.startStation = startStation.value
+            configuration.endStation = endStation.value
+            defaultAlarmValues.startStation = startStation.value
+            defaultAlarmValues.endStation = endStation.value
+        }
+        //set required start and endbuffer
+        configuration.startBuffer = setStartBufferTime.intValue
+        configuration.endBuffer = setEndBufferTime.intValue
+        defaultAlarmValues.setStartBufferTime = setStartBufferTime.intValue
+        defaultAlarmValues.setEndBufferTime = setEndBufferTime.intValue
+
+        configuration.enforceStartBuffer = enforceStartBuffer.value
+        defaultAlarmValues.enforceStartBuffer = enforceStartBuffer.value
+
+        //Setting days parameter
+        var days = mutableSetOf<DayOfWeek>()
+        selectedDays.value.forEachIndexed { index, active ->
+            if(active) days.add(DayOfWeek.entries[index])
+        }
+        configuration.days = days
+    }
+
+    // Saves the current configuration to the database and handles validation
+    fun saveConfiguration(core: CoreSpecification, context: Context){
+        thread{
+            if(validateConfiguration() && validatePermissions()){
+                //Retrieve parameters from input fields and convert to configuration
+                inputFieldsToConfiguration()
+
+                openLoadingScreen.value = true //Show loading screen
+                //Update configuration in database and generate event
                 core.generateOrUpdateAlarmConfiguration(configuration)
+                //Update default values in database
                 core.updateDefaultAlarmValues(defaultAlarmValues)
 
+                //Navigate to overview screen
                 val intent = Intent(context, AlarmClockOverviewScreen::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
                 startActivity(intent)

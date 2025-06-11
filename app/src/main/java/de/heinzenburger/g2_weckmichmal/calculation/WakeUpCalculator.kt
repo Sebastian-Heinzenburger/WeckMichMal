@@ -164,7 +164,6 @@ class WakeUpCalculator(
                         }
                     }
                 }
-
                 else -> throw WakeUpCalculatorException.InvalidConfiguration(
                     "Configuration must either contain a fixed travel buffer OR a start and end station"
                 )
