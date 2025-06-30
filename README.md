@@ -1,7 +1,11 @@
 # G2-WeckMichMal
 
-Dieses Android-Projekt wurde modular aufgebaut und folgt einer komponentenbasierten Architektur.
+## 🚀 Installation
+Die App ist im Google Play Store verfügbar:
+https://play.google.com/store/apps/details?id=de.heinzenburger.g2_weckmichmal&pli=1
+Alternativ kann die App über diesen Source Code und Android Studio selbst kompiliert und installiert werden. Dafür das Projekt in Android Studio klonen, USB-Debugging auf dem Handy aktivieren und über WLAN oder Kabel verbinden.
 
+Dieses Android-Projekt wurde modular aufgebaut und folgt einer komponentenbasierten Architektur.
 ## 📁 Projektstruktur
 
 Das Projekt sollte mit **Android Studio** geöffnet werden, um von der strukturierten “App”-Ansicht zu profitieren.
