@@ -166,9 +166,9 @@ class DataConverter {
                     val sectionJSONObject = sectionsArray.getJSONObject(j)
                     sections.add(RouteSection(
                         vehicleName = sectionJSONObject.getString("vehicleName"),
-                        startTime = LocalDateTime.parse(jsonObject.getString("startTime"), formatter),
+                        startTime = LocalDateTime.parse(sectionJSONObject.getString("startTime"), formatter),
                         startStation = sectionJSONObject.getString("startStation"),
-                        endTime = LocalDateTime.parse(jsonObject.getString("endTime"), formatter),
+                        endTime = LocalDateTime.parse(sectionJSONObject.getString("endTime"), formatter),
                         endStation = sectionJSONObject.getString("endStation"),
                     ))
                 }
